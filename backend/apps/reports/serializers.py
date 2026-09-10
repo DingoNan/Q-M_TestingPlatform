@@ -67,10 +67,13 @@ class ReportSerializer(BaseSerializer):
             return 0
 
     def get_modules(self, obj):
-        return obj.detail['module'].values()
+        # detail 可能为空字典或为 None（手工创建/历史数据），之前直接取 ['module'] 会 KeyError -> 500
+        detail = obj.detail if isinstance(obj.detail, dict) else {}
+        return list(detail.get('module', {}).values())
 
     def get_tags(self, obj):
-        return obj.detail['tag'].values()
+        detail = obj.detail if isinstance(obj.detail, dict) else {}
+        return list(detail.get('tag', {}).values())
 
     class Meta:
         model = Report
