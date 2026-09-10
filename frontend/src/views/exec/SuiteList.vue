@@ -215,7 +215,7 @@
 							    type="index" 
 							    align="center"
 							    class-name="index-column"
-							  >
+							   :show-overflow-tooltip="true">
 							    <template #default="scope">
 							      <div class="index-cell">
 							        {{ scope.$index + 1 + (page_size_params.page - 1) * page_size_params.size }}
@@ -249,7 +249,7 @@
 							    min-width="160" 
 							    align="center"
 							    class-name="tag-column"
-							  >
+							   :show-overflow-tooltip="true">
 							    <template #default="scope">
 							      <div class="tags-container">
 							        <el-tag 

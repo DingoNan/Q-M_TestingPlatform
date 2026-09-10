@@ -197,7 +197,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="状态码" prop="status_code" width="80" align="center">
+          <el-table-column label="状态码" prop="status_code" width="80" align="center" :show-overflow-tooltip="true">
             <template #default="scope">
               <span :style="{ color: scope.row.status_code >= 200 && scope.row.status_code < 300 ? '#67c23a' : '#f56c6c', fontWeight: '600' }">
                 {{ scope.row.status_code }}

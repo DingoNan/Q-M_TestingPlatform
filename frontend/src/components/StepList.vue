@@ -530,7 +530,7 @@
 								width="120" 
 								align="center"
 								class-name="case-count-column"
-							>
+							 :show-overflow-tooltip="true">
 								<template #default="scope">
 									<div class="case-count-cell">
 										<el-tooltip  

@@ -883,7 +883,7 @@
               align="center"
 			  prop="name"
               class-name="case-info-column"
-            >
+             :show-overflow-tooltip="true">
               <template #default="scope">
                 <el-link type="primary" @click="editStepTwo(scope.row)" class="case-link">
                   {{ scope.row.name }}

@@ -4,14 +4,22 @@
  *       原生滚动条又被隐藏 —— 用户既看不到末尾列也无法滚动。
  * 修复：恢复 wrap 的原生横向滚动条（不依赖 el-scrollbar 的 JS 计算），
  *       隐藏失效的自定义 bar。深浅主题均适配。
+ *
+ * 注意：Element Plus 自带 .el-scrollbar__wrap--hidden-default
+ *       { scrollbar-width: none } 与 ::-webkit-scrollbar { display: none }，
+ *       必须用 !important 覆盖，否则原生滚动条依旧不显示。
  */
-.el-table .el-scrollbar__wrap {
+.el-table .el-scrollbar__wrap,
+.el-table .el-scrollbar__wrap.el-scrollbar__wrap--hidden-default {
   overflow-x: auto !important;
-  scrollbar-width: thin;                       /* Firefox */
-  scrollbar-color: var(--el-border-color-darker, #a8abb2) transparent;
+  scrollbar-width: thin !important;             /* Firefox */
+  scrollbar-color: var(--el-border-color-darker, #a8abb2) transparent !important;
+  -ms-overflow-style: auto !important;          /* 老 Edge */
 }
-.el-table .el-scrollbar__wrap::-webkit-scrollbar {
-  height: 10px;                                /* Chrome / Edge */
+.el-table .el-scrollbar__wrap::-webkit-scrollbar,
+.el-table .el-scrollbar__wrap.el-scrollbar__wrap--hidden-default::-webkit-scrollbar {
+  display: block !important;
+  height: 10px !important;                      /* Chrome / Edge */
 }
 .el-table .el-scrollbar__wrap::-webkit-scrollbar-track {
   background: var(--el-fill-color-light, #f0f2f5);

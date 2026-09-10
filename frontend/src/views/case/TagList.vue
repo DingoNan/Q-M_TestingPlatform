@@ -148,7 +148,7 @@
             min-width="150" 
             align="center"
             class-name="tag-column"
-          >
+           :show-overflow-tooltip="true">
             <template #default="scope">
               <div class="tag-cell">
                 <el-tag 

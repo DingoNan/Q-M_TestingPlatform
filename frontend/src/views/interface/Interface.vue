@@ -64,9 +64,9 @@
 				    </template>
 				</el-dialog>
 				<el-table :data="interfaces.results" style="width: 100%; height: calc(100vh - 282px);">
-					<el-table-column label="序号" width="70" type="index"/>
-					<el-table-column label="接口名称" prop="name" min-width="100"/>
-					<el-table-column label="请求方法" prop="method" min-width="100"/>
+					<el-table-column label="序号" width="70" type="index" :show-overflow-tooltip="true" />
+					<el-table-column label="接口名称" prop="name" min-width="100" :show-overflow-tooltip="true" />
+					<el-table-column label="请求方法" prop="method" min-width="100" :show-overflow-tooltip="true" />
 					<el-table-column label="接口地址" prop="url" min-width="100"/>
 					<el-table-column label="接口类型" prop="type" :formatter="formatterType" min-width="100"/>
 					<el-table-column label="创建时间" prop="create_time" sortable min-width="150"/>

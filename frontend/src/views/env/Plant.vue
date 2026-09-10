@@ -519,7 +519,7 @@
 			        min-width="250" 
 			        align="center"
 			        class-name="app-info-column"
-			      >
+			       :show-overflow-tooltip="true">
 			        <template #default="scope">
 			          <div  class="app-info-cell">
 						<div  class="empty-cell app-info-item">

@@ -242,7 +242,7 @@
             width="100" 
             align="center"
             class-name="run-column"
-          >
+           :show-overflow-tooltip="true">
             <template #default="scope">
               <el-tag 
                 :type="scope.row.is_all_run ? 'success' : 'info'"
@@ -260,7 +260,7 @@
             width="120" 
             align="center"
             class-name="plant-column"
-          />
+          :show-overflow-tooltip="true" />
           
           <el-table-column 
             label="所属环境" 

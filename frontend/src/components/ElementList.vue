@@ -688,7 +688,7 @@
     <el-dialog 
       v-model="editDialogVisible" 
       :title="title" 
-	  
+      width="700"
       class="elegant-dialog"
       :close-on-click-modal="false"
     >

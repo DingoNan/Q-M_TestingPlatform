@@ -206,7 +206,7 @@
                       </el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="count" label="关联用户数" width="80" align="center">
+                  <el-table-column prop="count" label="关联用户数" width="100" align="center">
                     <template #default="scope">
                       <el-tag 
                         size="small" 

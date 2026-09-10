@@ -429,7 +429,7 @@
                   type="index" 
                   align="center"
                   class-name="index-column"
-                >
+                 :show-overflow-tooltip="true">
                   <template #default="scope">
                     <div class="index-cell">
                       {{ scope.$index + 1 + (page_size_params.page - 1) * page_size_params.size }}
