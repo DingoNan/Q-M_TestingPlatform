@@ -1,0 +1,26 @@
+.git/
+.gitignore
+.venv/
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+logs/
+chroma_db/
+upload_files/
+release*.db
+*.log
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+
+# 桌面客户端与离线依赖包，服务端容器运行不需要
+BlackBagTest.exe
+packages.zip
+
+# 构建产物与编排文件，不需要进入镜像
+Dockerfile
+.dockerignore
+docker-compose*.yml

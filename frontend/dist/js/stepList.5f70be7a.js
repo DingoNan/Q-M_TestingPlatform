@@ -1,0 +1,2 @@
+"use strict";(self["webpackChunkblack_bag_web"]=self["webpackChunkblack_bag_web"]||[]).push([[8789],{67112:function(n,e,t){t.r(e),t.d(e,{default:function(){return i}});var u=t(54909);function c(n,e,t,c,r,a){const s=(0,u.g2)("StepList",!0);return(0,u.uX)(),(0,u.CE)("div",null,[(0,u.bF)(s)])}var r=t(33270),a={components:{StepList:r.A}},s=t(62860);const b=(0,s.A)(a,[["render",c]]);var i=b}}]);
+//# sourceMappingURL=stepList.5f70be7a.js.map

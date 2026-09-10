@@ -1,0 +1,62 @@
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import api from './api/index.js'
+import VxeUI from 'vxe-pc-ui'
+import 'vxe-pc-ui/lib/style.css'
+import VxeUITable from 'vxe-table'
+import 'vxe-table/lib/style.css'
+import VxeUIPluginRenderElement from '@vxe-ui/plugin-render-element'
+import '@vxe-ui/plugin-render-element/dist/style.css'
+import '@/assets/css/global-form.css'
+// const debounce = (fn, delay) => {
+//   let timer = null;
+//   return function () {
+//     let context = this;
+//     let args = arguments;
+//     clearTimeout(timer);
+//     timer = setTimeout(function () {
+//       fn.apply(context, args);
+//     }, delay);
+//   }
+// }
+
+// const _ResizeObserver = window.ResizeObserver;
+// window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
+//   constructor(callback) {
+//     callback = debounce(callback, 16);
+//     super(callback);
+//   }
+// }
+
+var app = createApp(App)
+
+app.config.globalProperties.$api = api
+
+app.use(ElementPlus, {
+  locale: zhCn,
+})
+
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+// VxeUI.use(VxeUIPluginRenderElement)
+// VxeUI.setConfig({
+//   table: {
+//     scrollX: {
+//       enabled: true,
+//       gt: 60
+//     },
+//     scrollY: {
+//       enabled: true,
+//       gt: 100
+//     }
+//   }
+// })
+app.use(store).use(router).use(VxeUI).use(VxeUITable).mount('#app')

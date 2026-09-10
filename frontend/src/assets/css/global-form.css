@@ -1,0 +1,1849 @@
+/* @/assets/css/global-form.css */
+
+/* 输入框样式 */
+.input .el-input__wrapper {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.input .el-input__wrapper:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.input .el-input__wrapper.is-focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ==================== */
+/* 全局日期输入框统一样式 */
+.date.el-range-editor.el-input__wrapper,
+.date .el-range-editor.el-input__wrapper,
+.el-date-picker.date .el-range-editor.el-input__wrapper {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 12px; /* 减小水平内边距 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  height: 40px; /* 明确设置高度，通常el-input默认高度为40px */
+  box-sizing: border-box; /* 确保边框和内边距包含在高度内 */
+}
+
+/* 鼠标悬浮状态 */
+.date.el-range-editor.el-input__wrapper:hover,
+.date .el-range-editor.el-input__wrapper:hover,
+.el-date-picker.date .el-range-editor.el-input__wrapper:hover {
+  border: 2px solid #6366f1 !important;
+}
+
+
+/* 选择框样式 */
+.select .el-select__wrapper {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.select .el-select__wrapper:hover {
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+}
+
+.select .el-select__wrapper.is-focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.select .el-select__wrapper.is-focus .el-select__caret {
+  color: #2563eb;
+}
+
+/* el-tree-select 使用 el-input__wrapper，需要同步样式 */
+.select .el-input__wrapper {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.select .el-input__wrapper:hover {
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+}
+
+.select .el-input__wrapper.is-focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+/* 级联选择框样式 */
+.cascader .el-input__wrapper {
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.cascader .el-input__wrapper:hover {
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+}
+
+/* 下拉框样式 */
+.select-dropdown-rounded {
+  /* 下拉框整体圆角 */
+  border-radius: 10px !important;
+  /* 隐藏超出圆角的部分 */
+  overflow: hidden !important;
+  /* 下拉框与输入框的间距 */
+  margin-top: 0px !important;
+  /* 边框颜色 */
+  border: 1px solid #e2e8f0 !important;
+  /* 阴影效果 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 选项样式 - 增加高度和圆角 */
+.select-dropdown-rounded .el-select-dropdown__item {
+  /* 增加选项高度 */
+  height: 44px !important;
+  /* 垂直居中文字 */
+  line-height: 44px !important;
+  /* 每个选项的圆角 */
+  border-radius: 8px !important;
+  /* 选项之间的间距 */
+  margin: 4px 8px !important;
+  /* 内边距 */
+  padding: 0 16px !important;
+  /* 字体大小 */
+  font-size: 14px !important;
+  /* 过渡效果 */
+  transition: all 0.2s ease !important;
+  /* 文字颜色 */
+  color: #374151 !important;
+}
+
+/* 悬停状态 */
+.select-dropdown-rounded .el-select-dropdown__item:hover {
+  background-color: #f8fafc !important;
+  color: #6366f1 !important;
+  /* 轻微移动效果 */
+  transform: translateX(3px);
+  /* 悬停阴影 */
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* 选中状态 */
+.select-dropdown-rounded .el-select-dropdown__item.selected {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  /* 内边框效果 */
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* 禁用状态 */
+.select-dropdown-rounded .el-select-dropdown__item.is-disabled {
+  color: #9ca3af !important;
+  background-color: #f9fafb !important;
+  cursor: not-allowed !important;
+}
+
+/* 下拉框滚动条样式 */
+.select-dropdown-rounded .el-select-dropdown__wrap {
+  max-height: 280px !important;
+  /* 滚动条样式 */
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 3px !important;
+}
+
+.select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 3px !important;
+}
+
+.select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* =========================================== */
+/* el-dialog 弹窗全局样式 - 圆角 */
+/* =========================================== */
+
+/* 基础弹窗样式 - 所有弹窗都会有圆角 */
+.el-dialog {
+  border-radius: 12px !important;  /* 弹窗整体圆角 */
+  overflow: hidden !important;      /* 防止内容溢出 */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;  /* 更柔和的阴影 */
+  border: 1px solid #e2e8f0 !important;  /* 添加边框 */
+}
+
+/* 弹窗头部样式 */
+.el-dialog__header {
+  padding: 20px 24px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  margin-right: 0 !important;  /* 覆盖默认右边距 */
+  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
+  border-radius: 12px 12px 0 0 !important;  /* 顶部圆角 */
+}
+
+.el-dialog__title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* 关闭按钮样式 */
+.el-dialog__headerbtn {
+  position: absolute !important;
+  top: 24px !important;
+  right: 24px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;  /* 关闭按钮圆角 */
+  background-color: #f1f5f9 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.el-dialog__headerbtn:hover {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  transform: scale(1.05) !important;
+}
+
+.el-dialog__headerbtn:hover .el-dialog__close {
+  color: white !important;
+}
+
+.el-dialog__close {
+  color: #64748b !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  transition: color 0.2s ease !important;
+}
+
+/* 弹窗内容区域 */
+.el-dialog__body {
+  padding: 24px !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  max-height: 80vh !important;  /* 限制最大高度 */
+  overflow-y: auto !important;  /* 内容过多时滚动 */
+}
+
+/* 弹窗内容区域滚动条样式 */
+.el-dialog__body::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.el-dialog__body::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 3px !important;
+}
+
+.el-dialog__body::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 3px !important;
+}
+
+.el-dialog__body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* 弹窗底部样式 */
+.el-dialog__footer {
+  padding: 16px 24px 24px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  border-radius: 0 0 12px 12px !important;  /* 底部圆角 */
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+}
+
+/* 弹窗底部按钮样式 */
+.el-dialog__footer .el-button {
+  border-radius: 8px !important;  /* 按钮圆角 */
+  padding: 10px 20px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  min-width: 80px !important;  /* 最小宽度 */
+}
+
+/* 主要按钮样式 */
+.el-dialog__footer .el-button--primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+}
+
+.el-dialog__footer .el-button--primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* 默认按钮样式 */
+.el-dialog__footer .el-button--default {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.el-dialog__footer .el-button--default:hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+/* =========================================== */
+/* 弹窗尺寸变体 */
+/* =========================================== */
+
+/* 小弹窗 */
+.el-dialog.small-dialog {
+  width: 400px !important;
+}
+
+/* 中弹窗（默认） */
+.el-dialog.medium-dialog {
+  width: 600px !important;
+}
+
+/* 大弹窗 */
+.el-dialog.large-dialog {
+  width: 800px !important;
+}
+
+/* 全屏弹窗 */
+.el-dialog.fullscreen-dialog {
+  width: 90vw !important;
+  height: 90vh !important;
+  border-radius: 16px !important;
+}
+
+/* =========================================== */
+/* 弹窗动画效果 */
+/* =========================================== */
+
+/* 弹窗显示动画 */
+.el-dialog {
+  animation: dialogFadeIn 0.3s ease !important;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 弹窗遮罩样式 */
+.el-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;  /* 毛玻璃效果 */
+}
+
+.el-overlay .el-overlay-dialog-bg {
+  background-color: transparent !important;
+}
+
+/* =========================================== */
+/* 响应式调整 */
+/* =========================================== */
+
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 90% !important;
+    margin: 20px auto !important;
+    border-radius: 16px !important;
+  }
+  
+  .el-dialog__header,
+  .el-dialog__body,
+  .el-dialog__footer {
+    padding: 16px !important;
+  }
+  
+  .el-dialog__footer {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .el-dialog__footer .el-button {
+    width: 100% !important;
+  }
+}
+
+/* =========================================== */
+/* 特殊弹窗样式（通过 class 自定义） */
+/* =========================================== */
+
+/* 警告类型弹窗 */
+.el-dialog.warning-dialog {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.el-dialog.warning-dialog .el-dialog__header {
+  background: linear-gradient(to right, #fef3c7, #ffffff) !important;
+}
+
+/* 错误类型弹窗 */
+.el-dialog.error-dialog {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.el-dialog.error-dialog .el-dialog__header {
+  background: linear-gradient(to right, #fee2e2, #ffffff) !important;
+}
+
+/* 成功类型弹窗 */
+.el-dialog.success-dialog {
+  border-left: 4px solid #10b981 !important;
+}
+
+.el-dialog.success-dialog .el-dialog__header {
+  background: linear-gradient(to right, #d1fae5, #ffffff) !important;
+}
+
+/* 信息类型弹窗 */
+.el-dialog.info-dialog {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.el-dialog.info-dialog .el-dialog__header {
+  background: linear-gradient(to right, #dbeafe, #ffffff) !important;
+}
+
+/* =========================================== */
+/* 弹窗标题图标 */
+/* =========================================== */
+
+/* 可以在标题前添加图标 */
+.el-dialog__title::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 4px !important;
+  height: 18px !important;
+  background: linear-gradient(to bottom, #6366f1, #8b5cf6) !important;
+  border-radius: 2px !important;
+  margin-right: 8px !important;
+}
+
+/* 不同类型的标题图标颜色 */
+.warning-dialog .el-dialog__title::before {
+  background: linear-gradient(to bottom, #f59e0b, #fbbf24) !important;
+}
+
+.error-dialog .el-dialog__title::before {
+  background: linear-gradient(to bottom, #ef4444, #f87171) !important;
+}
+
+.success-dialog .el-dialog__title::before {
+  background: linear-gradient(to bottom, #10b981, #34d399) !important;
+}
+
+.info-dialog .el-dialog__title::before {
+  background: linear-gradient(to bottom, #3b82f6, #60a5fa) !important;
+}
+
+/* =========================================== */
+/* 无边框弹窗（简约风格） */
+/* =========================================== */
+
+.el-dialog.borderless-dialog {
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.borderless-dialog .el-dialog__header,
+.borderless-dialog .el-dialog__footer {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* =========================================== */
+/* 居中弹窗样式 */
+/* =========================================== */
+
+.el-dialog.center-dialog .el-dialog__header,
+.el-dialog.center-dialog .el-dialog__footer {
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.center-dialog .el-dialog__footer {
+  justify-content: center !important;
+}
+
+/* =========================================== */
+/* 无标题弹窗 */
+/* =========================================== */
+
+.el-dialog.no-header-dialog .el-dialog__header {
+  display: none !important;
+}
+
+.el-dialog.no-header-dialog .el-dialog__body {
+  border-radius: 12px 12px 0 0 !important;
+  padding-top: 32px !important;
+}
+
+
+
+
+/* =========================================== */
+/* el-input textarea 文本域全局样式 */
+/* =========================================== */
+
+/* 文本域外层容器 */
+/* 强力版 - 完全覆盖 Element Plus 默认样式 */
+.text.el-textarea {
+  /* 重置所有 Element Plus 默认变量 */
+  --el-input-border-color: transparent !important;
+  --el-input-border: none !important;
+  --el-input-hover-border-color: transparent !important;
+  --el-input-focus-border-color: transparent !important;
+  --el-input-transition-border: none !important;
+  
+  /* 我们的自定义样式 */
+  border: 2px solid #d1d5db !important;
+  border-radius: 12px !important;
+  background: white !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s ease !important;
+  overflow: hidden !important;
+}
+
+/* 重置 Element Plus 内部样式 */
+.text.el-textarea .el-textarea__inner {
+  /* 移除所有可能的内置边框 */
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+  
+  /* 其他样式 */
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #374151 !important;
+  resize: vertical !important;
+  min-height: 50px !important;
+}
+
+/* 检查并移除可能的伪元素边框 */
+.text.el-textarea::before,
+.text.el-textarea::after,
+.text.el-textarea .el-textarea__inner::before,
+.text.el-textarea .el-textarea__inner::after {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 悬停效果 */
+.text.el-textarea:hover {
+  border-color: #6366f1 !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* 聚焦效果 */
+.text.el-textarea.is-focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25) !important;
+}
+
+
+/* =========================================== */
+/* Element Plus 2.4.1 - el-cascader 全局样式优化 */
+/* =========================================== */
+
+/* 1. 级联选择器输入框样式 */
+.el-cascader {
+  --el-cascader-border-radius: 10px !important;
+  --el-cascader-border-color: #e2e8f0 !important;
+  --el-cascader-hover-border-color: #cbd5e1 !important;
+  --el-cascader-focus-border-color: #6366f1 !important;
+}
+
+/* 级联选择器输入框 */
+.el-cascader .el-input .el-input__wrapper {
+  border-radius: 10px !important;
+  border: 2px solid #e2e8f0 !important;
+  background: white !important;
+  padding: 1px 15px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-cascader .el-input .el-input__wrapper:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.el-cascader .el-input .el-input__wrapper.is-focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* 2. 级联选择器下拉框样式 */
+.el-cascader__dropdown {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  margin-top: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 下拉框面板样式 */
+.el-cascader__dropdown .el-cascader-panel {
+  border-radius: 10px !important;
+}
+
+/* 级联菜单列样式 */
+.el-cascader__dropdown .el-cascader-menu {
+  padding: 8px 0 !important;
+  min-width: 160px !important;
+}
+
+.el-cascader__dropdown .el-cascader-menu:not(:last-child) {
+  border-right: 1px solid #f1f5f9 !important;
+}
+
+/* 3. 级联菜单项样式 */
+.el-cascader__dropdown .el-cascader-node {
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 20px !important;
+  margin: 2px 8px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  color: #374151 !important;
+  font-size: 14px !important;
+}
+
+.el-cascader__dropdown .el-cascader-node:hover {
+  background-color: #f8fafc !important;
+  color: #6366f1 !important;
+  transform: translateX(2px);
+}
+
+.el-cascader__dropdown .el-cascader-node.is-active {
+  background-color: #eff6ff !important;
+  color: #6366f1 !important;
+  font-weight: 500 !important;
+}
+
+.el-cascader__dropdown .el-cascader-node.is-selectable.in-active-path {
+  color: #6366f1 !important;
+}
+
+/* 4. 级联菜单项前的复选框样式 */
+.el-cascader__dropdown .el-cascader-node .el-checkbox {
+  margin-right: 8px !important;
+}
+
+.el-cascader__dropdown .el-cascader-node .el-checkbox__inner {
+  border-radius: 4px !important;
+  border-color: #cbd5e1 !important;
+}
+
+.el-cascader__dropdown .el-cascader-node .el-checkbox__inner:hover {
+  border-color: #6366f1 !important;
+}
+
+/* 5. 级联选择器标签样式（多选时） */
+.el-cascader .el-cascader__tags .el-tag {
+  margin: 2px 6px 2px 0 !important;
+  border-radius: 6px !important;
+  background-color: #f3f4f6 !important;
+  border: 1px solid #d1d5db !important;
+  height: 28px !important;
+  line-height: 26px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.el-cascader .el-cascader__tags .el-tag:hover {
+  background-color: #e5e7eb !important;
+  border-color: #9ca3af !important;
+}
+
+.el-cascader .el-cascader__tags .el-tag .el-tag__close {
+  color: #6b7280 !important;
+  margin-left: 4px !important;
+}
+
+.el-cascader .el-cascader__tags .el-tag .el-tag__close:hover {
+  color: #374151 !important;
+  background-color: #d1d5db !important;
+}
+
+/* 6. 级联选择器搜索框样式 */
+.el-cascader__dropdown .el-cascader__search-input {
+  padding: 10px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.el-cascader__dropdown .el-cascader__search-input .el-input__wrapper {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 4px 12px !important;
+}
+
+.el-cascader__dropdown .el-cascader__search-input .el-input__wrapper:hover {
+  border-color: #cbd5e1 !important;
+}
+
+.el-cascader__dropdown .el-cascader__search-input .el-input__wrapper.is-focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* 7. 级联选择器空状态样式 */
+.el-cascader__dropdown .el-cascader__empty {
+  padding: 24px 16px !important;
+  color: #9ca3af !important;
+  font-size: 14px !important;
+}
+
+/* 8. 级联选择器滚动条样式 */
+.el-cascader__dropdown .el-scrollbar__wrap {
+  border-radius: 10px !important;
+}
+
+.el-cascader__dropdown .el-scrollbar__thumb {
+  background-color: #cbd5e1 !important;
+}
+
+.el-cascader__dropdown .el-scrollbar__thumb:hover {
+  background-color: #94a3b8 !important;
+}
+
+/* 9. 级联选择器尺寸变体 */
+.el-cascader.el-input--large .el-input .el-input__wrapper {
+  padding: 7px 15px !important;
+}
+
+.el-cascader.el-input--small .el-input .el-input__wrapper {
+  padding: 1px 7px !important;
+}
+
+/* 10. 级联选择器禁用状态 */
+.el-cascader.is-disabled .el-input .el-input__wrapper {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+}
+
+.el-cascader.is-disabled .el-input .el-input__wrapper:hover {
+  border-color: #e5e7eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 11. 级联选择器错误状态 */
+.el-cascader.is-error .el-input .el-input__wrapper {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.el-cascader.is-error .el-input .el-input__wrapper:hover {
+  border-color: #dc2626 !important;
+}
+
+.el-cascader.is-error .el-input .el-input__wrapper.is-focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* 12. 响应式调整 */
+@media (max-width: 768px) {
+  .el-cascader__dropdown {
+    border-radius: 8px !important;
+    max-width: 90vw !important;
+  }
+  
+  .el-cascader__dropdown .el-cascader-menu {
+    min-width: 140px !important;
+  }
+  
+  .el-cascader__dropdown .el-cascader-node {
+    height: 36px !important;
+    line-height: 36px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* 13. 级联选择器箭头图标样式 */
+.el-cascader .el-input .el-input__suffix .el-icon {
+  color: #6b7280 !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-cascader .el-input .el-input__wrapper:hover .el-icon {
+  color: #6366f1 !important;
+}
+
+.el-cascader .el-input .el-input__wrapper.is-focus .el-icon {
+  color: #6366f1 !important;
+}
+
+/* 14. 级联选择器多选时的计数器 */
+.el-cascader .el-cascader__collapse-tags {
+  gap: 4px !important;
+}
+
+.el-cascader .el-cascader__collapse-tags .el-tag {
+  max-width: 100px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 15. 级联选择器自定义下拉框类名支持 */
+.el-cascader.custom-cascader-dropdown .el-cascader__dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+.custom-cascader-dropdown .el-cascader__dropdown .el-cascader-node {
+  border-radius: 10px !important;
+  margin: 3px 10px !important;
+}
+
+
+/* 全局弹窗样式 - 圆角优化 */
+/* 确认弹窗样式 */
+.confirm-dialog {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+}
+
+/* 弹窗头部 */
+.confirm-dialog .el-message-box__header {
+  padding: 20px 24px 10px !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+
+/* =========================================== */
+/* el-tree-select 树形选择器下拉框圆角阴影修复 */
+/* =========================================== */
+
+/* 修复圆角阴影问题 - 使用正确的组件选择器 */
+.select-tree-dropdown-rounded.el-tree-select__popper {
+  /* 只修改圆角，保持其他样式不变 */
+  border-radius: 20px !important;
+  /* 使用更平滑的阴影避免圆角处出现三角形 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 确保树节点也有圆角 */
+.select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content {
+  border-radius: 8px !important;
+}
+
+/* 树形选择器树容器样式 */
+.select-tree-dropdown-rounded .el-tree {
+  /* 树容器内边距 */
+  padding: 8px !important;
+  /* 背景色 */
+  background: transparent !important;
+}
+
+/* 树节点样式 - 增加高度和圆角 */
+.select-tree-dropdown-rounded .el-tree-node {
+  /* 节点间距 */
+  margin: 2px 0 !important;
+}
+
+/* 树节点内容样式 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  /* 增加选项高度 */
+  height: 44px !important;
+  /* 垂直居中文字 */
+  line-height: 44px !important;
+  /* 每个选项的圆角 */
+  border-radius: 8px !important;
+  /* 内边距 */
+  padding: 0 16px !important;
+  /* 字体大小 */
+  font-size: 14px !important;
+  /* 过渡效果 */
+  transition: all 0.2s ease !important;
+  /* 文字颜色 */
+  color: #374151 !important;
+  /* 确保背景色覆盖整个节点 */
+  background: transparent !important;
+}
+
+/* 树节点悬停状态 - 强制统一与select组件颜色 */
+.select-tree-dropdown-rounded .el-tree-node__content:hover {
+  background-color: #f8fafc !important;
+  /* 悬停阴影 */
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* 强制覆盖所有可能的文字颜色 - 使用最具体的选择器 */
+.select-tree-dropdown-rounded .el-tree-node__content:hover,
+.select-tree-dropdown-rounded .el-tree-node__content:hover *,
+.select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label,
+.select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label *,
+.select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label span,
+.select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label span * {
+  color: #6366f1 !important;
+}
+
+/* 强制覆盖选中状态的所有文字颜色 - 使用最具体的选择器 */
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label *,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label span,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label span *,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label *,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label span,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label span * {
+  color: #6366f1 !important;
+}
+
+/* 树节点选中状态 - 覆盖所有可能的选中类名 */
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  /* 内边框效果 */
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* 强制覆盖所有可能的选中状态 - 使用最直接的方法 */
+
+/* 方法1: 直接覆盖所有el-tree-node__content元素的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* 方法2: 强制覆盖所有子元素的颜色 */
+.select-tree-dropdown-rounded .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded .el-tree-node__content .el-tree-node__label * {
+  color: #6366f1 !important;
+}
+
+/* 方法3: 针对el-tree-select组件的特定结构 */
+.select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content .el-tree-node__label * {
+  color: #6366f1 !important;
+}
+
+/* 方法4: 使用属性选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded [class*="current"] .el-tree-node__content,
+.select-tree-dropdown-rounded [class*="selected"] .el-tree-node__content,
+.select-tree-dropdown-rounded [class*="checked"] .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded [class*="current"] .el-tree-node__content *,
+.select-tree-dropdown-rounded [class*="selected"] .el-tree-node__content *,
+.select-tree-dropdown-rounded [class*="checked"] .el-tree-node__content *,
+.select-tree-dropdown-rounded [class*="current"] .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded [class*="selected"] .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded [class*="checked"] .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法5: 强制覆盖所有可能的选中状态 - 使用最高优先级 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法6: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法7: 强制覆盖所有可能的颜色属性 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法8: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法9: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法10: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法11: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法12: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法13: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法14: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法15: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法16: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法17: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法18: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法19: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法20: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法21: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法22: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法23: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 方法24: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #6366f1 !important;
+  background-color: #eef2ff !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 方法25: 使用内联样式属性选择器覆盖 */
+.select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
+  color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
+  background-color: #eef2ff !important;
+}
+
+/* 方法26: 使用最高优先级的选择器覆盖所有可能的选中状态 */
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content *,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
+.select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+}
+
+/* 修复：只针对选中和悬浮状态应用主题色 */
+
+/* 默认状态 - 恢复默认颜色 */
+.select-tree-dropdown-rounded .el-tree-node__content {
+  color: #374151 !important;
+  background-color: transparent !important;
+  font-weight: normal !important;
+  box-shadow: none !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content * {
+  color: #374151 !important;
+}
+
+/* 悬浮状态 - 应用主题色 */
+.select-tree-dropdown-rounded .el-tree-node__content:hover {
+  background-color: #f8fafc !important;
+  color: #6366f1 !important;
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content:hover * {
+  color: #6366f1 !important;
+}
+
+/* 选中状态 - 应用主题色 */
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content,
+.select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content {
+  background-color: #eef2ff !important;
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content *,
+.select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content * {
+  color: #6366f1 !important;
+}
+
+/* 树节点选中状态悬停 */
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content:hover {
+  background-color: #e0e7ff !important;
+}
+
+/* 树节点禁用状态 */
+.select-tree-dropdown-rounded .el-tree-node.is-disabled > .el-tree-node__content {
+  color: #9ca3af !important;
+  background-color: #f9fafb !important;
+  cursor: not-allowed !important;
+}
+
+/* 树形选择器下拉框滚动条样式 */
+.select-tree-dropdown-rounded .el-select-dropdown__wrap {
+  max-height: 280px !important;
+  /* 滚动条样式 */
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 3px !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 3px !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* 树形选择器搜索框样式 */
+.select-tree-dropdown-rounded .el-select-dropdown .el-input {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 4px 12px !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper:hover {
+  border-color: #cbd5e1 !important;
+}
+
+.select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper.is-focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* 树形选择器空状态样式 */
+.select-tree-dropdown-rounded .el-select-dropdown .el-select-dropdown__empty {
+  padding: 24px 16px !important;
+  color: #9ca3af !important;
+  font-size: 14px !important;
+}
+
+/* 树形选择器树节点展开/收起图标 */
+.select-tree-dropdown-rounded .el-tree-node__expand-icon {
+  color: #6b7280 !important;
+  transition: all 0.3s ease !important;
+  font-size: 16px !important;
+  margin-right: 8px !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__expand-icon {
+  color: #6366f1 !important;
+}
+
+/* 树形选择器多选样式 */
+.select-tree-dropdown-rounded .el-tree-node__content .el-checkbox {
+  margin-right: 8px !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content .el-checkbox .el-checkbox__inner {
+  border-radius: 4px !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content .el-checkbox .el-checkbox__inner:hover {
+  border-color: #6366f1 !important;
+}
+
+.select-tree-dropdown-rounded .el-tree-node__content .el-checkbox.is-checked .el-checkbox__inner {
+  background-color: #6366f1 !important;
+  border-color: #6366f1 !important;
+}
+
+/* 树节点标签样式 */
+.select-tree-dropdown-rounded .el-tree-node__label {
+  font-size: 14px !important;
+  color: inherit !important;
+}
+
+/* 树节点选中时的标签样式 */
+.select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label {
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .select-tree-dropdown-rounded .el-select-dropdown {
+    border-radius: 10px !important;
+    max-width: 90vw !important;
+  }
+  
+  .select-tree-dropdown-rounded .el-select-dropdown__item {
+    height: 40px !important;
+    line-height: 40px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+  }
+}
+
+.confirm-dialog .el-message-box__title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirm-dialog .el-message-box__title::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-radius: 2px;
+}
+
+/* 弹窗内容 */
+.confirm-dialog .el-message-box__content {
+  padding: 24px !important;
+  background: white;
+}
+
+.confirm-dialog .el-message-box__message {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #475569 !important;
+  padding: 0 !important;
+}
+
+.confirm-dialog .el-message-box__message p {
+  margin: 0 !important;
+}
+
+/* 弹窗底部样式 - 与对话框风格统一 */
+.confirm-dialog .el-message-box__btns {
+  padding: 16px 24px 24px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  border-radius: 0 0 16px 16px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+}
+
+/* 弹窗底部按钮样式 - 统一设计 */
+.confirm-dialog .el-button {
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  min-width: 80px !important;
+  height: auto !important;
+  min-height: 40px !important;
+  border: 1px solid transparent !important;
+}
+
+/* 默认按钮样式 */
+.confirm-dialog .el-button--default {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.confirm-dialog .el-button--default:hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 主要按钮样式 - 优化为一致的紫色渐变 */
+.confirm-dialog .el-button--primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+  color: white !important;
+}
+
+.confirm-dialog .el-button--primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* 危险按钮样式 - 使用相似的渐变和阴影效果 */
+.confirm-dialog .el-button--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
+  color: white !important;
+}
+
+.confirm-dialog .el-button--danger:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 图标样式 */
+.confirm-dialog .el-message-box__status {
+  font-size: 28px !important;
+  position: relative;
+  top: 4px;
+  margin-right: 12px !important;
+}
+
+/* 警告图标 */
+.confirm-dialog .el-message-box__status.el-icon-warning {
+  color: #f59e0b !important;
+}
+
+/* 成功图标 */
+.confirm-dialog .el-message-box__status.el-icon-success {
+  color: #10b981 !important;
+}
+
+/* 错误图标 */
+.confirm-dialog .el-message-box__status.el-icon-error {
+  color: #ef4444 !important;
+}
+
+/* 信息图标 */
+.confirm-dialog .el-message-box__status.el-icon-info {
+  color: #3b82f6 !important;
+}
+
+/* 关闭按钮 */
+.confirm-dialog .el-message-box__headerbtn {
+  top: 20px !important;
+  right: 24px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.confirm-dialog .el-message-box__headerbtn:hover {
+  background: #e2e8f0 !important;
+  transform: rotate(90deg);
+}
+
+.confirm-dialog .el-message-box__headerbtn .el-message-box__close {
+  color: #64748b !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+/* 不同弹窗类型的特殊样式 */
+/* 警告类型弹窗 */
+.confirm-dialog.el-message-box--warning .el-message-box__header {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+}
+
+.confirm-dialog.el-message-box--warning .el-message-box__title {
+  color: #92400e !important;
+}
+
+.confirm-dialog.el-message-box--warning .el-message-box__title::before {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+/* 错误类型弹窗 */
+.confirm-dialog.el-message-box--error .el-message-box__header {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+}
+
+.confirm-dialog.el-message-box--error .el-message-box__title {
+  color: #991b1b !important;
+}
+
+.confirm-dialog.el-message-box--error .el-message-box__title::before {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+/* 成功类型弹窗 */
+.confirm-dialog.el-message-box--success .el-message-box__header {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+}
+
+.confirm-dialog.el-message-box--success .el-message-box__title {
+  color: #065f46 !important;
+}
+
+.confirm-dialog.el-message-box--success .el-message-box__title::before {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+/* 信息类型弹窗 */
+.confirm-dialog.el-message-box--info .el-message-box__header {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+}
+
+.confirm-dialog.el-message-box--info .el-message-box__title {
+  color: #1e40af !important;
+}
+
+.confirm-dialog.el-message-box--info .el-message-box__title::before {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .confirm-dialog {
+    width: 90% !important;
+    max-width: 400px !important;
+    margin: 0 auto !important;
+  }
+  
+  .confirm-dialog .el-message-box__header,
+  .confirm-dialog .el-message-box__content,
+  .confirm-dialog .el-message-box__btns {
+    padding: 16px !important;
+  }
+  
+  .confirm-dialog .el-message-box__btns {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+  }
+  
+  .confirm-dialog .el-button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* 弹窗动画效果 */
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-dialog {
+  animation: dialogFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 遮罩层样式 */
+.el-overlay {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* 对话框遮罩动画 */
+.el-overlay .el-overlay-message-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 对于没有使用 customClass 的弹窗，也应用统一的设计语言 */
+.el-message-box {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: none !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.el-message-box__header {
+  padding: 20px 24px 10px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.el-message-box__content {
+  padding: 24px !important;
+}
+
+.el-message-box__btns {
+  padding: 16px 24px 24px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+}
+
+.el-message-box__btns .el-button {
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  min-width: 80px !important;
+}
+
+.el-message-box__btns .el-button--primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+  color: white !important;
+}
+
+.el-message-box__btns .el-button--primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+}
+
+.el-message-box__btns .el-button--default {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.el-message-box__btns .el-button--default:hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.el-message-box__headerbtn {
+  top: 20px !important;
+  right: 20px !important;
+}
+
+/* =========================================== */
+/* el-popover 弹窗全局样式 - 圆角 */
+/* =========================================== */
+
+/* 基础弹窗样式 - 所有popover都会有圆角 */
+.el-popover {
+  border-radius: 16px !important;  /* 弹窗整体圆角 */
+  overflow: hidden !important;      /* 防止内容溢出 */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;  /* 更柔和的阴影 */
+  border: 1px solid #e2e8f0 !important;  /* 添加边框 */
+  padding: 0 !important;  /* 重置内边距 */
+}
+
+/* 弹窗内容区域 */
+.el-popover__content {
+  padding: 0 !important;  /* 重置内边距 */
+  border-radius: inherit !important;  /* 继承父级圆角 */
+}
+
+/* 自定义弹窗头部样式 - 类似el-dialog */
+.step-log-popover-content {
+  padding: 0 !important;
+}
+
+.step-log-title {
+  padding: 20px 24px 16px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
+  border-radius: 16px 16px 0 0 !important;  /* 顶部圆角 */
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+
+/* 弹窗内容区域样式 */
+.step-log-popover-content > div:not(.step-log-title) {
+  padding: 24px !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* 隐藏箭头 */
+.el-popper__arrow {
+  display: none !important;
+}

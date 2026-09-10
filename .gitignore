@@ -1,0 +1,18 @@
+# ===== BlackBagTest 根仓库 =====
+
+# 敏感配置（.env.example 才入库）
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# 构建缓存（Docker 基础镜像构建用，几百MB不宜入库）
+backend/.buildcache/
