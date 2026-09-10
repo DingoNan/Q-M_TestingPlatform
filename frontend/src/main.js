@@ -16,6 +16,7 @@ import VxeUIPluginRenderElement from '@vxe-ui/plugin-render-element'
 import '@vxe-ui/plugin-render-element/dist/style.css'
 import '@/assets/css/theme.css'
 import '@/assets/css/global-form.css'
+import '@/assets/css/global-table.css'
 // const debounce = (fn, delay) => {
 //   let timer = null;
 //   return function () {

@@ -1,0 +1,33 @@
+/* ===== 全站表格横向溢出修复（2026-09-10 验收发现）=====
+ * 现象：31 个列表路由中 21 个 el-table 内容宽 > 容器宽（最严重 +1155px），
+ *       而 el-scrollbar 自定义横向滚动条被 display:none（resize 判定失效），
+ *       原生滚动条又被隐藏 —— 用户既看不到末尾列也无法滚动。
+ * 修复：恢复 wrap 的原生横向滚动条（不依赖 el-scrollbar 的 JS 计算），
+ *       隐藏失效的自定义 bar。深浅主题均适配。
+ */
+.el-table .el-scrollbar__wrap {
+  overflow-x: auto !important;
+  scrollbar-width: thin;                       /* Firefox */
+  scrollbar-color: var(--el-border-color-darker, #a8abb2) transparent;
+}
+.el-table .el-scrollbar__wrap::-webkit-scrollbar {
+  height: 10px;                                /* Chrome / Edge */
+}
+.el-table .el-scrollbar__wrap::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light, #f0f2f5);
+  border-radius: 5px;
+}
+.el-table .el-scrollbar__wrap::-webkit-scrollbar-thumb {
+  background: var(--el-border-color-darker, #a8abb2);
+  border-radius: 5px;
+}
+.el-table .el-scrollbar__wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--el-text-color-disabled, #909399);
+}
+html.dark .el-table .el-scrollbar__wrap::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light, #1d1e1f);
+}
+/* 自定义 bar 在部分场景判定失效，统一改用原生滚动，隐藏之 */
+.el-table .el-scrollbar__bar.is-horizontal {
+  display: none !important;
+}
