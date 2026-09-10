@@ -46,3 +46,9 @@ backend/.buildcache/
 *.jtl
 /allure-results/
 /.jmeter/
+
+# ---------- 打包 / 发布产物（体积大，禁止入库） ----------
+# BlackBagTest.exe(59MB) 与 packages.zip(27MB) 曾误入库，已从 git 历史中剔除，
+# 此处补规则防止再次被 add 进来（磁盘上的本地文件不受影响）。
+*.exe
+backend/packages.zip
