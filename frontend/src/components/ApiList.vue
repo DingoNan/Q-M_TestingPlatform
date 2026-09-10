@@ -1994,6 +1994,13 @@ export default{
       }
     },
     chooseApiId(apiData){
+      // 接口状态守卫：废弃接口不允许被用例引用
+      if (Number(apiData.status) === 10) {
+        this.$message.error(
+          `接口「${apiData.name}」已废弃，不允许被用例引用，请更换为有效接口`
+        )
+        return
+      }
       this.$emit('update:chooseApiVisible', false)
       this.$emit('setApiData', apiData)
     },

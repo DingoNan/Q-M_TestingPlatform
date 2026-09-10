@@ -2,6 +2,16 @@
 	<!-- 修改密码对话框 -->
 	<el-dialog v-model="modifyPwdVisible" title="修改密码" width="500" append-to-body :show-close='true' class="password-dialog">
 	    <el-form :model="userSave" label-position='top' :rules="passwordRules" ref="passwordFormRef">
+			<el-form-item label="原密码" prop="old_password" label-width="80px">
+				<el-input
+					v-model="userSave.old_password"
+					autocomplete="off"
+					placeholder="请输入当前使用的密码"
+					type="password"
+					show-password
+					class="password-input"
+				/>
+			</el-form-item>
 			<el-form-item label="新密码" prop="password" label-width="80px">
 				<el-input 
 					v-model="userSave.password" 
@@ -493,10 +503,14 @@ export default {
 		modifyPwdVisible: false,
 		userSave: {
 			id: '',
+			old_password: '',
 			password: '',
 			password_confirm: ''
 		},
 		passwordRules: {
+			old_password: [
+				{ required: true, message: '请输入原密码', trigger: 'blur' }
+			],
 			password: [
 				{ required: true, validator: validatePassword, trigger: 'blur' }
 			],
@@ -682,11 +696,20 @@ export default {
 				});
 				this.modifyPwdVisible = false;
 				// 清空密码字段
+				this.userSave.old_password = '';
 				this.userSave.password = '';
 				this.userSave.password_confirm = '';
 			}
 		} catch (error) {
-			if (error.errors) {
+			// 后端会返回 old_password / password 等字段级错误，提示给用户
+			const resp = error?.response || error?.rawResponse
+			const data = resp?.data ?? error?.response?.data
+			if (data && typeof data === 'object') {
+				const first = Object.values(data).flat?.()?.[0] ?? data.detail ?? data.msg
+				if (first) {
+					ElMessage({ message: String(first), type: 'error' })
+				}
+			} else if (error.errors) {
 				console.error('请正确填写密码信息:', error);
 			} else {
 				console.error('修改密码失败:', error);

@@ -22,6 +22,7 @@ from apps.interfaces.models import Api, ApiMock
 from apps.envs.models import ServiceModule, Service
 from apps.users.models import User
 from apps.interfaces.serializers import ApiSerializers, ApiMockSerializers
+from apps.interfaces.api_guard import count_api_reference
 from rest_framework.permissions import IsAuthenticated
 from apps.interfaces.filters import ApiFilter, ApiMockFilter
 from apps.messages.models import Message
@@ -93,6 +94,29 @@ class ApiViewSet(BaseModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        """接口状态守卫：置为「废弃」时回传仍被引用的用例数量，提醒责任人处理存量引用"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        api_obj = serializer.save()
+
+        payload = serializer.data
+        try:
+            new_status = int(request.data.get('status'))
+        except (TypeError, ValueError):
+            new_status = None
+        if new_status is not None and new_status == Api.ApiStatus.StatusTen:
+            ref_count = count_api_reference(api_obj.id)
+            payload['deprecated_reference_count'] = ref_count
+            if ref_count:
+                payload['deprecated_warning'] = (
+                    f'该接口仍被 {ref_count} 个用例引用，置为「废弃」后这些用例执行时将被直接拦截，'
+                    f'请通知用例负责人及时更换接口'
+                )
+        return Response(payload)
 
 
 class ApiMockViewSet(BaseModelViewSet):

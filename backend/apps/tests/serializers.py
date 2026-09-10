@@ -3,6 +3,7 @@ from utils.base import BaseSerializer
 from rest_framework.validators import ValidationError
 from apps.tests.models import Case, Step, CaseRunLog, Tag, CaseSteps, FuncCase
 from apps.projects.models import Project
+from apps.interfaces.api_guard import assert_api_reference_allowed
 
 from rest_framework import serializers
 
@@ -62,6 +63,16 @@ class StepSerializer(BaseSerializer):
         case_obj_set = Case.objects.filter(id__in=[case_step_obj.case_id for case_step_obj in case_step_obj_set])
         case_serializer = CaseNameSerializer(case_obj_set, many=True)
         return case_serializer.data
+
+    def validate(self, attrs):
+        """步骤引用接口时校验接口状态：废弃接口不允许被引用"""
+        # type=5(Request) 直接引用接口；type=3(ComStep) 且 com_step_type=5 为公共请求步骤
+        step_type = attrs.get('type', getattr(self.instance, 'type', None))
+        com_step_type = attrs.get('com_step_type', getattr(self.instance, 'com_step_type', None))
+        is_request_step = (step_type == 5) or (step_type == 3 and com_step_type == 5)
+        if is_request_step:
+            assert_api_reference_allowed(attrs.get('keyword'))
+        return attrs
 
 
 class CaseSerializer(BaseSerializer):

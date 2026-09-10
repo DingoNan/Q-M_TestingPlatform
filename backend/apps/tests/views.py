@@ -280,12 +280,13 @@ class StepViewSet(BaseModelViewSet):
         return queryset.distinct()
 
     def update(self, request, *args, **kwargs):
-        step_type = request.data['type']
-        case_step_id = request.data.pop('case_step_id')
-        step_index = request.data.pop('step_index')
-        step_params = request.data.pop('step_params')
-        is_run = request.data.pop('is_run')
-        fail_is_continue = request.data.pop('fail_is_continue')
+        # 之前用 request.data['type'] 硬取值，缺字段直接 KeyError -> 500
+        step_type = request.data.get('type')
+        case_step_id = request.data.pop('case_step_id', None)
+        request.data.pop('step_index', None)
+        step_params = request.data.pop('step_params', None)
+        is_run = request.data.pop('is_run', None)
+        fail_is_continue = request.data.pop('fail_is_continue', None)
         user = self.request.user
         case_step_ids = self.kwargs.get('pk')
         case_id = case_step_ids.split('_')[0]
@@ -343,12 +344,16 @@ class StepViewSet(BaseModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user = self.request.user
-        request.data.pop('id')
-        case_id = request.data.pop('case_id')
-        step_params = request.data.pop('step_params')
-        fail_is_continue = request.data.pop('fail_is_continue')
-        is_run = request.data.pop('is_run')
-        request.data.pop('step_index')
+        # 之前全部用 pop('x') 硬取值，缺任一字段直接 KeyError -> 500。
+        # 改为带默认值取值，并对真正必填的 case_id 显式返回 400。
+        request.data.pop('id', None)
+        case_id = request.data.pop('case_id', None)
+        step_params = request.data.pop('step_params', None)
+        fail_is_continue = request.data.pop('fail_is_continue', 0)
+        is_run = request.data.pop('is_run', True)
+        request.data.pop('step_index', None)
+        if not case_id:
+            return Response({'case_id': ['所属用例ID不能为空']}, status=400)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         step_obj = serializer.save()

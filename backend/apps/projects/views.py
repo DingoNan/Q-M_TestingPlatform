@@ -8,6 +8,7 @@ from apps.projects.filters import ProjectFilter, ProjectAppealFilter, ProjectMsg
 from apps.users.models import Role, RolePermission
 from utils.base import BasePageNumberPagination
 from utils.base_view import BaseModelViewSet
+from utils.cascade import cascade_soft_delete_atomic
 
 
 class ProjectViewSet(BaseModelViewSet):
@@ -16,6 +17,26 @@ class ProjectViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
     filterset_class = ProjectFilter
+
+    def destroy(self, request, *args, **kwargs):
+        """删除项目：级联软删除项目下全部数据（产品/模块/环境/用例/套件/计划/缺陷等）
+
+        之前 delete 只把项目自身置为 is_delete，下游数据全部变成孤儿，列表页还能查到
+        却无从管理。这里改为递归级联软删除，并把删除明细回传给前端做二次确认后的提示。
+        """
+        instance = self.get_object()
+        # 只有项目创建者或超级管理员可以删除项目（无归属人时放行给超管之外的管理员会造成越权，故要求超管）
+        if not (request.user.is_superuser or instance.create_by_id == request.user.id):
+            return Response({'error': '只有项目创建者或超级管理员可以删除项目'}, status=403)
+
+        project_name = instance.name
+        stats = cascade_soft_delete_atomic(instance)
+        total = sum(stats.values())
+        return Response({
+            'msg': f'项目「{project_name}」及其关联数据已删除，共 {total} 条',
+            'detail': stats,
+            'total': total,
+        }, status=200)
 
 
 class AiConfigViewSet(BaseModelViewSet):
@@ -44,12 +65,13 @@ class ProjectAppealViewSet(BaseModelViewSet):
 
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
-        project_id = request.data['project']
-        role_id = request.data['role_id']
-        user_id = request.data['user']
-        appeal = ProjectAppeal.objects.get(id=kwargs['pk'])
+        # 之前用 request.data['x'] 硬取值，缺字段直接 KeyError -> 500
+        project_id = request.data.get('project')
+        role_id = request.data.get('role_id')
+        user_id = request.data.get('user')
+        appeal = ProjectAppeal.objects.filter(id=kwargs.get('pk')).first()
         # 当申请通过时，创建项目成员记录
-        if appeal.status:
+        if appeal and appeal.status and project_id and role_id and user_id:
             ProjectMember.objects.get_or_create(
                 project_id=project_id,
                 user_id=user_id,

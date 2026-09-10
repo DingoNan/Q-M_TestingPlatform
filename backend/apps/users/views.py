@@ -114,11 +114,13 @@ class RolePermissionViewSet(BaseModelViewSet):
                                       create_by=user_id, update_by=user_id)
 
     def create(self, request, *args, **kwargs):
-        role_name = request.data['role_name']
+        role_name = request.data.get('role_name')
+        if not role_name:
+            raise ValidationError({'role_name': '角色名称不能为空'})
         if Role.objects.all().filter(name=role_name):
             raise ValidationError({'msg': '角色名已存在'})
         role = Role.objects.create(name=role_name, create_by=self.request.user, update_by=self.request.user)
-        for role_permission in request.data['items']:
+        for role_permission in request.data.get('items') or []:
             self._create_role_permission(role_permission['has_permission'],
                                          role.id, role_permission['id'],
                                          role_permission['has_read_permission'],
@@ -138,14 +140,18 @@ class RolePermissionViewSet(BaseModelViewSet):
         return Response({'data': role.id}, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        role_obj = Role.objects.all().get(id=self.kwargs.get('pk'))
-        role_name = request.data['role_name']
+        role_obj = Role.objects.all().filter(id=self.kwargs.get('pk')).first()
+        if role_obj is None:
+            return Response({'detail': '角色不存在'}, status=404)
+        role_name = request.data.get('role_name')
+        if not role_name:
+            raise ValidationError({'role_name': '角色名称不能为空'})
         if Role.objects.all().filter(name=role_name) and role_obj.name != role_name:
-            raise ValidationError({'msg': '角色名已存在11'})
+            raise ValidationError({'msg': '角色名已存在'})
         role_obj.name = role_name
         role_obj.update_by = self.request.user
         role_obj.save()
-        for role_permission in request.data['items']:
+        for role_permission in request.data.get('items') or []:
             self._update_role_permission(role_permission, self.request.user)
             for children_role_permission in role_permission['children']:
                 self._update_role_permission(children_role_permission, self.request.user)
@@ -262,18 +268,46 @@ class PermissionView(BaseModelViewSet):
 
 @api_view(['POST'])
 def modify_pwd(request: Request):
+    """修改密码。
+
+    安全约束（此前任何人登录后都能改任意账号的密码，属于 P0 越权）：
+    1. 普通用户只能改自己的密码，且必须校验原密码；
+    2. 超级管理员可以改他人密码，无需原密码；
+    3. 目标用户不存在 / 参数缺失时返回 400，不再抛 500。
+    """
     user_id = request.data.get('id')
     password = request.data.get('password')
     password_confirm = request.data.get('password_confirm')
+    old_password = request.data.get('old_password')
 
-    if password and password_confirm != password:
+    if not user_id:
+        return Response(data={'id': ['缺少用户ID']}, status=400)
+
+    if not password:
+        return Response(data={'password': ['新密码不能为空']}, status=400)
+
+    if password != password_confirm:
         return Response(data={'password': ['密码和确认密码不一致']}, status=400)
 
-    user_obj = User.objects.get(id=user_id)
+    try:
+        target_user = User.objects.get(id=user_id)
+    except (User.DoesNotExist, ValueError, TypeError):
+        return Response(data={'id': ['用户不存在']}, status=400)
 
-    user_obj.set_password(password)
+    is_self = request.user and request.user.is_authenticated and request.user.id == target_user.id
+    is_superuser = bool(request.user and request.user.is_authenticated and request.user.is_superuser)
 
-    user_obj.save()
+    if not (is_self or is_superuser):
+        return Response(data={'detail': '没有权限修改该用户的密码'}, status=403)
+
+    if is_self and not is_superuser:
+        if not old_password:
+            return Response(data={'old_password': ['修改自己的密码必须填写原密码']}, status=400)
+        if not target_user.check_password(old_password):
+            return Response(data={'old_password': ['原密码不正确']}, status=400)
+
+    target_user.set_password(password)
+    target_user.save()
 
     return Response(data='成功', status=200)
 

@@ -587,11 +587,15 @@
 				<el-form-item label="模型名称" prop="model_name">
 					<el-select
 						v-model="aiProviderForm.model_name"
-						placeholder="请选择模型名称"
+						placeholder="请选择或直接输入模型名称"
 						class="select"
 						size='large'
 						popper-class='select-dropdown-rounded'
 						filterable
+						allow-create
+						default-first-option
+						:reserve-keyword="false"
+						clearable
 					>
 						<el-option
 							v-for="model in currentModelOptions"
@@ -600,6 +604,9 @@
 							:value="model"
 						/>
 					</el-select>
+					<div v-if="isCustomModel" class="form-tip">
+						当前为自定义模型，请确认该模型 ID 在所选供应商处可用
+					</div>
 				</el-form-item>
 			</el-form>
 
@@ -675,7 +682,13 @@ export default {
 					value: 'DeepSeek',
 					avatar: 'https://cdn.apifox.com/app/llm-provider-icon/builtin/deepseek.png',
 					api_url: 'https://api.deepseek.com',
-					models: ['deepseek-chat', 'deepseek-reasoner']
+					// 官方最新模型（deepseek-chat / deepseek-reasoner 已于 2026-07-24 下线）
+					models: [
+						'deepseek-v4-pro',
+						'deepseek-v4-flash',
+						'deepseek-flash',
+						'deepseek-v4-flash-vision-exp'
+					]
 				},
 				{
 					label: '腾讯混元',
@@ -731,7 +744,28 @@ export default {
 					value: '硅基流动',
 					avatar: 'https://cdn.apifox.com/app/llm-provider-icon/builtin/siliconflow.png',
 					api_url: 'https://api.siliconflow.cn/v1',
-					models: ['Qwen/Qwen2.5-7B-Instruct', 'deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1']
+					// 模型广场持续上新，以下为常用清单；下拉支持直接输入任意 model id
+					models: [
+						'deepseek-ai/DeepSeek-V3.2',
+						'deepseek-ai/DeepSeek-V4-Pro',
+						'deepseek-ai/DeepSeek-V4-Flash',
+						'deepseek-ai/DeepSeek-R1',
+						'deepseek-ai/DeepSeek-V3',
+						'Qwen/Qwen3-8B',
+						'Qwen/Qwen2.5-7B-Instruct',
+						'Qwen/Qwen2.5-72B-Instruct',
+						'zai-org/GLM-5.2',
+						'moonshotai/Kimi-K2.7-Code',
+						'MiniMaxAI/MiniMax-M3',
+						'THUDM/glm-4-9b-chat'
+					]
+				},
+				{
+					label: '自定义',
+					value: '自定义',
+					avatar: 'https://cdn.apifox.com/app/llm-provider-icon/builtin/openai.png',
+					api_url: '',
+					models: []
 				}
 			],
 
@@ -881,7 +915,20 @@ export default {
 		},
 		currentModelOptions() {
 			const provider = this.providerOptions.find(item => item.value === this.aiProviderForm.provider)
-			return provider ? (provider.models || []) : []
+			const list = provider ? [...(provider.models || [])] : []
+			// 已保存的自定义模型不在预置清单时也要能正常回显
+			const current = (this.aiProviderForm.model_name || '').trim()
+			if (current && !list.includes(current)) {
+				list.unshift(current)
+			}
+			return list
+		},
+		// 是否为预置清单外的自定义模型
+		isCustomModel() {
+			const provider = this.providerOptions.find(item => item.value === this.aiProviderForm.provider)
+			const current = (this.aiProviderForm.model_name || '').trim()
+			if (!current) return false
+			return !(provider?.models || []).includes(current)
 		},
 
 		// 判断当前用户是否为项目创建者
@@ -1038,9 +1085,11 @@ export default {
 		selectAiProvider(item) {
 			this.aiProviderForm.provider = item.value
 			this.aiProviderForm.provider_name = item.label
-			this.aiProviderForm.api_url = item.api_url || ''
-			if (!item.models.includes(this.aiProviderForm.model_name)) {
-				this.aiProviderForm.model_name = item.models?.[0] || ''
+			// 自定义供应商无预置 URL，保留用户已填写的内容
+			this.aiProviderForm.api_url = item.api_url || this.aiProviderForm.api_url || ''
+			// 自定义供应商（预置清单为空）不覆盖用户已填/自定义的模型名
+			if (item.models && item.models.length > 0 && !item.models.includes(this.aiProviderForm.model_name)) {
+				this.aiProviderForm.model_name = item.models[0] || ''
 			}
 		},
 
@@ -1719,6 +1768,14 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* 模型名称自定义提示 */
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-color-warning, #e6a23c);
 }
 
 /* ===== 页面容器 ===== */

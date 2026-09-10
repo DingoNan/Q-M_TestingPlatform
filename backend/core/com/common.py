@@ -238,6 +238,9 @@ def api_list_to_dict(list_obj: list, json_data):
     """
     将列表嵌套字典转换成dict
     """
+    # 请求头/请求体为空时上层会传 None，这里兜底，避免 TypeError: 'NoneType' is not iterable
+    if not list_obj:
+        return json_data
     for obj in list_obj:
         name, value, obj_type, children = obj['name'], str(obj['value']), obj['type'], obj.get('children', [])
         if obj_type == 'object':

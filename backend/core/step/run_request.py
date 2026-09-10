@@ -16,6 +16,7 @@ from core.com.common import (
 from utils.user_exception import EnvServiceNotExistException, EnvPlantNotExistException
 from core.com.check import loop_assert_by_check_list, CHECK_FUNC_MAP, CHECK_TEXT
 from apps.tests.models import CaseRunLog, Step
+from apps.interfaces.api_guard import assert_api_runnable
 from core.com.step_model import CaseParams
 from core.com.faker import faker_function_map
 from core.step.run_python_script import exec_and_return
@@ -131,6 +132,8 @@ def get_api_data(env_id, step, case_params, case_logs_obj, manager_obj):
 
 def run_step_request(manager_obj, env_id, step, case_params, case_logs_obj, run_times, run_element):
     step_id = step["case_step_id"]
+    # 接口状态守卫：引用了「废弃」接口直接中断，不再发起真实请求
+    assert_api_runnable(step.get('keyword'))
     # 执行前置脚本
     exec_and_return(manager_obj, step['setup'], case_logs_obj, formatter_log, case_params, sys_function)
     case_params.stepResponse[f'{step_id}']['runTimes'] = run_times

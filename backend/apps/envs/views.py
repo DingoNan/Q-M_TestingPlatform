@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from utils.base import BasePageNumberPagination
 from utils.base_view import BaseModelViewSet
+from utils.cascade import cascade_soft_delete_atomic
 from apps.envs.models import (
     Env,
     EnvGlobalParams,
@@ -112,6 +113,18 @@ class ServiceViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
     filterset_class = ServiceFilter
+
+    def destroy(self, request, *args, **kwargs):
+        """删除服务：级联软删除其下的服务模块、接口文档、服务域名配置等"""
+        instance = self.get_object()
+        service_name = instance.name
+        stats = cascade_soft_delete_atomic(instance)
+        total = sum(stats.values())
+        return Response({
+            'msg': f'服务「{service_name}」及其关联数据已删除，共 {total} 条',
+            'detail': stats,
+            'total': total,
+        }, status=200)
 
 
 class DbViewSet(BaseModelViewSet):

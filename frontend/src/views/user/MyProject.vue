@@ -658,11 +658,12 @@ export default {
         }
       ).then(async () => {
         const response = await this.$api.deleteProject(id)
-        if (response.status === 204) {
+        if (response.status === 204 || response.status === 200) {
           this.getProjects()
+          // 后端已改为级联软删除，会把删除明细回传
           ElMessage({
             type: 'success',
-            message: '删除成功',
+            message: response.data?.msg || '删除成功',
           })
         }
       }).catch(() => {})

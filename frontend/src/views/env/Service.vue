@@ -1347,7 +1347,7 @@ export default {
     
     async deleteService(id) {
       ElMessageBox.confirm(
-        '确定删除此服务？删除后数据将无法恢复。',
+        '确定删除此服务？将级联删除其下的服务模块、接口文档与服务域名配置，删除后数据将无法恢复。',
         '确认删除',
         {
           confirmButtonText: '确认删除',
@@ -1358,12 +1358,12 @@ export default {
         }
       ).then(async () => {
         const response = await this.$api.deleteService(id)
-        if (response.status === 204) {
+        if (response.status === 204 || response.status === 200) {
           this.getServices()
           this.getServicesNoLimit()
           ElMessage({
             type: 'success',
-            message: '删除成功'
+            message: response.data?.msg || '删除成功'
           })
         }
       }).catch(() => {})
