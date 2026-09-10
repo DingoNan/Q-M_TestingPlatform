@@ -58,7 +58,7 @@ export default {
 						`<div style="line-height:1.9">
 							<p>Trace 官方回放器依赖浏览器 Service Worker，仅在 <b>localhost</b> 或 <b>HTTPS</b> 环境可用，当前为 LAN IP + HTTP。可选择：</p>
 							<p><b>方法一（一次性配置）：</b>Chrome/Edge 地址栏打开 <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>，填入 <code>${this.flagOrigins}</code>（页面和接口两个源，逗号分隔），选 Enabled 并点 Relaunch 完全重启浏览器后即可在线回放。</p>
-							<p><b>方法二：</b><a href="${this.resolveMedia(this.logInfo.trace_url)}" target="_blank" style="color:#409eff">下载 Trace zip</a>，本地安装 Playwright 后执行 <code>playwright show-trace 文件名.zip</code> 打开。</p>
+							<p><b>方法二：</b><a href="${this.resolveMedia(this.logInfo.trace_url)}" target="_blank" style="color:#f59e0b">下载 Trace zip</a>，本地安装 Playwright 后执行 <code>playwright show-trace 文件名.zip</code> 打开。</p>
 							<p>上方的执行过程视频不受此限制，可直接播放。</p>
 						</div>`,
 						'Trace 在线回放受限',
@@ -102,15 +102,15 @@ export default {
 
 	.trace-replay-tip {
 		font-size: 12px;
-		color: #94a3b8;
+		color: var(--qm-text-3);
 		line-height: 1.6;
 	}
 
 	.trace-replay-tip code {
-		background: #f1f5f9;
+		background: var(--qm-bg-3);
 		padding: 1px 5px;
 		border-radius: 4px;
-		color: #64748b;
+		color: var(--qm-text-2);
 	}
 </style>
 

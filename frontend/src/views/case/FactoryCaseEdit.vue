@@ -98,7 +98,7 @@
 			    </div>
 			  </template>
 			  <el-form :model="caseForm" style='margin:0'>
-			  	<el-tabs v-model="active_tab" type="card" style='background-color: white, margin: 0'>
+			  	<el-tabs v-model="active_tab" type="card" style='background-color: var(--qm-bg-2), margin: 0'>
 					<el-tab-pane label="用例基础信息" name="case_info" lazy='true'>
 			  			   <el-form :inline="false">
 			  			   	<el-row :gutter="20">
@@ -821,10 +821,10 @@ export default{
 	}
 
 	/deep/ .el-page-header__content{
-		color: #409eff
+		color: #f59e0b
 	}
 	.create_case .el-input-group__append{
-		background-color: white;
+		background-color: var(--qm-bg-2);
 		box-shadow: none;
 		border: none;
 		/* padding: 0px; */

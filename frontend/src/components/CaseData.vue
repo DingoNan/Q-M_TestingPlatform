@@ -17,7 +17,7 @@
           v-model:value="exportJson"
           lang="json"
           theme="chrome"
-          style="height: 350px; border-radius: 4px; border: 1px solid #dcdfe6;"
+          style="height: 350px; border-radius: 4px; border: 1px solid var(--qm-line-strong);"
           :options="editOption"
         />
       </div>
@@ -789,7 +789,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--qm-bg-2);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
@@ -797,7 +797,7 @@ export default {
 
 .table-header {
   padding: 16px 20px;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border-bottom: 1px solid #e8eaec;
   display: flex;
   justify-content: space-between;
@@ -813,12 +813,12 @@ export default {
 .title-text {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--qm-text-1);
 }
 
 .title-sub {
   font-size: 12px;
-  color: #909399;
+  color: var(--qm-text-3);
 }
 
 .table-actions {
@@ -829,7 +829,7 @@ export default {
 .table-container {
   flex: 1;
   padding: 16px;
-  background: #fff;
+  background: var(--qm-bg-2);
   min-height: 200px;
 }
 
@@ -846,7 +846,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #909399;
+  color: var(--qm-text-3);
   text-align: center;
 }
 
@@ -865,12 +865,12 @@ export default {
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 8px;
-  color: #606266;
+  color: var(--qm-text-2);
 }
 
 .empty-sub {
   font-size: 13px;
-  color: #909399;
+  color: var(--qm-text-3);
 }
 
 /* 修复表格边框和输入框布局问题 */
@@ -880,13 +880,13 @@ export default {
 }
 
 :deep(.vxe-table--header-wrapper) {
-  background: #f5f7fa;
+  background: var(--qm-bg-1);
 }
 
 :deep(.vxe-header--column) {
   font-weight: 600;
-  color: #303133;
-  background: #f5f7fa !important;
+  color: var(--qm-text-1);
+  background: var(--qm-bg-1) !important;
 }
 
 /* 修复单元格内边距和文本对齐 */
@@ -994,7 +994,7 @@ export default {
 :deep(.vxe-table--edit-cell .el-input__wrapper:hover),
 :deep(.vxe-table--edit-cell .el-textarea__inner:hover),
 :deep(.vxe-table--edit-cell .el-select__wrapper:hover) {
-  background-color: #f5f7fa !important;
+  background-color: var(--qm-bg-1) !important;
 }
 
 .column-header {
@@ -1017,7 +1017,7 @@ export default {
 
 .header-icon {
   margin-right: 10px;
-  color: #909399;
+  color: var(--qm-text-3);
   font-size: 14px;
   cursor: help;
 }
@@ -1029,7 +1029,7 @@ export default {
 }
 
 .dropdown-icon {
-  color: #909399;
+  color: var(--qm-text-3);
   font-size: 16px;
   margin-right: 10px;
   transition: color 0.3s;
@@ -1037,8 +1037,8 @@ export default {
 }
 
 .dropdown-icon:hover {
-  color: #409eff;
-  background-color: #f5f7fa;
+  color: #f59e0b;
+  background-color: var(--qm-bg-1);
   border-radius: 4px;
 }
 
@@ -1077,7 +1077,7 @@ export default {
 .table-footer {
   padding: 12px 20px;
   border-top: 1px solid #e8eaec;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
 }
 
 .footer-tips {
@@ -1085,7 +1085,7 @@ export default {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #909399;
+  color: var(--qm-text-3);
 }
 
 .footer-tips .el-icon {
@@ -1110,7 +1110,7 @@ export default {
 
 .import-tip {
   font-size: 13px;
-  color: #909399;
+  color: var(--qm-text-3);
   line-height: 1.5;
 }
 
@@ -1121,12 +1121,12 @@ export default {
 .input-label {
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--qm-text-1);
 }
 
 .input-tip {
   font-size: 12px;
-  color: #909399;
+  color: var(--qm-text-3);
   margin-left: 8px;
 }
 

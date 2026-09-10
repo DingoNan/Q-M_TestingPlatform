@@ -241,7 +241,7 @@ export default{
 		/* margin-bottom: 40px; */
 	}
 	.create_test .el-input-group__append{
-		background-color: white;
+		background-color: var(--qm-bg-2);
 		box-shadow: none;
 		border: none;
 		/* padding: 0px; */

@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import api from './api/index.js'
@@ -13,6 +14,7 @@ import VxeUITable from 'vxe-table'
 import 'vxe-table/lib/style.css'
 import VxeUIPluginRenderElement from '@vxe-ui/plugin-render-element'
 import '@vxe-ui/plugin-render-element/dist/style.css'
+import '@/assets/css/theme.css'
 import '@/assets/css/global-form.css'
 // const debounce = (fn, delay) => {
 //   let timer = null;
@@ -33,6 +35,11 @@ import '@/assets/css/global-form.css'
 //     super(callback);
 //   }
 // }
+
+// 主题初始化：默认深色科技风，可从 localStorage 持久化切换
+// 默认浅色主题（人类视觉更友好，长时间办公不易疲劳）
+const savedTheme = localStorage.getItem('qm-theme') || 'light'
+document.documentElement.classList.toggle('dark', savedTheme === 'dark')
 
 var app = createApp(App)
 

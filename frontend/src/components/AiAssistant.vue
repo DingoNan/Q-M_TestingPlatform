@@ -91,7 +91,7 @@
       <div class="ai-chat-main" :class="{ 'no-messages': !chatMessages.length && !aiStreaming }">
         <div class="ai-chat-messages" ref="chatMessagesRef">
           <div v-if="!chatMessages.length" class="ai-chat-welcome">
-            <el-icon :size="48" color="#8b5cf6"><MagicStick /></el-icon>
+            <el-icon :size="48" color="#f97316"><MagicStick /></el-icon>
             <h3>AI助手</h3>
             <div class="ai-welcome-options">
               <div class="ai-welcome-option" :class="{ active: chatMode === 'generate' }" @click="selectMode('generate')">
@@ -108,11 +108,11 @@
           <div v-for="msg in chatMessages" :key="msg.id" class="ai-message" :class="msg.role">
             <div class="ai-message-header">
               <div class="ai-message-avatar">
-                <el-avatar v-if="msg.role === 'user'" :size="32" :style="{background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff', fontWeight: 600, fontSize: 14}">
+                <el-avatar v-if="msg.role === 'user'" :size="32" :style="{background: 'linear-gradient(135deg, #f97316, #ea580c)', color: '#fff', fontWeight: 600, fontSize: 14}">
                   {{ (userInfo.user_name || 'U').toString().charAt(0).toUpperCase() }}
                 </el-avatar>
-                <el-icon v-else-if="msg.is_task && (msg.task_status === 'pending' || msg.task_status === 'running')" :size="20" color="#8b5cf6" class="is-loading"><Loading /></el-icon>
-                <el-icon v-else :size="20" color="#8b5cf6"><MagicStick /></el-icon>
+                <el-icon v-else-if="msg.is_task && (msg.task_status === 'pending' || msg.task_status === 'running')" :size="20" color="#f97316" class="is-loading"><Loading /></el-icon>
+                <el-icon v-else :size="20" color="#f97316"><MagicStick /></el-icon>
               </div>
               <span class="ai-message-name">
                 {{ msg.role === 'user' ? (userInfo.user_name || '用户') : 'AI助手' }}
@@ -148,7 +148,7 @@
           <div v-if="aiStreaming" class="ai-message assistant">
             <div class="ai-message-header">
               <div class="ai-message-avatar">
-                <el-icon :size="20" color="#8b5cf6" class="is-loading"><Loading /></el-icon>
+                <el-icon :size="20" color="#f97316" class="is-loading"><Loading /></el-icon>
               </div>
               <span class="ai-message-name">AI助手</span>
             </div>
@@ -228,7 +228,7 @@
             </div>
             <!-- 拖拽提示 -->
             <div v-if="isDraggingFile" class="ai-drag-overlay">
-              <el-icon :size="48" color="#8b5cf6"><UploadFilled /></el-icon>
+              <el-icon :size="48" color="#f97316"><UploadFilled /></el-icon>
               <span>松开上传文件</span>
             </div>
           </div>
@@ -1145,18 +1145,18 @@ export default {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.45);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
 .ai-assistant-fab:hover {
   transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.55);
-  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.55);
+  background: linear-gradient(135deg, #ea580c 0%, #5b21b6 100%);
 }
 
 .ai-assistant-fab:active {
@@ -1169,7 +1169,7 @@ export default {
   transform: none;
   cursor: grabbing;
   transition: none;
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.45);
   opacity: 0.9;
 }
 
@@ -1199,7 +1199,7 @@ export default {
   margin: 0 !important;
   padding: 0 !important;
   border-radius: 0 !important;
-  background: #fff;
+  background: var(--qm-bg-2);
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
@@ -1225,7 +1225,7 @@ export default {
 .ai-header-title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -1238,7 +1238,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
   border-radius: 2px;
 }
 
@@ -1249,11 +1249,11 @@ export default {
   gap: 6px;
   font-size: 15px;
   font-weight: 600;
-  color: #6d28d9;
+  color: #d97706;
   cursor: pointer;
   padding: 5px 12px;
   border-radius: 8px;
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
   transition: all 0.2s;
   user-select: none;
 }
@@ -1265,7 +1265,7 @@ export default {
 
 .ai-model-arrow {
   font-size: 13px;
-  color: #8b5cf6;
+  color: #f97316;
   transition: transform 0.2s;
 }
 
@@ -1277,7 +1277,7 @@ export default {
 .ai-model-list {
   max-height: 320px;
   overflow-y: auto;
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
   border-radius: 8px;
   padding: 4px;
 }
@@ -1304,12 +1304,12 @@ export default {
 .ai-model-list-name {
   font-size: 14px;
   font-weight: 600;
-  color: #6d28d9;
+  color: #d97706;
 }
 
 .ai-model-list-desc {
   font-size: 12px;
-  color: #8b5cf6;
+  color: #f97316;
 }
 
 .ai-model-check {
@@ -1317,13 +1317,13 @@ export default {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #6d28d9;
+  color: #d97706;
   font-size: 16px;
 }
 
 .ai-model-list-empty {
   text-align: center;
-  color: #8b5cf6;
+  color: #f97316;
   font-size: 13px;
   padding: 20px 0;
 }
@@ -1341,8 +1341,8 @@ export default {
   bottom: 0;
   left: 0;
   width: 280px;
-  background: #f8fafc;
-  border-right: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border-right: 1px solid var(--qm-line-strong);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1354,7 +1354,7 @@ export default {
   flex-direction: column;
   gap: 12px;
   padding: 12px 25px 12px 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .ai-new-chat-btn {
@@ -1365,19 +1365,19 @@ export default {
   width: 100%;
   height: 42px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
   user-select: none;
 }
 
 .ai-new-chat-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.45);
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.45);
   transform: translateY(-1px);
 }
 
@@ -1407,7 +1407,7 @@ export default {
 }
 
 .ai-conversation-item:hover {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
 }
 
 .ai-conversation-item.active {
@@ -1422,7 +1422,7 @@ export default {
 .ai-conv-title {
   font-size: 13px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1430,13 +1430,13 @@ export default {
 
 .ai-conv-meta {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   margin-top: 2px;
 }
 
 .ai-conv-action,
 .ai-conv-delete {
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: 8px;
@@ -1452,7 +1452,7 @@ export default {
 }
 
 .ai-conv-action:hover {
-  color: #6d28d9;
+  color: #d97706;
 }
 
 .ai-conv-delete:hover {
@@ -1461,7 +1461,7 @@ export default {
 
 .ai-empty-conversation {
   text-align: center;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 13px;
   padding: 40px 0;
 }
@@ -1472,12 +1472,12 @@ export default {
   justify-content: center;
   gap: 6px;
   padding: 16px 0;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 12px;
 }
 
 .ai-conv-loadmore.end {
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
 }
 
 /* 删除对话确认提示 */
@@ -1487,7 +1487,7 @@ export default {
   gap: 12px;
   padding: 8px 0;
   font-size: 14px;
-  color: #475569;
+  color: var(--qm-text-2);
 }
 
 /* 右侧对话区 */
@@ -1496,7 +1496,7 @@ export default {
   bottom: 0;
   left: 280px;
   right: 0;
-  background: #fff;
+  background: var(--qm-bg-2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1533,14 +1533,14 @@ export default {
 .ai-chat-messages::-webkit-scrollbar-thumb,
 .ai-conversation-list::-webkit-scrollbar-thumb,
 .ai-chat-textarea::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
   border-radius: 3px;
 }
 
 .ai-chat-messages::-webkit-scrollbar-thumb:hover,
 .ai-conversation-list::-webkit-scrollbar-thumb:hover,
 .ai-chat-textarea::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--qm-text-3);
 }
 
 /* 欢迎页 */
@@ -1556,7 +1556,7 @@ export default {
 .ai-chat-welcome h3 {
   font-size: 22px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--qm-text-1);
   margin: 8px 0 4px;
 }
 
@@ -1571,9 +1571,9 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 14px 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
-  background: #fff;
+  background: var(--qm-bg-2);
   cursor: pointer;
   transition: all 0.25s;
   user-select: none;
@@ -1581,35 +1581,35 @@ export default {
 
 .ai-welcome-option:hover {
   border-color: #c4b5fd;
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.12);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.12);
 }
 
 .ai-welcome-option.active {
-  border-color: #8b5cf6;
+  border-color: #f97316;
   background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
 .ai-welcome-option.active .ai-welcome-option-icon {
-  color: #6d28d9;
+  color: #d97706;
 }
 
 .ai-welcome-option.active .ai-welcome-option-text {
-  color: #6d28d9;
+  color: #d97706;
   font-weight: 600;
 }
 
 .ai-welcome-option-icon {
   font-size: 20px;
-  color: #8b5cf6;
+  color: #f97316;
 }
 
 .ai-welcome-option-text {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 /* 消息样式 */
@@ -1650,7 +1650,7 @@ export default {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1667,7 +1667,7 @@ export default {
 .ai-message-name {
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   line-height: 1;
 }
 
@@ -1677,9 +1677,9 @@ export default {
   height: 28px !important;
   min-width: 28px !important;
   min-height: 28px !important;
-  color: #94a3b8 !important;
-  background: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  color: var(--qm-text-3) !important;
+  background: var(--qm-bg-3) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -1689,8 +1689,8 @@ export default {
 }
 
 .ai-copy-btn:hover {
-  color: #8b5cf6 !important;
-  background: #f5f3ff !important;
+  color: #f97316 !important;
+  background: var(--qm-accent-soft) !important;
   border-color: #c4b5fd !important;
 }
 
@@ -1732,15 +1732,15 @@ export default {
   border-radius: 12px;
   font-size: 14px;
   line-height: 1.6;
-  color: #334155;
+  color: var(--qm-text-2);
   word-break: break-word;
   display: inline-block;
   max-width: 100%;
 }
 
 .ai-message.assistant .ai-message-content {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
 }
 
 .ai-message-content.ai-task-success {
@@ -1750,7 +1750,7 @@ export default {
 
 .ai-message-content.ai-task-failed {
   border-color: #fca5a5 !important;
-  background: #fef2f2 !important;
+  background: var(--qm-red-soft) !important;
   color: #b91c1c !important;
 }
 
@@ -1766,7 +1766,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 13px;
   padding: 4px 0;
 }
@@ -1774,7 +1774,7 @@ export default {
 .ai-streaming::after {
   content: '▋';
   animation: blink 1s infinite;
-  color: #8b5cf6;
+  color: #f97316;
 }
 
 @keyframes blink {
@@ -1785,7 +1785,7 @@ export default {
 /* Markdown渲染 */
 .ai-message-content :deep(.md-code-block) {
   background: #1e293b;
-  color: #e2e8f0;
+  color: var(--qm-line-strong);
   padding: 12px;
   border-radius: 8px;
   overflow-x: auto;
@@ -1800,7 +1800,7 @@ export default {
 }
 
 .ai-message-content :deep(.md-inline-code) {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
@@ -1814,27 +1814,27 @@ export default {
   font-size: 18px;
   color: #0f172a;
   padding-bottom: 6px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 
 .ai-message-content :deep(h3) {
   margin: 14px 0 8px;
   font-weight: 600;
   font-size: 16px;
-  color: #1e293b;
+  color: var(--qm-text-1);
 }
 
 .ai-message-content :deep(h4) {
   margin: 12px 0 6px;
   font-weight: 600;
   font-size: 15px;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 /* 分割线 */
 .ai-message-content :deep(.md-hr) {
   border: none;
-  border-top: 1px dashed #cbd5e1;
+  border-top: 1px dashed var(--qm-line-strong);
   margin: 14px 0;
 }
 
@@ -1850,7 +1850,7 @@ export default {
   margin-left: 22px;
   line-height: 1.8;
   padding-left: 4px;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .ai-message-content :deep(.md-ol li) {
@@ -1858,7 +1858,7 @@ export default {
   margin-left: 22px;
   line-height: 1.8;
   padding-left: 4px;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 /* Markdown表格 */
@@ -1873,29 +1873,29 @@ export default {
 }
 
 .ai-message-content :deep(.md-table th) {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   color: #fff;
   font-weight: 600;
   text-align: left;
   padding: 10px 12px;
-  border: 1px solid #7c3aed;
+  border: 1px solid #ea580c;
   white-space: nowrap;
 }
 
 .ai-message-content :deep(.md-table td) {
   padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  color: #334155;
-  background: #fff;
+  border: 1px solid var(--qm-line-strong);
+  color: var(--qm-text-2);
+  background: var(--qm-bg-2);
   line-height: 1.6;
 }
 
 .ai-message-content :deep(.md-table tbody tr:nth-child(even) td) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .ai-message-content :deep(.md-table tbody tr:hover td) {
-  background: #eef2ff;
+  background: var(--qm-accent-soft);
 }
 
 .ai-message-content :deep(strong) {
@@ -1906,8 +1906,8 @@ export default {
 /* 用例预览 */
 .ai-message-cases {
   margin-top: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -1920,7 +1920,7 @@ export default {
   background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
   font-size: 13px;
   font-weight: 500;
-  color: #6d28d9;
+  color: #d97706;
 }
 
 .ai-cases-preview {
@@ -1934,7 +1934,7 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .ai-case-preview-item:last-child {
@@ -1947,7 +1947,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #8b5cf6;
+  background: #f97316;
   color: #fff;
   border-radius: 50%;
   font-size: 11px;
@@ -1958,7 +1958,7 @@ export default {
 .ai-case-preview-name {
   flex: 1;
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1966,7 +1966,7 @@ export default {
 
 .ai-case-steps {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   flex-shrink: 0;
 }
 
@@ -1983,17 +1983,17 @@ export default {
 
 .ai-input-box {
   position: relative;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
-  background: #fff;
+  background: var(--qm-bg-2);
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .ai-input-box:focus-within {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 .ai-input-box.has-images {
@@ -2017,16 +2017,16 @@ export default {
 }
 
 .ai-chat-textarea::placeholder {
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .ai-attach-btn {
   position: absolute;
   right: 54px;
   bottom: 16px;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
+  background: var(--qm-bg-1) !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
   width: 32px !important;
   height: 32px !important;
   min-height: 32px !important;
@@ -2034,8 +2034,8 @@ export default {
 }
 
 .ai-attach-btn:hover:not(.is-disabled) {
-  background: #f1f5f9 !important;
-  color: #6d28d9 !important;
+  background: var(--qm-bg-3) !important;
+  color: #d97706 !important;
   border-color: #c4b5fd !important;
 }
 
@@ -2047,7 +2047,7 @@ export default {
   position: absolute;
   right: 12px;
   bottom: 16px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border: none;
   border-radius: 8px;
   padding: 0 !important;
@@ -2062,13 +2062,13 @@ export default {
 }
 
 .ai-send-btn:hover {
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
 .ai-send-btn.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
   box-shadow: none;
 }
 
@@ -2078,7 +2078,7 @@ export default {
   flex-wrap: wrap;
   gap: 6px;
   padding: 0 14px 8px 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   margin-bottom: 4px;
 }
 
@@ -2088,8 +2088,8 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 6px 28px 6px 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 8px;
   max-width: 240px;
 }
@@ -2121,23 +2121,23 @@ export default {
 }
 .ai-doc-icon.doc,
 .ai-doc-icon.docx {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 .ai-doc-icon.xls,
 .ai-doc-icon.xlsx {
   color: #22c55e;
 }
 .ai-doc-icon.md {
-  color: #8b5cf6;
+  color: #f97316;
 }
 .ai-doc-icon.txt,
 .ai-doc-icon.csv {
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .ai-attachment-name {
   font-size: 12px;
-  color: #475569;
+  color: var(--qm-text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2146,7 +2146,7 @@ export default {
 
 .ai-doc-size {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   flex-shrink: 0;
 }
 
@@ -2176,8 +2176,8 @@ export default {
 .ai-drag-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(139, 92, 246, 0.08);
-  border: 2px dashed #8b5cf6;
+  background: rgba(249, 115, 22, 0.08);
+  border: 2px dashed #f97316;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -2189,8 +2189,8 @@ export default {
 }
 
 .ai-chat-input-wrapper.is-dragging .ai-input-box {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
 }
 </style>
 
@@ -2200,7 +2200,7 @@ html body .el-dialog.ai-chat-dialog {
   margin: 0 !important;
   padding: 0 !important;
   border-radius: 0 !important;
-  background: #fff;
+  background: var(--qm-bg-2);
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
@@ -2211,7 +2211,7 @@ html body .el-dialog.ai-chat-dialog {
 html body .el-dialog.ai-chat-dialog .el-dialog__header {
   padding: 16px 24px !important;
   margin: 0 !important;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 
 html body .el-dialog.ai-chat-dialog .el-dialog__body {
@@ -2225,14 +2225,14 @@ html body .el-dialog.ai-chat-dialog .el-dialog__body {
 
 /* AI模型选择弹窗容器 */
 .ai-model-popover.el-popover.el-popper {
-  background: #f5f3ff !important;
+  background: var(--qm-accent-soft) !important;
   border: 1px solid #ddd6fe !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.15) !important;
 }
 
 .ai-model-popover .el-popover__title {
-  color: #6d28d9;
+  color: #d97706;
 }
 
 html body .ai-copy-btn.el-button {
@@ -2241,9 +2241,9 @@ html body .ai-copy-btn.el-button {
   height: 28px !important;
   min-width: 28px !important;
   min-height: 28px !important;
-  color: #94a3b8 !important;
-  background: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  color: var(--qm-text-3) !important;
+  background: var(--qm-bg-3) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -2252,8 +2252,8 @@ html body .ai-copy-btn.el-button {
 }
 
 html body .ai-copy-btn.el-button:hover {
-  color: #8b5cf6 !important;
-  background: #f5f3ff !important;
+  color: #f97316 !important;
+  background: var(--qm-accent-soft) !important;
   border-color: #c4b5fd !important;
 }
 

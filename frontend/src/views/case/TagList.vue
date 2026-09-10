@@ -432,9 +432,9 @@ export default {
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -644,7 +644,7 @@ export default {
 <style scoped>
 .tag-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -669,7 +669,7 @@ export default {
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -685,7 +685,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 24px 10px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -698,7 +698,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -721,7 +721,7 @@ export default {
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -729,8 +729,8 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -744,9 +744,9 @@ export default {
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -755,8 +755,8 @@ export default {
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -768,7 +768,7 @@ export default {
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -779,7 +779,7 @@ export default {
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -818,7 +818,7 @@ export default {
   gap: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
   width: 90px;
   margin-right: 10px;
   flex-shrink: 0;
@@ -842,12 +842,12 @@ export default {
 
 /* 为图标添加背景颜色 */
 .icon-user {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 4px;
 }
 
 .icon-role {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 4px;
 }
 
@@ -862,14 +862,14 @@ export default {
 }
 
 .icon-updater {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 4px;
 }
 
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -879,7 +879,7 @@ export default {
 
 .content-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -899,7 +899,7 @@ export default {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -912,7 +912,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -926,21 +926,21 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .add-btn {
@@ -984,10 +984,10 @@ export default {
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -1000,16 +1000,16 @@ export default {
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row.active-row {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -1020,11 +1020,11 @@ export default {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -1039,10 +1039,10 @@ export default {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
   border-radius: 8px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   margin: 0 auto;
 }
 
@@ -1076,7 +1076,7 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 13px;
 }
 
@@ -1142,7 +1142,7 @@ export default {
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn .el-icon {
@@ -1158,12 +1158,12 @@ export default {
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   float: right;
   display: block !important;
   min-height: 40px;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -1183,7 +1183,7 @@ export default {
 }
 
 .elegant-pagination >>> .el-pagination__total {
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
   margin-right: 20px;
 }
@@ -1194,15 +1194,15 @@ export default {
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
 }
 
 .elegant-pagination >>> .el-pager li {
@@ -1217,13 +1217,13 @@ export default {
 }
 
 .elegant-pagination >>> .el-pager li:not(.disabled):hover {
-  color: #3b82f6;
-  border-color: #3b82f6;
-  background: white;
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background: var(--qm-bg-2);
 }
 
 .elegant-pagination >>> .el-pager li.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border-color: transparent;
 }
@@ -1231,8 +1231,8 @@ export default {
 .elegant-pagination >>> .btn-prev,
 .elegant-pagination >>> .btn-next {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   transition: all 0.3s ease;
   min-width: 36px;
   height: 36px;
@@ -1241,8 +1241,8 @@ export default {
 
 .elegant-pagination >>> .btn-prev:hover:not(.disabled),
 .elegant-pagination >>> .btn-next:hover:not(.disabled) {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
 .elegant-pagination >>> .el-pagination__jump {
@@ -1251,14 +1251,14 @@ export default {
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
 }
 
 /* 对话框样式 - 优化部分 */
@@ -1266,7 +1266,7 @@ export default {
   border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4) !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   backdrop-filter: blur(10px) !important;
 }
@@ -1279,7 +1279,7 @@ export default {
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px !important;
   font-weight: 700 !important;
-  color: #1a1a1a !important;
+  color: var(--qm-text-1) !important;
   letter-spacing: 0.5px !important;
   position: relative !important;
   padding-left: 32px !important; /* 为图标留出空间 */
@@ -1306,7 +1306,7 @@ export default {
 }
 
 .elegant-dialog >>> .el-dialog__headerbtn:hover {
-  background: rgba(99, 102, 241, 0.1) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
   transform: rotate(90deg) !important;
 }
 
@@ -1339,7 +1339,7 @@ export default {
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .dialog-title {
@@ -1349,43 +1349,43 @@ export default {
   margin-bottom: 8px;
   font-size: 16px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .icon-tag-dialog {
   width: 16px;
   height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
 }
 
 .dialog-input >>> .el-input__inner {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .dialog-input >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .dialog-input >>> .el-input__count {
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -1408,28 +1408,28 @@ export default {
 }
 
 .dialog-cancel-btn {
-  border: 1px solid #e2e8f0 !important;
-  background: white !important;
-  color: #64748b !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 .dialog-confirm-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
 }
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
 }
 
 /* 按钮文字容器 */
@@ -1455,12 +1455,12 @@ export default {
 
 /* 取消按钮下划线颜色 */
 .dialog-cancel-btn .button-text::after {
-  background: #3b82f6; /* 蓝色下划线 */
+  background: #f59e0b; /* 蓝色下划线 */
 }
 
 /* 确认按钮下划线颜色 */
 .dialog-confirm-btn .button-text::after {
-  background: white; /* 白色下划线 */
+  background: var(--qm-bg-2); /* 白色下划线 */
 }
 
 /* 鼠标悬停时显示下划线 */

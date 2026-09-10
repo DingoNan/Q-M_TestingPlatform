@@ -248,7 +248,7 @@ ASSISTANT_SYSTEM_WITH_CONTEXT = """你是一个智能测试平台AI助手，可�
 
 
 # ===== AI助手 Agent模式（带工具调用） =====
-ASSISTANT_AGENT_SYSTEM = """你是BlackBag测试平台的智能AI助手，你可以通过调用工具查询测试平台的实时数据来回答用户的问题。
+ASSISTANT_AGENT_SYSTEM = """你是 Q·M 测试平台的智能AI助手，你可以通过调用工具查询测试平台的实时数据来回答用户的问题。
 
 重要：你当前已在某个项目内，所有工具调用会自动带上当前项目ID，你不需要向用户询问项目ID，直接调用工具查询即可。
 

@@ -692,7 +692,7 @@ def get_init_data(request: Request):
 
 @api_view(['GET'])
 def download_windows(request: Request):
-    file_path = os.path.join(BASE_DIR, 'BlackBagTest.exe')
+    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
 
     if not os.path.exists(file_path):
         return Response({"error": "File not found"}, status=404)
@@ -707,7 +707,7 @@ def download_windows(request: Request):
         file_generator(),
         content_type='application/octet-stream'
     )
-    response['Content-Disposition'] = 'attachment; filename="BlackBagTest.exe"'
+    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
     response['Content-Length'] = str(os.path.getsize(file_path))
 
     return response
@@ -715,7 +715,7 @@ def download_windows(request: Request):
 
 @api_view(['GET'])
 def download_macos(request: Request):
-    file_path = os.path.join(BASE_DIR, 'BlackBagTest.exe')
+    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
 
     if not os.path.exists(file_path):
         return Response({"error": "File not found"}, status=404)
@@ -730,7 +730,7 @@ def download_macos(request: Request):
         file_generator(),
         content_type='application/octet-stream'
     )
-    response['Content-Disposition'] = 'attachment; filename="BlackBagTest.exe"'
+    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
     response['Content-Length'] = str(os.path.getsize(file_path))
 
     return response
@@ -738,7 +738,7 @@ def download_macos(request: Request):
 
 @api_view(['GET'])
 def download_linux(request: Request):
-    file_path = os.path.join(BASE_DIR, 'BlackBagTest.exe')
+    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
 
     if not os.path.exists(file_path):
         return Response({"error": "File not found"}, status=404)
@@ -753,7 +753,7 @@ def download_linux(request: Request):
         file_generator(),
         content_type='application/octet-stream'
     )
-    response['Content-Disposition'] = 'attachment; filename="BlackBagTest.exe"'
+    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
     response['Content-Length'] = str(os.path.getsize(file_path))
 
     return response

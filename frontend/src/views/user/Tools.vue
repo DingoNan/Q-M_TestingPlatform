@@ -15,7 +15,7 @@
               <div class="logo-glow"></div>
             </div>
             <div class="platform-info">
-              <h1 class="platform-name">BlackBagTest</h1>
+              <h1 class="platform-name">Q·M 测试平台</h1>
               <p class="platform-slogan">开发者测试工具箱</p>
             </div>
           </div>
@@ -2508,7 +2508,7 @@ export default {
       unicodeOutput: '',
       asciiInput: '',
       asciiOutput: '',
-      colorHex: '#409EFF',
+      colorHex: '#f59e0b',
       colorRgb: 'rgb(64,158,255)',
       urlInput: '',
       urlOutput: '',
@@ -2613,7 +2613,7 @@ export default {
       // 定义所有工具（包含所有分组）
       const allTools = [
         // 测试数据生成
-        { name: '身份证正反面', id: 'idcard', description: '生成身份证正面/反面图片', icon: 'Picture', color: '#409EFF', group: '测试数据生成' },
+        { name: '身份证正反面', id: 'idcard', description: '生成身份证正面/反面图片', icon: 'Picture', color: '#f59e0b', group: '测试数据生成' },
         { name: '银行卡号', id: 'bankcard', description: '生成随机银行卡号', icon: 'CreditCard', color: '#67C23A', group: '测试数据生成' },
         { name: '证件号', id: 'idnumber', description: '生成各种类型的证件号码', icon: 'User', color: '#E6A23C', group: '测试数据生成' },
         { name: '中文姓名', id: 'chineseName', description: '生成随机中文姓名', icon: 'User', color: '#F56C6C', group: '测试数据生成' },
@@ -2626,7 +2626,7 @@ export default {
         { name: '经纬度坐标', id: 'coords', description: '生成随机经纬度', icon: 'Location', color: '#20B2AA', group: '测试数据生成' },
         { name: '用户档案', id: 'profile', description: '生成完整用户档案', icon: 'UserFilled', color: '#FF7F50', group: '测试数据生成' },
         // JSON 处理
-        { name: 'JSON 格式化', id: 'jsonFormat', description: '格式化/压缩 JSON', icon: 'Document', color: '#409EFF', group: 'JSON 处理' },
+        { name: 'JSON 格式化', id: 'jsonFormat', description: '格式化/压缩 JSON', icon: 'Document', color: '#f59e0b', group: 'JSON 处理' },
         { name: 'JSON 校验', id: 'jsonValidate', description: '验证 JSON 合法性', icon: 'CircleCheck', color: '#67C23A', group: 'JSON 处理' },
         { name: 'JSON 对比增强', id: 'jsonDiff', description: '对比两个 JSON 差异', icon: 'CopyDocument', color: '#E6A23C', group: 'JSON 处理' },
         { name: 'JSONPath 查询', id: 'jsonpath', description: '使用 JSONPath 查询数据', icon: 'Search', color: '#F56C6C', group: 'JSON 处理' },
@@ -2637,7 +2637,7 @@ export default {
         { name: 'JSON 转 YAML', id: 'jsonToYaml', description: 'JSON 转 YAML 格式', icon: 'Document', color: '#FF69B4', group: 'JSON 处理' },
         { name: 'YAML 转 JSON', id: 'yamlToJson', description: 'YAML 转 JSON 格式', icon: 'Document', color: '#8A2BE2', group: 'JSON 处理' },
         // 编码转换
-        { name: '条形码', id: 'barcode', description: '生成条形码图片', icon: 'Grid', color: '#409EFF', group: '编码转换' },
+        { name: '条形码', id: 'barcode', description: '生成条形码图片', icon: 'Grid', color: '#f59e0b', group: '编码转换' },
         { name: '二维码', id: 'qrcode', description: '生成二维码图片', icon: 'Grid', color: '#67C23A', group: '编码转换' },
         { name: '二维码解析', id: 'qrcodeDecode', description: '解析二维码内容', icon: 'Search', color: '#E6A23C', group: '编码转换' },
         { name: '时间戳转换', id: 'timestampConv', description: 'Unix 时间戳与日期互转', icon: 'Clock', color: '#F56C6C', group: '编码转换' },
@@ -2649,9 +2649,9 @@ export default {
         { name: 'JWT 解析', id: 'jwt', description: '解析 JWT Token', icon: 'Key', color: '#8A2BE2', group: '编码转换' },
         { name: '图片转 Base64', id: 'imageToBase64', description: '图片文件转 Base64', icon: 'Picture', color: '#20B2AA', group: '编码转换' },
         { name: 'Base64 转图片', id: 'base64ToImage', description: 'Base64 还原为图片', icon: 'Picture', color: '#FF7F50', group: '编码转换' },
-        { name: 'Base64 编码', id: 'base64Encode', description: '文本 Base64 编码/解码', icon: 'Lock', color: '#409EFF', group: '编码转换' },
+        { name: 'Base64 编码', id: 'base64Encode', description: '文本 Base64 编码/解码', icon: 'Lock', color: '#f59e0b', group: '编码转换' },
         // 加密哈希
-        { name: 'MD5', id: 'md5Hash', description: '计算 MD5 哈希值', icon: 'Lock', color: '#409EFF', group: '加密哈希' },
+        { name: 'MD5', id: 'md5Hash', description: '计算 MD5 哈希值', icon: 'Lock', color: '#f59e0b', group: '加密哈希' },
         { name: 'SHA-1', id: 'sha1Hash', description: '计算 SHA-1 哈希值', icon: 'Lock', color: '#67C23A', group: '加密哈希' },
         { name: 'SHA-256', id: 'sha256Hash', description: '计算 SHA-256 哈希值', icon: 'Lock', color: '#E6A23C', group: '加密哈希' },
         { name: 'SHA-512', id: 'sha512Hash', description: '计算 SHA-512 哈希值', icon: 'Lock', color: '#F56C6C', group: '加密哈希' },
@@ -2661,7 +2661,7 @@ export default {
         { name: '密码强度', id: 'passwordStrength', description: '检测密码强度', icon: 'Key', color: '#FFD700', group: '加密哈希' },
         { name: '生成盐值', id: 'generateSalt', description: '生成随机盐值', icon: 'Refresh', color: '#FF69B4', group: '加密哈希' },
         // 字符串处理
-        { name: '文本对比', id: 'textDiff', description: '对比两段文本差异', icon: 'CopyDocument', color: '#409EFF', group: '字符串处理' },
+        { name: '文本对比', id: 'textDiff', description: '对比两段文本差异', icon: 'CopyDocument', color: '#f59e0b', group: '字符串处理' },
         { name: '正则测试', id: 'regexTest', description: '测试正则表达式匹配', icon: 'Search', color: '#67C23A', group: '字符串处理' },
         { name: '去除空格', id: 'trimSpaces', description: '去除首尾、所有或多余空格', icon: 'Delete', color: '#E6A23C', group: '字符串处理' },
         { name: '字符替换', id: 'replace', description: '查找并替换字符', icon: 'EditPen', color: '#F56C6C', group: '字符串处理' },
@@ -2819,7 +2819,7 @@ export default {
       else if (tool.id === 'baseConvert') this.baseNumber = this.baseResult = ''
       else if (tool.id === 'unicodeConv') this.unicodeInput = this.unicodeOutput = ''
       else if (tool.id === 'ascii') this.asciiInput = this.asciiOutput = ''
-      else if (tool.id === 'colorConv') this.colorHex = '#409EFF', this.colorRgb = 'rgb(64,158,255)'
+      else if (tool.id === 'colorConv') this.colorHex = '#f59e0b', this.colorRgb = 'rgb(64,158,255)'
       else if (tool.id === 'urlEncode') this.urlInput = this.urlOutput = ''
       else if (tool.id === 'jwt') this.jwtToken = this.jwtOutput = ''
       else if (tool.id === 'imageToBase64') this.imageToBase64Result = ''
@@ -3022,7 +3022,7 @@ export default {
         <text x="110" y="185" font-size="16" font-weight="bold" font-family="Arial, sans-serif" letter-spacing="2" fill="#333">${idNumber}</text>
         
         <!-- 人像区域 - 真实头像 -->
-        <rect x="230" y="50" width="70" height="100" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+        <rect x="230" y="50" width="70" height="100" fill="var(--qm-bg-3)" stroke="#999" stroke-width="1"/>
         <!-- 真实头像占位 - 使用渐变圆形头像 -->
         <circle cx="265" cy="100" r="25" fill="url(#avatarGradient)"/>
         <defs>
@@ -4284,7 +4284,7 @@ export default {
 .test-tools-container {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -4329,8 +4329,8 @@ export default {
   height: 50px;
 }
 .logo-icon { width: 100%; height: 100%; }
-.logo-hexagon { fill: none; stroke: #6366f1; stroke-width: 4; }
-.logo-center { fill: #6366f1; opacity: 0.8; }
+.logo-hexagon { fill: none; stroke: #f59e0b; stroke-width: 4; }
+.logo-center { fill: #f59e0b; opacity: 0.8; }
 .logo-square { fill: rgba(255, 255, 255, 0.9); }
 .platform-info {
   display: flex;
@@ -4340,7 +4340,7 @@ export default {
 .platform-name {
   font-size: 18px;
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
@@ -4373,7 +4373,7 @@ export default {
 }
 .search-icon {
   font-size: 18px;
-  color: #909399;
+  color: var(--qm-text-3);
 }
 .main-content {
   flex: 1;
@@ -4389,14 +4389,14 @@ export default {
 }
 .group-card {
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   overflow: hidden;
 }
 .group-card >>> .el-card__header {
   padding: 16px 24px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 .card-header {
   padding: 0;
@@ -4414,17 +4414,17 @@ export default {
 .group-indicator {
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 .group-title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 .group-count {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
   border: none;
 }
 .tools-grid {
@@ -4474,21 +4474,21 @@ export default {
   margin: 0 0 6px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--qm-text-1);
 }
 .tool-description {
   margin: 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 .empty-state {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 20px;
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed var(--qm-line-strong);
   margin-top: 24px;
 }
 .empty-state-content {
@@ -4497,7 +4497,7 @@ export default {
 }
 .empty-state-icon {
   font-size: 72px;
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
   margin-bottom: 24px;
 }
 .empty-state-title {
@@ -4507,24 +4507,24 @@ export default {
 }
 .empty-state-description {
   margin: 0 0 24px;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 .empty-state-btn {
   padding: 12px 32px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
   font-weight: 500;
 }
 .elegant-dialog >>> .el-dialog {
   border-radius: 24px;
   overflow: hidden;
-  background: white;
+  background: var(--qm-bg-2);
 }
 .elegant-dialog >>> .el-dialog__header {
   padding: 20px 24px 0;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
@@ -4540,7 +4540,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 20px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 .tool-dialog-content {
@@ -4553,8 +4553,8 @@ export default {
   display: flex;
   justify-content: flex-end;
   padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border-top: 1px solid var(--qm-line-strong);
 }
 .copy-btn {
   text-align: right;
@@ -4570,7 +4570,7 @@ export default {
   width: 100%;
   height: 60px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 .strength-tips {
   margin-top: 8px;

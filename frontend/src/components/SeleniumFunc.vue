@@ -357,8 +357,8 @@ export default{
 	}
 	
 	:deep(.custom-table .vxe-table--header) {
-	  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-	  border-bottom: 2px solid #e2e8f0;
+	  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+	  border-bottom: 2px solid var(--qm-line-strong);
 	}
 	
 	:deep(.custom-table .vxe-header--column) {
@@ -370,7 +370,7 @@ export default{
 	
 	:deep(.custom-table .vxe-body--column) {
 	  padding: 6px 8px !important;
-	  border-bottom: 1px solid #f1f5f9;
+	  border-bottom: 1px solid var(--qm-bg-3);
 	  box-sizing: border-box !important;
 	  overflow: visible !important;
 	}
@@ -390,7 +390,7 @@ export default{
 	  width: 100% !important;
 	  box-sizing: border-box !important;
 	  border-radius: 6px;
-	  border: 1px solid #d1d5db;
+	  border: 1px solid var(--qm-line-strong);
 	  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	  transition: all 0.2s ease;
 	}
@@ -404,7 +404,7 @@ export default{
 	  width: 100% !important;
 	  box-sizing: border-box !important;
 	  border-radius: 6px;
-	  border: 1px solid #d1d5db;
+	  border: 1px solid var(--qm-line-strong);
 	  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 	
@@ -436,18 +436,18 @@ export default{
 	}
 	
 	:deep(.custom-table .vxe-table--body-row:hover) {
-	  background-color: #f8fafc !important;
+	  background-color: var(--qm-bg-1) !important;
 	  transform: translateY(-1px);
 	  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 	}
 	
 	:deep(.custom-table .vxe-table--body-row.row--current) {
-	  background-color: #eff6ff !important;
+	  background-color: var(--qm-warning-soft) !important;
 	}
 	
 	:deep(.custom-table .vxe-table--empty-block) {
-	  background: #f8fafc;
-	  color: #64748b;
+	  background: var(--qm-bg-1);
+	  color: var(--qm-text-2);
 	  font-size: 14px;
 	}
 	
@@ -468,7 +468,7 @@ export default{
 	}
 	
 	:deep(.custom-table .vxe-tree-node--leaf) {
-	  color: #4b5563;
+	  color: var(--qm-text-2);
 	}
 	
 	:deep(.custom-table .vxe-tree-node--expanded) {
@@ -478,24 +478,24 @@ export default{
 	
 	:deep(.custom-table .vxe-table--edit-cell .el-input .el-input__wrapper) {
 	  border-radius: 8px;
-	  border: 1px solid #d1d5db;
+	  border: 1px solid var(--qm-line-strong);
 	  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	  transition: all 0.2s ease;
 	}
 	
 	:deep(.custom-table .vxe-table--edit-cell .el-input .el-input__wrapper:hover) {
-	  border-color: #3b82f6;
-	  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+	  border-color: #f59e0b;
+	  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
 	}
 	
 	:deep(.custom-table .vxe-table--edit-cell .el-input .el-input__wrapper.is-focus) {
-	  border-color: #3b82f6;
-	  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	  border-color: #f59e0b;
+	  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 	}
 	
 	:deep(.custom-table .vxe-table--edit-cell .el-select .el-input__wrapper) {
 	  border-radius: 8px;
-	  border: 1px solid #d1d5db;
+	  border: 1px solid var(--qm-line-strong);
 	  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 	
@@ -531,7 +531,7 @@ export default{
 	.search-btn {
 	  padding: 10px 24px;
 	  border-radius: 10px;
-	  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+	  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 	  border: none;
 	  font-weight: 500;
 	  transition: all 0.3s ease;
@@ -543,7 +543,7 @@ export default{
 	
 	.search-btn:hover {
 	  transform: translateY(-2px);
-	  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+	  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 	}
 	
 	.search-btn .el-icon {
@@ -558,7 +558,7 @@ export default{
 	}
 	.content-card {
 	  flex: 1;
-	  background: white;
+	  background: var(--qm-bg-2);
 	  margin-bottom: 20px;
 	  border: none;
 	  border-radius: 16px;
@@ -576,22 +576,22 @@ export default{
 	}
 	
 	.selenium-func-container {
-	  border: 2px solid #e2e8f0;
+	  border: 2px solid var(--qm-line-strong);
 	  border-radius: 16px;
 	  padding: 20px;
-	  background: white;
+	  background: var(--qm-bg-2);
 	  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 	  transition: all 0.3s ease;
 	}
 	
 	.selenium-func-container:hover {
-	  border-color: #cbd5e1;
+	  border-color: var(--qm-line-strong);
 	  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 	}
 	
 	.section-title {
 	  font-size: 16px;
 	  font-weight: 600;
-	  color: #334155;
+	  color: var(--qm-text-2);
 	}
 </style>

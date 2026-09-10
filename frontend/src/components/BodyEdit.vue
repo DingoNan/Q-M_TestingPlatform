@@ -149,7 +149,7 @@ export default{
 	  chooseCaseVisible: false,
       script_text: '',
       size: '18px',
-      color: '#409EFF'
+      color: '#f59e0b'
     }
   },
   methods: {
@@ -333,7 +333,7 @@ export default{
 .code-editor-container {
   border: 1px solid #ebeef5;
   border-radius: 6px;
-  background: #fff;
+  background: var(--qm-bg-2);
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
   overflow: hidden;
 }
@@ -343,7 +343,7 @@ export default{
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #f5f7fa;
+  background: var(--qm-bg-1);
   border-bottom: 1px solid #ebeef5;
 }
 
@@ -361,7 +361,7 @@ export default{
 }
 
 .toolbar-btn:hover {
-  background: #e4e7ed;
+  background: var(--qm-bg-4);
   transform: translateY(-1px);
 }
 
@@ -395,7 +395,7 @@ export default{
 .params-header {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--qm-text-1);
   padding-bottom: 8px;
   border-bottom: 1px solid #ebeef5;
   margin-bottom: 8px;
@@ -410,7 +410,7 @@ export default{
 .action-buttons-title,
 .variable-buttons-title {
   font-size: 13px;
-  color: #606266;
+  color: var(--qm-text-2);
   margin-top: 8px;
   margin-bottom: 4px;
   font-weight: 500;
@@ -435,25 +435,25 @@ export default{
 }
 
 .action-btn {
-  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #66b1ff 100%);
   border: none;
   color: white;
 }
 
 .action-btn:hover {
-  background: linear-gradient(135deg, #66b1ff 0%, #409EFF 100%);
+  background: linear-gradient(135deg, #66b1ff 0%, #f59e0b 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 .variable-btn {
   background: #f0f2f5;
-  border: 1px solid #e4e7ed;
-  color: #606266;
+  border: 1px solid var(--qm-line);
+  color: var(--qm-text-2);
 }
 
 .variable-btn:hover {
-  background: #e4e7ed;
+  background: var(--qm-bg-4);
   border-color: #d3d6dd;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -466,14 +466,14 @@ export default{
 
 .ace-editor {
   border-radius: 4px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--qm-line-strong);
   overflow: hidden;
 }
 
 .ace-editor-full {
   width: 100%;
   border-radius: 4px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--qm-line-strong);
   overflow: hidden;
 }
 
@@ -509,20 +509,20 @@ export default{
 }
 
 .dialog-confirm-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
 }
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
 }
 
 /* 确认按钮下划线颜色 */
 .button-text::after {
-  background: white; /* 白色下划线 */
+  background: var(--qm-bg-2); /* 白色下划线 */
 }
 
 
@@ -544,7 +544,7 @@ export default{
 /* 滚动条样式 */
 :deep(.ace_scrollbar) {
   scrollbar-width: thin;
-  scrollbar-color: #c0c4cc #f5f5f5;
+  scrollbar-color: #c0c4cc var(--qm-bg-3);
 }
 
 :deep(.ace_scrollbar::-webkit-scrollbar) {
@@ -553,7 +553,7 @@ export default{
 }
 
 :deep(.ace_scrollbar::-webkit-scrollbar-track) {
-  background: #f5f5f5;
+  background: var(--qm-bg-3);
   border-radius: 3px;
 }
 
@@ -563,6 +563,6 @@ export default{
 }
 
 :deep(.ace_scrollbar::-webkit-scrollbar-thumb:hover) {
-  background: #909399;
+  background: var(--qm-text-3);
 }
 </style>

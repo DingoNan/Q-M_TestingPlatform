@@ -315,7 +315,7 @@ export default {
   padding: 10px 12px 10px 16px;
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
 }
 
@@ -327,12 +327,12 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 18px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 
 .group-icon {
-  color: #6366f1;
+  color: #f59e0b;
   font-size: 18px;
 }
 
@@ -350,21 +350,21 @@ export default {
   border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
-  color: #475569;
+  color: var(--qm-text-2);
   transition: all 0.25s ease;
   margin-bottom: 2px;
 }
 
 .menu-item:hover {
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
 }
 
 .menu-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.12) 100%);
-  color: #6366f1;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(249, 115, 22, 0.12) 100%);
+  color: #f59e0b;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 #6366f1;
+  box-shadow: inset 3px 0 0 #f59e0b;
 }
 
 .menu-item-text {
@@ -394,7 +394,7 @@ export default {
 .env-mgmt-dialog.el-dialog {
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -402,15 +402,15 @@ export default {
 .env-mgmt-dialog .el-dialog__header {
   padding: 24px 24px 0;
   margin: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+  border-bottom: 1px solid var(--qm-line-strong);
   flex-shrink: 0;
 }
 
 .env-mgmt-dialog .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -426,7 +426,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 20px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 
@@ -488,8 +488,8 @@ export default {
   flex-shrink: 0;
   align-self: flex-start;
   max-height: 100%;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.08);
   overflow-y: auto;
@@ -507,14 +507,14 @@ export default {
   background: transparent;
 }
 .env-mgmt-dialog .env-mgmt-sider::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
   border-radius: 4px;
   background-clip: padding-box;
   border: 8px solid transparent;
   min-height: 40px;
 }
 .env-mgmt-dialog .env-mgmt-sider::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
   background-clip: padding-box;
   border: 8px solid transparent;
 }
@@ -552,8 +552,8 @@ export default {
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-radius: 16px !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.08) !important;
   box-sizing: border-box !important;

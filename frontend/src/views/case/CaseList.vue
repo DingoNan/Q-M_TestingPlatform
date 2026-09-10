@@ -1030,9 +1030,9 @@ export default{
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -1348,7 +1348,7 @@ export default{
     async getCases(){
       this.caseSearch.project = this.projectInfo.id
       const data = Object.assign(this.caseSearch, this.page_size_params, this.sort_params)
-      this.caseSearch.module = this.caseSearch.module_list.join(',')
+      this.caseSearch.module = (this.caseSearch.module_list || []).join(',')
       const response = await this.$api.getCases(data)
       if (response.status === 200){
         this.case_list = {...response.data}
@@ -1408,7 +1408,7 @@ export default{
 <style scoped>
 .case-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -1434,7 +1434,7 @@ export default{
 .sidebar-card {
   width: 320px;
   flex-shrink: 0;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -1444,7 +1444,7 @@ export default{
 
 .sidebar-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1476,7 +1476,7 @@ export default{
   left: 8px;
   width: 8px;
   height: 8px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 50%;
 }
 
@@ -1487,7 +1487,7 @@ export default{
   left: 7px;
   width: 10px;
   height: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
@@ -1495,7 +1495,7 @@ export default{
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   flex: 1;
 }
 
@@ -1512,16 +1512,16 @@ export default{
 
 .tree-search-input >>> .el-input__inner {
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-1);
   padding: 0 15px;
   box-shadow: none;
   transition: all 0.3s ease;
 }
 
 .tree-search-input >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
-  background: white;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-2);
 }
 
 .tree-search-input >>> .el-input__inner:focus {
@@ -1531,7 +1531,7 @@ export default{
 
 .tree-divider {
   margin: 16px 0;
-  border-color: #f1f5f9;
+  border-color: var(--qm-bg-3);
 }
 
 .include-children-wrapper {
@@ -1558,11 +1558,11 @@ export default{
 }
 
 .elegant-tree >>> .el-tree-node__content:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
 }
 
 .elegant-tree >>> .el-tree-node.is-current > .el-tree-node__content {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -1573,7 +1573,7 @@ export default{
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
   border-radius: 0 2px 2px 0;
 }
 
@@ -1616,7 +1616,7 @@ export default{
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
-  color: #334155;
+  color: var(--qm-text-1);
   min-width: 0; /* 允许文本区域收缩 */
 }
 
@@ -1637,13 +1637,13 @@ export default{
   padding: 0;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   transition: all 0.3s ease;
 }
 
 .node-dropdown-btn:hover {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--qm-bg-3);
+  color: var(--qm-text-2);
 }
 
 .danger-item {
@@ -1662,16 +1662,16 @@ export default{
 .tree-btn {
   flex: 1;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .tree-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -1691,7 +1691,7 @@ export default{
 
 /* 自动化类型筛选卡片 */
 .type-filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -1699,7 +1699,7 @@ export default{
 
 .type-filter-header {
   padding: 15px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1709,7 +1709,7 @@ export default{
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1721,7 +1721,7 @@ export default{
   left: 6px;
   width: 6px;
   height: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 1px;
 }
 
@@ -1732,7 +1732,7 @@ export default{
   left: 6px;
   width: 12px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 1px;
 }
 
@@ -1740,7 +1740,7 @@ export default{
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   flex: 1;
 }
 
@@ -1764,9 +1764,9 @@ export default{
   width: 100%;
   padding: 16px 12px;
   border-radius: 12px !important;
-  border: 2px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -1775,10 +1775,10 @@ export default{
 }
 
 .type-radio-group >>> .el-radio-button__original-radio:checked + .el-radio-button__inner {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  color: #1e40af;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, var(--qm-warning-soft) 0%, var(--qm-warning-soft-2) 100%);
+  color: #b45309;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
   transform: translateY(-2px);
 }
 
@@ -1825,9 +1825,9 @@ export default{
 
 /* 不同类型按钮的样式 */
 .type-radio-group >>> .type-1 .el-radio-button__inner {
-  border-color: #dbeafe;
-  background: #eff6ff;
-  color: #1e40af;
+  border-color: var(--qm-warning-line);
+  background: var(--qm-warning-soft);
+  color: #b45309;
 }
 
 .type-radio-group >>> .type-2 .el-radio-button__inner {
@@ -1837,28 +1837,28 @@ export default{
 }
 
 .type-radio-group >>> .type-3 .el-radio-button__inner {
-  border-color: #fef3c7;
-  background: #fffbeb;
+  border-color: var(--qm-warning-line);
+  background: var(--qm-warning-soft);
   color: #92400e;
 }
 
 .type-radio-group >>> .type-4 .el-radio-button__inner {
-  border-color: #f3f4f6;
-  background: #f9fafb;
+  border-color: var(--qm-bg-3);
+  background: var(--qm-bg-1);
   color: #374151;
 }
 
 .type-radio-group >>> .type-5 .el-radio-button__inner {
   border-color: #fee2e2;
-  background: #fef2f2;
+  background: var(--qm-red-soft);
   color: #991b1b;
 }
 
 .type-radio-group >>> .type-1 .el-radio-button__original-radio:checked + .el-radio-button__inner {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  color: #1e40af;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, var(--qm-warning-soft) 0%, var(--qm-warning-soft-2) 100%);
+  color: #b45309;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
 }
 
 .type-radio-group >>> .type-2 .el-radio-button__original-radio:checked + .el-radio-button__inner {
@@ -1870,14 +1870,14 @@ export default{
 
 .type-radio-group >>> .type-3 .el-radio-button__original-radio:checked + .el-radio-button__inner {
   border-color: #f59e0b;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  background: linear-gradient(135deg, var(--qm-warning-soft) 0%, var(--qm-warning-soft-2) 100%);
   color: #92400e;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
 }
 
 .type-radio-group >>> .type-4 .el-radio-button__original-radio:checked + .el-radio-button__inner {
-  border-color: #6b7280;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-color: var(--qm-text-2);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   color: #374151;
   box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
 }
@@ -1891,7 +1891,7 @@ export default{
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -1906,7 +1906,7 @@ export default{
   justify-content: space-between;
   align-items: center;
   padding: 15px 24px 10px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -1919,7 +1919,7 @@ export default{
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1942,7 +1942,7 @@ export default{
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -1969,8 +1969,8 @@ export default{
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1984,9 +1984,9 @@ export default{
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -1995,8 +1995,8 @@ export default{
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -2008,7 +2008,7 @@ export default{
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -2019,7 +2019,7 @@ export default{
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -2049,7 +2049,7 @@ export default{
    gap: 6px;
    font-size: 14px;
    font-weight: 500;
-   color: #475569;
+   color: var(--qm-text-2);
    width: 90px;
    margin-right: 10px;
    flex-shrink: 0;
@@ -2099,7 +2099,7 @@ export default{
   display: inline-block;
   flex-shrink: 0;
   border-radius: 4px;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .inline-label-wrapper .icon-tag {
@@ -2108,7 +2108,7 @@ export default{
   display: inline-block;
   flex-shrink: 0;
   border-radius: 4px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 .inline-label-wrapper .icon-result {
@@ -2135,14 +2135,14 @@ export default{
   display: inline-block;
   flex-shrink: 0;
   border-radius: 4px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .input-inline >>> .el-input__inner,
 .select-inline >>> .el-input__inner {
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-1);
   padding: 0 15px;
   box-shadow: none;
   transition: all 0.3s ease;
@@ -2152,14 +2152,14 @@ export default{
 
 .input-inline >>> .el-input__inner:hover,
 .select-inline >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
-  background: white;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-2);
 }
 
 .input-inline >>> .el-input__inner:focus,
 .select-inline >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .select-inline {
@@ -2170,7 +2170,7 @@ export default{
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -2180,7 +2180,7 @@ export default{
 
 .content-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -2200,7 +2200,7 @@ export default{
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -2213,7 +2213,7 @@ export default{
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -2227,18 +2227,18 @@ export default{
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .type-badge {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--qm-warning-soft) 0%, var(--qm-warning-soft-2) 100%);
+  border: 1px solid #fde68a;
 }
 
 .type-badge .stat-value {
-  color: #1e40af;
+  color: #b45309;
   font-weight: 600;
 }
 
@@ -2253,14 +2253,14 @@ export default{
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .add-btn {
@@ -2304,10 +2304,10 @@ export default{
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -2320,16 +2320,16 @@ export default{
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row.active-row {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -2340,11 +2340,11 @@ export default{
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -2359,10 +2359,10 @@ export default{
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
   border-radius: 8px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   margin: 0 auto;
 }
 
@@ -2378,8 +2378,8 @@ export default{
   gap: 6px;
   padding: 6px 14px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
   font-size: 13px;
   font-weight: 600;
   margin-right: 12px;
@@ -2400,23 +2400,23 @@ export default{
   padding: 10px 20px;
   border-radius: 10px !important;
   font-weight: 500 !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
   transition: all 0.3s ease !important;
 }
 
 .batch-dropdown .toolbar-btn:disabled {
   opacity: 0.5 !important;
   cursor: not-allowed;
-  background: #94a3b8 !important;
+  background: var(--qm-text-3) !important;
   box-shadow: none !important;
 }
 
 .batch-dropdown .toolbar-btn:hover:not(:disabled) {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4) !important;
 }
 
 .batch-dropdown .toolbar-btn .el-icon {
@@ -2461,7 +2461,7 @@ export default{
 }
 
 .batch-delete-tip {
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 14px;
   margin-top: 4px !important;
 }
@@ -2504,7 +2504,7 @@ export default{
 }
 
 .case-link:hover {
-  color: #3b82f6;
+  color: #f59e0b;
   text-decoration: underline;
 }
 
@@ -2534,7 +2534,7 @@ export default{
 }
 
 .no-tag {
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 13px;
 }
 
@@ -2575,7 +2575,7 @@ export default{
 
 .user-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-1);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -2585,7 +2585,7 @@ export default{
 
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2630,7 +2630,7 @@ export default{
 }
 
 .action-btn.copy-btn:hover {
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .action-btn.delete-btn:hover {
@@ -2650,11 +2650,11 @@ export default{
 }
 
 .action-btn.copy-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn .el-icon {
@@ -2670,12 +2670,12 @@ export default{
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   display: block !important;
   min-height: 40px;
   float: right;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -2687,7 +2687,7 @@ export default{
 .elegant-dialog >>> .el-dialog {
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
@@ -2699,7 +2699,7 @@ export default{
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2709,7 +2709,7 @@ export default{
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -2740,7 +2740,7 @@ export default{
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-1);
 }
 
 .icon-module,
@@ -2753,19 +2753,19 @@ export default{
 }
 
 .icon-module {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/%3E%3C/svg%3E");
 }
 
 .icon-tag-dialog {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z'/%3E%3C/svg%3E");
 }
 
 .dialog-input >>> .el-input__inner,
 .dialog-cascader >>> .el-input__inner,
 .dialog-select >>> .el-input__inner {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
@@ -2774,20 +2774,20 @@ export default{
 .dialog-input >>> .el-input__inner:hover,
 .dialog-cascader >>> .el-input__inner:hover,
 .dialog-select >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input >>> .el-input__inner:focus,
 .dialog-cascader >>> .el-input__inner:focus,
 .dialog-select >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -2799,23 +2799,23 @@ export default{
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
 .dialog-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -2823,7 +2823,7 @@ export default{
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 /* 响应式设计 */
@@ -3007,9 +3007,9 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   padding: 6px 12px;
   font-size: 12px;
   border-radius: 0 !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   transition: all 0.3s ease;
 }
 
@@ -3018,17 +3018,17 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .tree-wrapper::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 4px;
 }
 
 .tree-wrapper::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
   border-radius: 4px;
 }
 
 .tree-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
 }
 
 /* ===== 批量操作下拉菜单 popper 样式（与 FunCaseList 一致） ===== */
@@ -3037,7 +3037,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   border-radius: 12px !important;
   border: none !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
-  background: white !important;
+  background: var(--qm-bg-2) !important;
   width: auto !important;
   min-width: 100px !important;
 }
@@ -3057,7 +3057,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   overflow: hidden;
   padding-bottom: 12px !important;
   margin-bottom: 12px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
 }
 
 .batch-dropdown-popper .el-dropdown-menu__item:hover {
@@ -3083,18 +3083,18 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .batch-dropdown-item:hover {
-  background: #eff6ff !important;
+  background: var(--qm-warning-soft) !important;
 }
 
 .item-text {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-1);
   transition: all 0.2s ease;
 }
 
 .batch-dropdown-item:hover .item-text {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .batch-form .el-form-item {
@@ -3116,7 +3116,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3131,13 +3131,13 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 
 .tag-add-badge:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .tag-empty {
   padding: 16px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 13px;
 }
 </style>
@@ -3170,7 +3170,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .tag-add-dropdown-popper .el-dropdown-menu__item:hover {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
 }
 
 .tag-add-dropdown-popper .status-indicator {
@@ -3181,7 +3181,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .tag-add-dropdown-popper .status-indicator.primary {
-  background: #3b82f6;
+  background: #f59e0b;
 }
 
 .tag-add-dropdown-popper .status-indicator.success {
@@ -3193,7 +3193,7 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .tag-add-dropdown-popper .status-indicator.info {
-  background: #94a3b8;
+  background: var(--qm-text-3);
 }
 
 .tag-add-dropdown-popper .status-indicator.danger {
@@ -3203,6 +3203,6 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 .tag-add-dropdown-popper .status-text {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-1);
 }
 </style>

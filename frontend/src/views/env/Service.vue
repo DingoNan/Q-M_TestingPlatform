@@ -1083,9 +1083,9 @@ export default {
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -1503,7 +1503,7 @@ export default {
 <style scoped>
 .service-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -1516,7 +1516,7 @@ export default {
 
 .drawer-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -1528,18 +1528,18 @@ export default {
 .drawer-tabs >>> .el-tabs__header {
   margin: 0;
   padding: 0px 24px 0;
-  background: white;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--qm-bg-2);
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .drawer-tabs >>> .el-tabs__nav-wrap::after {
-  background-color: #f1f5f9;
+  background-color: var(--qm-bg-3);
 }
 
 .drawer-tabs >>> .el-tabs__item {
   font-size: 16px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--qm-text-2);
   padding: 0 24px;
   height: 48px;
   line-height: 48px;
@@ -1547,11 +1547,11 @@ export default {
 }
 
 .drawer-tabs >>> .el-tabs__item:hover {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .drawer-tabs >>> .el-tabs__item.is-active {
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
 }
 
@@ -1562,7 +1562,7 @@ export default {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px 2px 0 0;
 }
 
@@ -1589,7 +1589,7 @@ export default {
 /* 筛选卡片 */
 .filter-card {
   margin-bottom: 20px;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -1601,7 +1601,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 5px 10px 5px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -1614,7 +1614,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1637,7 +1637,7 @@ export default {
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -1645,8 +1645,8 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1660,9 +1660,9 @@ export default {
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -1671,8 +1671,8 @@ export default {
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -1684,7 +1684,7 @@ export default {
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1695,7 +1695,7 @@ export default {
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -1740,7 +1740,7 @@ export default {
    gap: 6px;
    font-size: 14px;
    font-weight: 500;
-   color: #475569;
+   color: var(--qm-text-2);
    min-width: 80px;
    margin-right: 10px;
    flex-shrink: 0;
@@ -1750,7 +1750,7 @@ export default {
 .inline-label-text {
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
   white-space: nowrap;
 }
 
@@ -1761,7 +1761,7 @@ export default {
   display: inline-block;
   flex-shrink: 0;
   border-radius: 4px;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .icon-environment,
@@ -1775,10 +1775,10 @@ export default {
   border-radius: 4px;
 }
 
-.icon-environment { background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%); }
+.icon-environment { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 .icon-product { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 .icon-creator { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.icon-updater { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.icon-updater { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
 
 /* 内联输入框样式 - 修复布局问题 */
 .input-inline,
@@ -1790,8 +1790,8 @@ export default {
 .input-inline >>> .el-input__inner,
 .select-inline >>> .el-input__inner {
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-1);
   padding: 0 15px;
   box-shadow: none;
   transition: all 0.3s ease;
@@ -1802,20 +1802,20 @@ export default {
 
 .input-inline >>> .el-input__inner:hover,
 .select-inline >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
-  background: white;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-2);
 }
 
 .input-inline >>> .el-input__inner:focus,
 .select-inline >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -1832,7 +1832,7 @@ export default {
 .content-header {
   padding: 20px 24px;
   margin-top:20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -1856,7 +1856,7 @@ export default {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -1869,7 +1869,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -1883,21 +1883,21 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .add-btn {
@@ -1942,12 +1942,12 @@ export default {
 .content-tabs >>> .el-tabs__header {
   margin: 0 24px;
   padding-top: 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
 .content-tabs >>> .el-tabs__nav-wrap::after {
-  background-color: #e2e8f0;
+  background-color: var(--qm-line-strong);
 }
 
 .content-tabs >>> .el-tabs__item {
@@ -1955,18 +1955,18 @@ export default {
   height: 48px;
   line-height: 48px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--qm-text-2);
   transition: all 0.3s ease;
 }
 
 .content-tabs >>> .el-tabs__item:hover {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .content-tabs >>> .el-tabs__item.is-active {
-  color: #3b82f6;
+  color: #f59e0b;
   font-weight: 600;
-  border-bottom: 2px solid #3b82f6;
+  border-bottom: 2px solid #f59e0b;
 }
 
 .content-tabs >>> .el-tabs__content {
@@ -2010,10 +2010,10 @@ export default {
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -2026,16 +2026,16 @@ export default {
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row.active-row {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -2046,11 +2046,11 @@ export default {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -2066,10 +2066,10 @@ export default {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
   border-radius: 8px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   margin: 0 auto;
 }
 
@@ -2109,7 +2109,7 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 13px;
 }
 
@@ -2154,7 +2154,7 @@ export default {
 }
 .user-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -2163,7 +2163,7 @@ export default {
 }
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2191,18 +2191,18 @@ export default {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   min-width: 40px;
 }
 
 .config-value {
   font-size: 13px;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .rule-count {
   font-weight: 600;
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .icon-environment-cell,
@@ -2229,7 +2229,7 @@ export default {
 }
 
 .icon-host {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z'/%3E%3C/svg%3E");
 }
 
 
@@ -2288,7 +2288,7 @@ export default {
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn .el-icon {
@@ -2304,11 +2304,11 @@ export default {
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 20px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   display: block !important;
   min-height: 40px;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -2319,7 +2319,7 @@ export default {
 .elegant-dialog >>> .el-dialog {
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
@@ -2336,7 +2336,7 @@ export default {
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2346,7 +2346,7 @@ export default {
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -2390,7 +2390,7 @@ export default {
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 /* 对话框图标 */
@@ -2405,26 +2405,26 @@ export default {
 }
 
 .icon-service-dialog {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z'/%3E%3C/svg%3E");
 }
 
 .icon-environment-dialog {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z'/%3E%3C/svg%3E");
 }
 
 .icon-product-dialog {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z'/%3E%3C/svg%3E");
 }
 
 .icon-rules-dialog {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23334155' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E");
 }
 
 .dialog-input >>> .el-input__inner,
 .dialog-select >>> .el-input__inner {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
@@ -2433,26 +2433,26 @@ export default {
 
 .dialog-input >>> .el-input__inner:hover,
 .dialog-select >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input >>> .el-input__inner:focus,
 .dialog-select >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .dialog-input >>> .el-input__count {
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 /* 规则区域样式 */
 .rules-section {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
   padding: 20px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .rules-header {
@@ -2466,7 +2466,7 @@ export default {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2492,7 +2492,7 @@ export default {
 .rules-tooltip-content h4 {
   margin: 0 0 8px 0;
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .rules-tooltip-content ul {
@@ -2502,17 +2502,17 @@ export default {
 
 .rules-tooltip-content li {
   font-size: 12px;
-  color: #475569;
+  color: var(--qm-text-2);
   line-height: 1.5;
   margin-bottom: 4px;
 }
 
 .rules-tooltip-content li strong {
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .rules-tooltip-content li code {
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Monaco', 'Consolas', monospace;
@@ -2525,7 +2525,7 @@ export default {
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -2537,23 +2537,23 @@ export default {
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
 .dialog-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -2561,7 +2561,7 @@ export default {
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 /* 响应式设计 */

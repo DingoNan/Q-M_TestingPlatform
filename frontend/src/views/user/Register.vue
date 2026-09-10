@@ -72,7 +72,7 @@
 								<div class="logo-glow"></div>
 							</div>
 							<div class="logo-text">
-								<h1 class="platform-name">BlackBagTest</h1>
+								<h1 class="platform-name">Q·M 测试平台</h1>
 								<p class="platform-slogan">智能测试解决方案</p>
 							</div>
 						</div>
@@ -268,7 +268,7 @@
 		<!-- 底部信息 -->
 		<div class="footer">
 			<div class="footer-content">
-				<p>© 2025 BlackBagTest 智能测试平台 | 版本 3.0.0</p>
+				<p>© 2025 Q·M 测试平台 | 版本 3.0.0</p>
 				<div class="footer-links">
 					<a href="#" @click="openHelp">帮助文档</a>
 					<a href="#">API文档</a>
@@ -302,7 +302,7 @@ export default {
 			focusedField: '',
 			activeFeature: '',
 			onlineUsers: 124,
-			switchColor: '#6366f1',
+			switchColor: '#f59e0b',
 			registerError: {
 				show: false,
 				title: '',
@@ -353,7 +353,8 @@ export default {
 	},
 	methods: {
 		openHelp(){
-			window.open('https://gitee.com/zengqicheng/black-bag-test/wikis/pages', '_blank');
+			const routeData = this.$router.resolve({ name: 'help' });
+			window.open(routeData.href, '_blank');
 		},
 		async register(){
 			// 清除之前的错误提示
@@ -508,7 +509,7 @@ export default {
 					length: Math.random() * 200 + 100,
 					speed: Math.random() * 2 + 1,
 					width: Math.random() * 2 + 0.5,
-					color: `rgba(99, 102, 241, ${Math.random() * 0.3 + 0.1})`,
+					color: `rgba(245, 158, 11, ${Math.random() * 0.3 + 0.1})`,
 					direction: Math.random() > 0.5 ? 1 : -1
 				});
 			}
@@ -659,17 +660,17 @@ export default {
 }
 
 .layer-1 {
-	background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+	background: radial-gradient(circle at 20% 50%, rgba(245, 158, 11, 0.15) 0%, transparent 50%);
 	animation: pulse-1 8s ease-in-out infinite;
 }
 
 .layer-2 {
-	background: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+	background: radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 50%);
 	animation: pulse-2 10s ease-in-out infinite;
 }
 
 .layer-3 {
-	background: radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
+	background: radial-gradient(circle at 50% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%);
 	animation: pulse-3 12s ease-in-out infinite;
 }
 
@@ -735,7 +736,7 @@ export default {
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
-	background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+	background: conic-gradient(from 0deg, transparent, rgba(245, 158, 11, 0.3), transparent);
 	animation: rotate 4s linear infinite;
 	z-index: -1;
 	opacity: 0.5;
@@ -760,7 +761,7 @@ export default {
 	transform: translateY(-10px) scale(1.1);
 	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 	background: rgba(255, 255, 255, 0.12);
-	border-color: rgba(99, 102, 241, 0.4);
+	border-color: rgba(245, 158, 11, 0.4);
 }
 
 .float-content {
@@ -903,13 +904,13 @@ export default {
 .logo-icon {
 	width: 100%;
 	height: 100%;
-	filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));
+	filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.5));
 	animation: logoFloat 6s ease-in-out infinite;
 }
 
 .logo-hexagon {
 	fill: none;
-	stroke: #6366f1;
+	stroke: #f59e0b;
 	stroke-width: 4;
 	stroke-linecap: round;
 	stroke-linejoin: round;
@@ -917,7 +918,7 @@ export default {
 }
 
 .logo-center {
-	fill: #6366f1;
+	fill: #f59e0b;
 	opacity: 0.8;
 	animation: centerPulse 2s ease-in-out infinite;
 }
@@ -933,7 +934,7 @@ export default {
 	width: 100%;
 	height: 100%;
 	border-radius: 50%;
-	background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+	background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
 	animation: glowPulse 4s ease-in-out infinite;
 }
 
@@ -944,7 +945,7 @@ export default {
 .platform-name {
 	font-size: 42px;
 	font-weight: 800;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
@@ -998,7 +999,7 @@ export default {
 .feature-card:hover {
 	transform: translateY(-8px);
 	background: rgba(255, 255, 255, 0.08);
-	border-color: rgba(99, 102, 241, 0.3);
+	border-color: rgba(245, 158, 11, 0.3);
 	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -1025,18 +1026,18 @@ export default {
 }
 
 .feature-icon.api {
-	background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
-	border: 1px solid rgba(99, 102, 241, 0.3);
+	background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+	border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .feature-icon.ui {
-	background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
-	border: 1px solid rgba(139, 92, 246, 0.3);
+	background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
+	border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .feature-icon.performance {
-	background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%);
-	border: 1px solid rgba(14, 165, 233, 0.3);
+	background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
+	border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .feature-icon.mock {
@@ -1064,7 +1065,7 @@ export default {
 	left: 0;
 	width: 100%;
 	height: 3px;
-	background: linear-gradient(90deg, transparent, #6366f1, transparent);
+	background: linear-gradient(90deg, transparent, #f59e0b, transparent);
 	transform: translateX(-100%);
 	transition: transform 0.6s ease;
 }
@@ -1102,7 +1103,7 @@ export default {
 	left: 0;
 	right: 0;
 	height: 6px;
-	background: linear-gradient(90deg, #6366f1, #8b5cf6, #0ea5e9, #ec4899);
+	background: linear-gradient(90deg, #f59e0b, #f97316, #f97316, #ec4899);
 	background-size: 300% 100%;
 	animation: gradientShift 3s ease infinite;
 }
@@ -1114,13 +1115,13 @@ export default {
 
 .login-header h2 {
 	font-size: 28px;
-	color: #1e293b;
+	color: var(--qm-text-1);
 	margin: 0 0 10px 0;
 	font-weight: 700;
 }
 
 .login-header p {
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-size: 15px;
 	margin: 0;
 }
@@ -1238,13 +1239,13 @@ export default {
 	left: 16px;
 	top: 50%;
 	transform: translateY(-50%);
-	color: #6366f1;
+	color: #f59e0b;
 	z-index: 2;
 	transition: all 0.3s ease;
 }
 
 .form-input.focused .input-icon {
-	color: #8b5cf6;
+	color: #f97316;
 	margin-bottom: 10px;
 	transform: translateY(-50%) scale(1.2);
 }
@@ -1261,7 +1262,7 @@ export default {
 :deep(.el-input__wrapper) {
 	width: 100%;
 	background: rgba(255, 255, 255, 0.95);
-	border: 2px solid #e2e8f0;
+	border: 2px solid var(--qm-line-strong);
 	border-radius: 12px;
 	padding: 16px 16px 16px 48px;
 	height: 56px;
@@ -1272,14 +1273,14 @@ export default {
 
 .form-input.has-error :deep(.el-input__wrapper) {
 	border-color: #dc2626;
-	background: #fef2f2;
+	background: var(--qm-red-soft);
 }
 
 :deep(.el-input__wrapper:hover),
 :deep(.el-input__wrapper.is-focus) {
-	border-color: #6366f1;
-	box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-	background: white;
+	border-color: #f59e0b;
+	box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+	background: var(--qm-bg-2);
 }
 
 .form-input.has-error :deep(.el-input__wrapper:hover),
@@ -1294,18 +1295,18 @@ export default {
 	left: 16px;
 	right: 16px;
 	height: 2px;
-	background: #e2e8f0;
+	background: var(--qm-line-strong);
 	overflow: hidden;
 }
 
 .form-input.has-error .input-underline {
-	background: #fecaca;
+	background: var(--qm-red-soft-2);
 }
 
 .underline-active {
 	height: 100%;
 	width: 100%;
-	background: linear-gradient(90deg, #6366f1, #8b5cf6);
+	background: linear-gradient(90deg, #f59e0b, #f97316);
 	transform: translateX(-100%);
 	transition: transform 0.3s ease;
 }
@@ -1327,7 +1328,7 @@ export default {
 	font-size: 16px;
 	font-weight: 600;
 	letter-spacing: 0.5px;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 	overflow: hidden;
 	transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	margin-bottom: 20px;
@@ -1335,7 +1336,7 @@ export default {
 
 .login-btn:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+	box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
 }
 
 .login-btn:active {
@@ -1377,12 +1378,12 @@ export default {
 
 .login-footer {
 	text-align: center;
-	border-top: 1px solid #e2e8f0;
+	border-top: 1px solid var(--qm-line-strong);
 	padding-top: 20px;
 }
 
 .login-footer p {
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-size: 14px;
 	margin: 0 0 15px 0;
 }
@@ -1391,21 +1392,21 @@ export default {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	color: #6366f1;
+	color: #f59e0b;
 	text-decoration: none;
 	font-weight: 600;
 	font-size: 14px;
 	transition: all 0.3s ease;
 	padding: 8px 16px;
 	border-radius: 8px;
-	background: rgba(99, 102, 241, 0.1);
+	background: rgba(245, 158, 11, 0.1);
 }
 
 .nav-link:hover {
 	color: white;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 	transform: translateY(-2px);
-	box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+	box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
 }
 
 .platform-status {
@@ -1414,14 +1415,14 @@ export default {
 	align-items: center;
 	margin-top: 25px;
 	padding-top: 25px;
-	border-top: 1px solid #e2e8f0;
+	border-top: 1px solid var(--qm-line-strong);
 }
 
 .status-item {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-size: 14px;
 }
 
@@ -1494,7 +1495,7 @@ export default {
 }
 
 .footer-links a:hover {
-	color: #6366f1;
+	color: #f59e0b;
 }
 
 .footer-links a::after {
@@ -1504,7 +1505,7 @@ export default {
 	left: 0;
 	width: 0;
 	height: 2px;
-	background: #6366f1;
+	background: #f59e0b;
 	transition: width 0.3s ease;
 }
 
@@ -1618,11 +1619,11 @@ export default {
 
 /* 加载动画 */
 :deep(.el-loading-spinner) {
-	color: #6366f1;
+	color: #f59e0b;
 }
 
 :deep(.el-loading-spinner .path) {
-	stroke: #6366f1;
+	stroke: #f59e0b;
 }
 
 /* 表单验证样式 */
@@ -1634,7 +1635,7 @@ export default {
 
 /* 按钮加载状态 */
 :deep(.el-button--loading) {
-	background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+	background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
 }
 
 /* 确保所有元素都有合适的z-index */

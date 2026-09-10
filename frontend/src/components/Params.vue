@@ -440,8 +440,8 @@ export default {
 	}
 
 	.param-info-section {
-		background: #f8fafc;
-		border: 1px solid #e2e8f0;
+		background: var(--qm-bg-1);
+		border: 1px solid var(--qm-line-strong);
 		border-radius: 10px;
 		padding: 16px;
 		margin-bottom: 20px;
@@ -461,13 +461,13 @@ export default {
 
 	.param-info-label {
 		font-size: 12px;
-		color: #94a3b8;
+		color: var(--qm-text-3);
 		font-weight: 500;
 	}
 
 	.param-info-value {
 		font-size: 14px;
-		color: #1e293b;
+		color: var(--qm-text-1);
 		font-weight: 500;
 		word-break: break-all;
 	}
@@ -479,16 +479,16 @@ export default {
 	.setting-section-title {
 		font-size: 15px;
 		font-weight: 600;
-		color: #1e293b;
+		color: var(--qm-text-1);
 		margin-bottom: 16px;
 		padding-left: 10px;
-		border-left: 3px solid #6366f1;
+		border-left: 3px solid #f59e0b;
 		line-height: 1.2;
 	}
 
 	.advanced-setting-form .setting-tip {
 		font-size: 12px;
-		color: #94a3b8;
+		color: var(--qm-text-3);
 		font-weight: normal;
 		margin-left: 4px;
 	}
@@ -508,7 +508,7 @@ export default {
 	}
 
 	.advanced-setting-form :deep(.el-input.is-disabled .el-input__wrapper) {
-		background-color: #f8fafc !important;
+		background-color: var(--qm-bg-1) !important;
 	}
 
 </style>

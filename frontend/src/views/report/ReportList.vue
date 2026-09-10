@@ -447,9 +447,9 @@ export default{
 		headerRowStyle() {
 			return {
 				'font-weight': '600',
-				'color': '#1a1a1a',
-				'background-color': '#f8fafc',
-				'border-bottom': '1px solid #e2e8f0',
+				'color': 'var(--qm-text-1)',
+				'background-color': 'var(--qm-bg-1)',
+				'border-bottom': '1px solid var(--qm-line-strong)',
 				'height': '56px'
 			}
 		},
@@ -590,7 +590,7 @@ export default{
 <style scoped>
 .report{
 	width: 100%;
-	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 	padding: 20px 15px 15px 15px;
 	box-sizing: border-box;
 	display: flex;
@@ -615,7 +615,7 @@ export default{
 
 /* 筛选卡片 */
 .filter-card {
-	background: white;
+	background: var(--qm-bg-2);
 	border: none;
 	border-radius: 16px;
 	overflow: hidden;
@@ -627,7 +627,7 @@ export default{
 	justify-content: space-between;
 	align-items: center;
 	padding: 15px 24px 10px 24px;
-	border-bottom: 1px solid #f1f5f9;
+	border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -640,7 +640,7 @@ export default{
 	display: inline-block;
 	width: 24px;
 	height: 24px;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 	border-radius: 8px;
 	position: relative;
 }
@@ -663,7 +663,7 @@ export default{
 	left: 15px;
 	width: 6px;
 	height: 2px;
-	background: white;
+	background: var(--qm-bg-2);
 	transform: rotate(45deg);
 }
 
@@ -671,8 +671,8 @@ export default{
 	margin: 0;
 	font-size: 18px;
 	font-weight: 600;
-	color: #1a1a1a;
-	background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+	color: var(--qm-text-1);
+	background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
@@ -686,9 +686,9 @@ export default{
 .reset-btn {
 	padding: 10px 20px;
 	border-radius: 10px;
-	border: 1px solid #e2e8f0;
-	background: white;
-	color: #64748b;
+	border: 1px solid var(--qm-line-strong);
+	background: var(--qm-bg-2);
+	color: var(--qm-text-2);
 	font-weight: 500;
 	transition: all 0.3s ease;
 	display: flex;
@@ -697,8 +697,8 @@ export default{
 }
 
 .reset-btn:hover {
-	background: #f8fafc;
-	border-color: #cbd5e1;
+	background: var(--qm-bg-1);
+	border-color: var(--qm-line-strong);
 	transform: translateY(-1px);
 }
 
@@ -710,7 +710,7 @@ export default{
 .search-btn {
 	padding: 10px 24px;
 	border-radius: 10px;
-	background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 	border: none;
 	font-weight: 500;
 	transition: all 0.3s ease;
@@ -721,7 +721,7 @@ export default{
 
 .search-btn:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+	box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -770,7 +770,7 @@ export default{
 	margin-right: 12px;
 	font-size: 14px;
 	font-weight: 500;
-	color: #475569;
+	color: var(--qm-text-2);
 	width: 90px;
 	flex-shrink: 0;
 	white-space: nowrap;
@@ -782,7 +782,7 @@ export default{
 	display: inline-block;
 	flex-shrink: 0;
 	border-radius: 4px;
-	background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .icon-suite,
@@ -795,9 +795,9 @@ export default{
 	border-radius: 4px;
 }
 
-.icon-suite { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
-.icon-env { background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%); }
-.icon-user { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+.icon-suite { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.icon-env { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.icon-user { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 
 /* 调整输入框和选择框样式 */
 .input-elegant,
@@ -808,8 +808,8 @@ export default{
 .input-elegant >>> .el-input__inner,
 .select-elegant >>> .el-input__inner {
 	border-radius: 10px;
-	border: 1px solid #e2e8f0;
-	background: #f8fafc;
+	border: 1px solid var(--qm-line-strong);
+	background: var(--qm-bg-1);
 	padding: 0 15px;
 	box-shadow: none;
 	transition: all 0.3s ease;
@@ -819,14 +819,14 @@ export default{
 
 .input-elegant >>> .el-input__inner:hover,
 .select-elegant >>> .el-input__inner:hover {
-	border-color: #cbd5e1;
-	background: white;
+	border-color: var(--qm-line-strong);
+	background: var(--qm-bg-2);
 }
 
 .input-elegant >>> .el-input__inner:focus,
 .select-elegant >>> .el-input__inner:focus {
-	border-color: #3b82f6;
-	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	border-color: #f59e0b;
+	box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* 调整 el-form-item 的内部布局 */
@@ -839,7 +839,7 @@ export default{
 /* 内容卡片 */
 .content-card {
 	flex: 1;
-	background: white;
+	background: var(--qm-bg-2);
 	border: none;
 	border-radius: 16px;
 	display: flex;
@@ -849,7 +849,7 @@ export default{
 
 .content-header {
 	padding: 20px 24px;
-	border-bottom: 1px solid #f1f5f9;
+	border-bottom: 1px solid var(--qm-bg-3);
 	flex-shrink: 0;
 	display: flex;
 	align-items: center;
@@ -874,7 +874,7 @@ export default{
 .batch-delete-btn {
 	padding: 10px 20px;
 	border-radius: 10px;
-	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 	border: none;
 	font-weight: 500;
 	transition: all 0.3s ease;
@@ -903,7 +903,7 @@ export default{
 	margin: 0;
 	font-size: 20px;
 	font-weight: 700;
-	color: #1a1a1a;
+	color: var(--qm-text-1);
 	position: relative;
 	padding-left: 16px;
 }
@@ -916,7 +916,7 @@ export default{
 	transform: translateY(-50%);
 	width: 4px;
 	height: 24px;
-	background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 	border-radius: 2px;
 }
 
@@ -930,21 +930,21 @@ export default{
 	align-items: center;
 	gap: 6px;
 	padding: 6px 12px;
-	background: #f8fafc;
+	background: var(--qm-bg-1);
 	border-radius: 8px;
-	border: 1px solid #e2e8f0;
+	border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
 	font-size: 12px;
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-weight: 500;
 }
 
 .stat-value {
 	font-size: 14px;
 	font-weight: 600;
-	color: #1a1a1a;
+	color: var(--qm-text-1);
 }
 
 /* 表格区域 */
@@ -966,10 +966,10 @@ export default{
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-	background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+	background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 	font-weight: 600;
-	color: #1a1a1a;
-	border-bottom: 1px solid #e2e8f0;
+	color: var(--qm-text-1);
+	border-bottom: 1px solid var(--qm-line-strong);
 	padding: 16px 0;
 }
 
@@ -982,16 +982,16 @@ export default{
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-	background: #f8fafc;
+	background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-	background: #f1f8ff;
+	background: var(--qm-warning-soft);
 	transform: translateX(4px);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row.active-row {
-	background: #ebf5ff;
+	background: var(--qm-warning-soft);
 	position: relative;
 }
 
@@ -1002,11 +1002,11 @@ export default{
 	top: 0;
 	bottom: 0;
 	width: 4px;
-	background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+	background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-	border-bottom: 1px solid #f1f5f9;
+	border-bottom: 1px solid var(--qm-bg-3);
 	padding: 16px 0;
 	transition: all 0.3s ease;
 }
@@ -1021,10 +1021,10 @@ export default{
 	justify-content: center;
 	width: 32px;
 	height: 32px;
-	background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+	background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
 	border-radius: 8px;
 	font-weight: 600;
-	color: #475569;
+	color: var(--qm-text-2);
 	margin: 0 auto;
 }
 
@@ -1033,7 +1033,7 @@ export default{
 	align-items: center;
 	justify-content: center;
 	font-weight: 600;
-	color: #1a1a1a;
+	color: var(--qm-text-1);
 }
 
 .success-tag {
@@ -1072,7 +1072,7 @@ export default{
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-size: 13px;
 }
 
@@ -1099,11 +1099,11 @@ export default{
 }
 
 .progress-bar >>> .el-progress-bar__inner {
-	background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .progress-bar >>> .el-progress-bar__outer {
-	background-color: #e2e8f0;
+	background-color: var(--qm-line-strong);
 	border-radius: 10px;
 }
 
@@ -1153,7 +1153,7 @@ export default{
 }
 
 .action-btn.delete-btn {
-	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn .el-icon {
@@ -1169,12 +1169,12 @@ export default{
 /* 分页组件样式 */
 .pagination-wrapper {
 	padding: 20px 24px 0px 24px;
-	border-top: 1px solid #f1f5f9;
+	border-top: 1px solid var(--qm-bg-3);
 	flex-shrink: 0;
 	display: block !important;
 	min-height: 40px;
 	float: right;
-	background: white;
+	background: var(--qm-bg-2);
 	z-index: 10;
 	position: relative;
 	opacity: 1 !important;
@@ -1194,7 +1194,7 @@ export default{
 }
 
 .elegant-pagination >>> .el-pagination__total {
-	color: #64748b;
+	color: var(--qm-text-2);
 	font-weight: 500;
 	margin-right: 20px;
 }
@@ -1205,15 +1205,15 @@ export default{
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner {
 	border-radius: 8px;
-	border: 1px solid #e2e8f0;
-	background: white;
+	border: 1px solid var(--qm-line-strong);
+	background: var(--qm-bg-2);
 	box-shadow: none;
 	height: 32px;
 	line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner:hover {
-	border-color: #cbd5e1;
+	border-color: var(--qm-line-strong);
 }
 
 .elegant-pagination >>> .el-pager li {
@@ -1228,13 +1228,13 @@ export default{
 }
 
 .elegant-pagination >>> .el-pager li:not(.disabled):hover {
-	color: #3b82f6;
-	border-color: #3b82f6;
-	background: white;
+	color: #f59e0b;
+	border-color: #f59e0b;
+	background: var(--qm-bg-2);
 }
 
 .elegant-pagination >>> .el-pager li.active {
-	background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 	color: white;
 	border-color: transparent;
 }
@@ -1242,8 +1242,8 @@ export default{
 .elegant-pagination >>> .btn-prev,
 .elegant-pagination >>> .btn-next {
 	border-radius: 8px;
-	border: 1px solid #e2e8f0;
-	background: white;
+	border: 1px solid var(--qm-line-strong);
+	background: var(--qm-bg-2);
 	transition: all 0.3s ease;
 	min-width: 36px;
 	height: 36px;
@@ -1252,8 +1252,8 @@ export default{
 
 .elegant-pagination >>> .btn-prev:hover:not(.disabled),
 .elegant-pagination >>> .btn-next:hover:not(.disabled) {
-	border-color: #3b82f6;
-	color: #3b82f6;
+	border-color: #f59e0b;
+	color: #f59e0b;
 }
 
 .elegant-pagination >>> .el-pagination__jump {
@@ -1262,14 +1262,14 @@ export default{
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner {
 	border-radius: 8px;
-	border: 1px solid #e2e8f0;
+	border: 1px solid var(--qm-line-strong);
 	box-shadow: none;
 	height: 32px;
 	line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner:hover {
-	border-color: #cbd5e1;
+	border-color: var(--qm-line-strong);
 }
 
 /* 响应式设计 */

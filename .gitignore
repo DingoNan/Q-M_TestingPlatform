@@ -1,18 +1,48 @@
-# ===== BlackBagTest 根仓库 =====
+# ===== Q·M 测试平台 根仓库 =====
 
-# 敏感配置（.env.example 才入库）
+# ---------- 敏感 / 本地配置（.env.example 才入库） ----------
 .env
+.env.*
+!.env.example
 
-# IDE
+# ---------- IDE ----------
 .idea/
 .vscode/
+*.swp
 
-# OS
+# ---------- OS ----------
 .DS_Store
 Thumbs.db
 
-# 日志
+# ---------- 日志 ----------
 *.log
+
+# ---------- 前端 ----------
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/coverage/
+frontend/tests/e2e/videos/
+
+# ---------- 后端 Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+backend/media/
+backend/staticfiles/
 
 # 构建缓存（Docker 基础镜像构建用，几百MB不宜入库）
 backend/.buildcache/
+
+# ---------- 测试产物（注意：不能用 report/，会误伤 frontend/src/views/report 源码目录） ----------
+*.jtl
+/allure-results/
+/.jmeter/

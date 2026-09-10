@@ -73,7 +73,7 @@
 					</el-col> -->
 				</el-row>
 				<div class='api_request_info'>
-					<el-tabs v-model="active_request_tab" type="card" @tab-click="handleClick" style='background-color: white, margin: 0'>
+					<el-tabs v-model="active_request_tab" type="card" @tab-click="handleClick" style='background-color: var(--qm-bg-2), margin: 0'>
 						<el-tab-pane label="Headers" name="headers">
 							<Header :tableData='apiForm.headers' :func_list='func_list'></Header>
 						</el-tab-pane>
@@ -342,10 +342,10 @@ export default{
 	}
 
 	/deep/ .el-page-header__content{
-		color: #409eff
+		color: #f59e0b
 	}
 	.create_case .el-input-group__append{
-		background-color: white;
+		background-color: var(--qm-bg-2);
 		box-shadow: none;
 		border: none;
 		/* padding: 0px; */

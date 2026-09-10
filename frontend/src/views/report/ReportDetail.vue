@@ -821,7 +821,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 14,
             fontWeight: 'bold'
           }
@@ -829,14 +829,14 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{a} <br/>{b}: {c} ({d}%)'
         },
         legend: {
           orient: 'horizontal',
           bottom: 0,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -878,7 +878,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 14,
             fontWeight: 'bold'
           }
@@ -886,8 +886,8 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           axisPointer: {
             type: 'cross',
             label: {
@@ -898,22 +898,22 @@ export default {
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         yAxis: {
           type: 'value',
           name: '百分比(%)',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         legend: {
           show: true,
           data: ['成功率', '失败率', '错误率'],
           bottom: 0,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         grid: {
           left: '3%',
@@ -990,9 +990,9 @@ export default {
     getTableHeaderStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '2px solid #e2e8f0'
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '2px solid var(--qm-line-strong)'
       }
     },
     
@@ -1264,7 +1264,7 @@ export default {
 <style scoped>
 .test-report-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 5px;
   box-sizing: border-box;
   display: flex;
@@ -1279,7 +1279,7 @@ export default {
               0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
 }
 
@@ -1321,17 +1321,17 @@ export default {
   gap: 6px;
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .back-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -1339,7 +1339,7 @@ export default {
   display: inline-block;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 10px;
   position: relative;
 }
@@ -1351,7 +1351,7 @@ export default {
   left: 7px;
   right: 7px;
   bottom: 7px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 5px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -1360,7 +1360,7 @@ export default {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .report-status {
@@ -1395,7 +1395,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1407,7 +1407,7 @@ export default {
   left: 5px;
   right: 5px;
   bottom: 5px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 3px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -1416,7 +1416,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .info-content-grid {
@@ -1437,7 +1437,7 @@ export default {
   gap: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .icon-user,
@@ -1500,18 +1500,18 @@ export default {
 
 .info-value {
   font-size: 15px;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   font-weight: 500;
   padding: 10px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   transition: all 0.3s ease;
 }
 
 .info-value:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-2);
+  border-color: var(--qm-line-strong);
 }
 
 /* 图表行 */
@@ -1561,7 +1561,7 @@ export default {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .chart-content {
@@ -1591,7 +1591,7 @@ export default {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 
 .card-title-section {
@@ -1615,7 +1615,7 @@ export default {
 }
 
 .icon-module {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 .icon-log {
@@ -1631,7 +1631,7 @@ export default {
   left: 6px;
   right: 6px;
   bottom: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 4px;
 }
 
@@ -1639,7 +1639,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .data-badge {
@@ -1677,13 +1677,13 @@ export default {
 }
 
 .data-table ::v-deep(.el-table__row:hover) {
-  background-color: #f8fafc;
+  background-color: var(--qm-bg-1);
 }
 
 .tag-name,
 .module-name {
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .number-value,
@@ -1696,12 +1696,12 @@ export default {
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
-.number-value { color: #3b82f6; }
-.time-value { color: #8b5cf6; }
+.number-value { color: #f59e0b; }
+.time-value { color: #f97316; }
 .success-value { color: #52c41a; }
 .error-value { color: #f5222d; }
 .warning-value { color: #fa8c16; }
-.percent-value { color: #64748b; }
+.percent-value { color: var(--qm-text-2); }
 
 .percent-good {
   color: #52c41a !important;

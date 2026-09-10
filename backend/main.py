@@ -122,7 +122,7 @@ class TestConfigApp(QWidget):
         self.web_ui = False
         self.max_num = 1000000000
         self.project_data = {}
-        self.settings = QSettings("BlackBagTest", "LocustConfig")
+        self.settings = QSettings("Q·M 测试平台", "LocustConfig")
         self.initUI()
         self.apply_stylesheet()
         self.load_settings()
@@ -130,7 +130,7 @@ class TestConfigApp(QWidget):
         self.load_project_data(show_error=False, auto_select_first=True)
 
     def initUI(self):
-        self.setWindowTitle('BlackBagTest')
+        self.setWindowTitle('Q·M 测试平台')
         self.setMinimumSize(820, 620)
 
         svg_data = '''
@@ -396,11 +396,11 @@ class TestConfigApp(QWidget):
 
     def show_about(self):
         msg = QMessageBox(self)
-        msg.setWindowTitle("关于 BlackBagTest")
+        msg.setWindowTitle("关于 Q·M 测试平台")
         msg.setIcon(QMessageBox.Information)
         msg.setTextFormat(Qt.RichText)
         msg.setText(
-            "<b>BlackBagTest 压测配置工具</b><br><br>"
+            "<b>Q·M 测试平台 压测配置工具</b><br><br>"
             "版本 1.2<br>"
             "基于 PyQt5 和 Locust 的分布式压测客户端<br><br>"
             "特性：<br>"
@@ -719,7 +719,7 @@ class TestConfigApp(QWidget):
 
 if __name__ == '__main__':
     # 先注释掉 core/system_function/faker.py 中的inspect.getsource
-    # 打包命令：pyinstaller -F --icon=./core/locust/locust.ico --name BlackBagTest  main.py
+    # 打包命令：pyinstaller -F --icon=./core/locust/locust.ico --name QMTestPlatform  main.py
     app = QApplication(sys.argv)
     window = TestConfigApp()
     window.show()

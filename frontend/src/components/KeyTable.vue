@@ -94,7 +94,7 @@ export default{
 
 <style>
 	.el-table--border .el-table__inner-wrapper::after, .el-table--border::after, .el-table--border::before, .el-table__inner-wrapper::before{
-		background-color: white !important;
+		background-color: var(--qm-bg-2) !important;
 	}
 	
 </style>

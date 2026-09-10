@@ -76,7 +76,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
@@ -103,7 +103,7 @@ export default {
 .effect-1 {
   width: 500px;
   height: 500px;
-  background: #3b82f6;
+  background: #f59e0b;
   top: -150px;
   left: -150px;
   animation-delay: 0s;
@@ -143,7 +143,7 @@ export default {
 }
 
 .no-permission-card {
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 32px;
   box-shadow: 0 16px 60px rgba(0, 0, 0, 0.15);
   padding: 80px 50px;
@@ -213,7 +213,7 @@ export default {
 .no-permission-title {
   font-size: 36px;
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   margin: 0 0 20px 0;
   display: flex;
   justify-content: center;
@@ -237,7 +237,7 @@ export default {
 /* 描述 */
 .no-permission-description {
   font-size: 20px;
-  color: #64748b;
+  color: var(--qm-text-2);
   margin: 0 0 50px 0;
   line-height: 1.7;
   opacity: 0;
@@ -271,16 +271,16 @@ export default {
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   color: white;
   min-width: 180px;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
 }
 
 .back-button:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.5);
 }
 
 .back-button::before {
@@ -316,7 +316,7 @@ export default {
 .decoration {
   position: absolute;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(245, 158, 11, 0.1);
   animation: float 8s infinite ease-in-out;
 }
 

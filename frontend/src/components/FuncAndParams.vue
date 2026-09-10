@@ -1712,14 +1712,14 @@ export default {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #409eff, #79bbff);
+  background: linear-gradient(135deg, #f59e0b, #79bbff);
   cursor: pointer;
   transition: all 0.3s ease;
   color: white;
 }
 
 .dropdown-trigger:hover {
-  background: linear-gradient(135deg, #79bbff, #409eff);
+  background: linear-gradient(135deg, #79bbff, #f59e0b);
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
@@ -1735,7 +1735,7 @@ export default {
   border-radius: 8px;
   padding: 8px 0;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--qm-line);
   min-width: 160px;
 }
 
@@ -1746,7 +1746,7 @@ export default {
 
 .custom-dropdown-menu :deep(.el-dropdown-menu__item:hover) {
   background-color: #f0f7ff;
-  color: #409eff;
+  color: #f59e0b;
 }
 
 .dropdown-item-content {
@@ -1757,7 +1757,7 @@ export default {
 
 .dropdown-item-icon {
   font-size: 16px;
-  color: #409eff;
+  color: #f59e0b;
   width: 20px;
   display: flex;
   align-items: center;
@@ -1804,7 +1804,7 @@ export default {
 }
 
 .table-container :deep(.vxe-table--header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .table-container :deep(.vxe-table--header .vxe-header--row) {
@@ -1845,7 +1845,7 @@ export default {
   align-items: center;
   height: 300px;
   border-radius: 8px;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border: 1px dashed #dcdfe6;
 }
 
@@ -1887,20 +1887,20 @@ export default {
 }
 
 .dialog-confirm-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
 }
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
 }
 
 /* 确认按钮下划线颜色 */
 .button-text::after {
-  background: white; /* 白色下划线 */
+  background: var(--qm-bg-2); /* 白色下划线 */
 }
 
 
@@ -1908,7 +1908,7 @@ export default {
 .step-sidebar {
   width: 280px;
   flex-shrink: 0;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -1920,7 +1920,7 @@ export default {
 .variable-type-sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -1936,7 +1936,7 @@ export default {
 }
 
 .sidebar-section {
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1948,10 +1948,10 @@ export default {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--qm-text-1);
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--qm-line);
   flex-shrink: 0;
 }
 
@@ -1995,20 +1995,20 @@ export default {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: white;
-  border: 1px solid #e4e7ed;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line);
   flex-shrink: 0;
 }
 
 .step-item:hover {
-  background: #f0f7ff;
-  border-color: #409eff;
+  background: var(--qm-info-soft);
+  border-color: #f59e0b;
   transform: translateX(4px);
 }
 
 .step-item.active {
-  background: linear-gradient(135deg, #409eff, #79bbff);
-  border-color: #409eff;
+  background: linear-gradient(135deg, #f59e0b, #79bbff);
+  border-color: #f59e0b;
   color: white;
 }
 
@@ -2019,16 +2019,16 @@ export default {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #f0f7ff;
-  color: #409eff;
+  background: var(--qm-info-soft);
+  color: #f59e0b;
   font-weight: bold;
   font-size: 14px;
   flex-shrink: 0;
 }
 
 .step-item.active .step-index {
-  background: white;
-  color: #409eff;
+  background: var(--qm-bg-2);
+  color: #f59e0b;
 }
 
 .step-info {
@@ -2038,7 +2038,7 @@ export default {
 
 .step-type {
   font-size: 12px;
-  color: #909399;
+  color: var(--qm-text-3);
   margin-bottom: 4px;
 }
 
@@ -2094,20 +2094,20 @@ export default {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: white;
-  border: 1px solid #e4e7ed;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line);
   flex-shrink: 0;
 }
 
 .variable-type-item:hover {
-  border-color: #409eff;
-  background: #f0f7ff;
+  border-color: #f59e0b;
+  background: var(--qm-info-soft);
   transform: translateX(4px);
 }
 
 .variable-type-item.active {
-  background: linear-gradient(135deg, #409eff, #79bbff);
-  border-color: #409eff;
+  background: linear-gradient(135deg, #f59e0b, #79bbff);
+  border-color: #f59e0b;
   color: white;
 }
 
@@ -2117,7 +2117,7 @@ export default {
 
 .variable-type-item .el-icon {
   font-size: 18px;
-  color: #409eff;
+  color: #f59e0b;
   width: 24px;
   flex-shrink: 0;
   display: flex;
@@ -2128,7 +2128,7 @@ export default {
 .variable-type-item span {
   font-size: 14px;
   font-weight: 500;
-  color: #606266;
+  color: var(--qm-text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2143,7 +2143,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
   border: 1px dashed #dcdfe6;
 }
@@ -2152,23 +2152,23 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--qm-line);
 }
 
 .content-header {
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f8f9fa 100%);
-  border-bottom: 1px solid #e4e7ed;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 20%, var(--qm-bg-1) 100%);
+  border-bottom: 1px solid var(--qm-line);
   flex-shrink: 0;
 }
 
 .content-header .step-number {
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: var(--qm-text-1);
 }
 
 .step-title {
@@ -2180,7 +2180,7 @@ export default {
 
 .content-header .subtitle {
   font-size: 14px;
-  color: #303133;
+  color: var(--qm-text-1);
 }
 
 .direct-bind-content {
@@ -2193,41 +2193,41 @@ export default {
 }
 
 .bind-info {
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border-radius: 12px;
   padding: 40px;
   text-align: center;
   max-width: 600px;
   width: 100%;
-  border: 2px solid #e4e7ed;
+  border: 2px solid var(--qm-line);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .bind-title {
   font-size: 24px;
   font-weight: 600;
-  color: #303133;
+  color: var(--qm-text-1);
   margin-bottom: 12px;
 }
 
 .bind-desc {
   font-size: 16px;
-  color: #606266;
+  color: var(--qm-text-2);
   margin-bottom: 24px;
   line-height: 1.5;
 }
 
 .bind-expression {
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 32px;
-  border: 2px dashed #409eff;
+  border: 2px dashed #f59e0b;
 }
 
 .expression-label {
   font-size: 14px;
-  color: #606266;
+  color: var(--qm-text-2);
   margin-bottom: 8px;
   text-align: left;
 }
@@ -2235,12 +2235,12 @@ export default {
 .expression-value {
   font-size: 18px;
   font-weight: 600;
-  color: #409eff;
+  color: #f59e0b;
   font-family: 'Courier New', monospace;
   word-break: break-all;
   text-align: left;
   padding: 8px;
-  background: #f8f9fa;
+  background: var(--qm-bg-1);
   border-radius: 4px;
 }
 
@@ -2275,21 +2275,21 @@ export default {
 }
 
 .func-collapse :deep(.el-collapse-item__header) {
-  background: #f5f7fa;
+  background: var(--qm-bg-1);
   padding: 0 20px;
   font-weight: 600;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--qm-line);
 }
 
 .func-collapse :deep(.el-collapse-item__content) {
   padding: 20px;
-  background: white;
+  background: var(--qm-bg-2);
 }
 
 .code-editor-container {
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .result-container {
@@ -2303,8 +2303,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 0px;
-  /* border-top: 1px solid #e4e7ed; */
-  background: #f8f9fa;
+  /* border-top: 1px solid var(--qm-line); */
+  background: var(--qm-bg-1);
 }
 
 :deep(.el-dialog) {
@@ -2313,7 +2313,7 @@ export default {
 }
 
 :deep(.el-dialog__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   margin: 0;
   padding: 20px;
 }
@@ -2336,7 +2336,7 @@ export default {
 }
 
 :deep(.el-tabs__nav-wrap::after) {
-  background-color: #e4e7ed;
+  background-color: var(--qm-bg-4);
 }
 
 :deep(.el-tabs__item) {
@@ -2344,11 +2344,11 @@ export default {
 }
 
 :deep(.el-tabs__item:hover) {
-  color: #409eff;
+  color: #f59e0b;
 }
 
 :deep(.el-tabs__item.is-active) {
-  color: #409eff;
+  color: #f59e0b;
   font-weight: 600;
 }
 

@@ -40,7 +40,7 @@
 	<div class="case" v-if='case_model==="tree"' >
 		<el-container>
 		  <el-card style='margin-bottom: 10px;'>
-		  	<el-aside style=" height: 740px; background-color: white; margin-top: 10px; margin-left: 10px;" :style="{ width: `${asideWidth}px` }">
+		  	<el-aside style=" height: 740px; background-color: var(--qm-bg-2); margin-top: 10px; margin-left: 10px;" :style="{ width: `${asideWidth}px` }">
 			   <vxe-tree
 					 ref="treeRef"
 					 :show-line="false"
@@ -115,8 +115,8 @@
 				 	</el-form>	  
 				 </el-card>
 				 <el-card style='margin-bottom: 10px;'>
-				 	<div style="background-color: white; padding-bottom: 10px;">
-						 <div style="padding-top: 10px; padding-right: 25px; padding-bottom: 10px; background-color: white; display: flex; justify-content: flex-end" class='btn_right'>
+				 	<div style="background-color: var(--qm-bg-2); padding-bottom: 10px;">
+						 <div style="padding-top: 10px; padding-right: 25px; padding-bottom: 10px; background-color: var(--qm-bg-2); display: flex; justify-content: flex-end" class='btn_right'>
 							<el-tooltip content="切换模式">
 								<el-button  @click="changeMode" :icon="Switch"></el-button>
 							</el-tooltip>
@@ -235,8 +235,8 @@
 			</el-form>	  
 		</el-card>
 		<el-card style='margin-bottom: 10px;'>
-			<div style="background-color: white; padding-bottom: 10px;">
-					   <div style="padding-top: 10px; padding-right: 24px; padding-bottom: 10px; background-color: white; display: flex; justify-content: flex-end" class='btn_right'>
+			<div style="background-color: var(--qm-bg-2); padding-bottom: 10px;">
+					   <div style="padding-top: 10px; padding-right: 24px; padding-bottom: 10px; background-color: var(--qm-bg-2); display: flex; justify-content: flex-end" class='btn_right'>
 					   		<el-tooltip content="切换模式">
 					   			<el-button  @click="changeMode" :icon="Switch"></el-button>
 					   		</el-tooltip>
@@ -654,7 +654,7 @@ export default{
 		async getCases(){
 			this.caseSearch.project = this.projectInfo.id
 			const data = Object.assign(this.caseSearch, this.page_size_params)
-			this.caseSearch.module = this.caseSearch.module_list.join(',')
+			this.caseSearch.module = (this.caseSearch.module_list || []).join(',')
 			const response = await this.$api.getCases(data)
 			if (response.status === 200){
 				this.case_list = {...response.data}
@@ -737,7 +737,7 @@ export default{
 	}
 	.case .searchForm{
 		
-		background-color: white;
+		background-color: var(--qm-bg-2);
 		padding: 15px 15px 0 15px;
 		
 	}
@@ -745,7 +745,7 @@ export default{
 		margin-bottom: 15px;
 	}
 	.case .table{
-		background-color: white;
+		background-color: var(--qm-bg-2);
 		flex: 1;
 		margin-right: 10px;
 		margin-left: 10px;

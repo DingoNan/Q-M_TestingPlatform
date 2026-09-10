@@ -643,7 +643,7 @@
 						  <span>请求方法/地址</span>
 				        </template>
 					  <el-select v-model='one_step_obj.api_method'  size='large' class="select" popper-class='select-dropdown-rounded' style='margin-left: 15px'>
-					  	<el-option color="#409EFF" size="large" effect="dark" class="method-tag" label='GET' value="GET" v-if='one_step_obj.api_method === "GET"'></el-option>
+					  	<el-option color="#f59e0b" size="large" effect="dark" class="method-tag" label='GET' value="GET" v-if='one_step_obj.api_method === "GET"'></el-option>
 					  	<el-option  size="large" color="#49CC90" effect="dark" class="method-tag" label='POST' value="POST" v-if='one_step_obj.api_method === "POST"'></el-option>
 					  	<el-option  color="#F93E3E" size="large" effect="dark" class="method-tag" label='DELETE' value="DELETE" v-if='one_step_obj.api_method === "DELETE"'></el-option>
 					  	<el-option  color="#FCA130" size="large" effect="dark" class="method-tag" label='PUT' value="PUT" v-if='one_step_obj.api_method === "PUT"'></el-option>
@@ -851,9 +851,9 @@
 			        ></Params>
 			      </el-tab-pane>
 			      <el-tab-pane label="请求体" name="body" v-if="one_step_obj.type === StepType.Request || one_step_obj.com_step_type === StepType.Request">
-			       <el-row style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px; padding: 16px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e4e7ed;">
+			       <el-row style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px; padding: 16px; background-color: var(--qm-bg-1); border-radius: 8px; border: 1px solid var(--qm-line);">
 			         <div style="display: flex; align-items: center; gap: 15px;">
-			           <span style="font-weight: 600; color: #303133; width: 80px;">请求体类型</span>
+			           <span style="font-weight: 600; color: var(--qm-text-1); width: 80px;">请求体类型</span>
 			           <el-radio-group v-model="one_step_obj.body_type" size="large">
 			             <el-radio-button :label="1" style=" text-align: center;">Json</el-radio-button>
 			             <el-radio-button :label="2" style=" text-align: center;">Form</el-radio-button>
@@ -861,7 +861,7 @@
 			         </div>
 			         
 			         <div v-if="one_step_obj.body_type === 1" style="display: flex; align-items: center; gap: 15px; padding-left: 20px; border-left: 1px solid #dcdfe6;">
-			           <span style="font-weight: 600; color: #303133; width: 100px;">JSON根类型</span>
+			           <span style="font-weight: 600; color: var(--qm-text-1); width: 100px;">JSON根类型</span>
 			           <el-select 
 			             v-model="one_step_obj.api_json_type" 
 						 class="select" size='large' popper-class='select-dropdown-rounded'
@@ -1059,7 +1059,7 @@
 			  <div  v-if="one_step_obj.body_type === 1">
 				  <el-row>
 					  <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 20px;padding-left: 20px; border-left: 1px solid #dcdfe6;">
-						  <span style="font-weight: 600; color: #303133; width: 100px;">数据根类型</span>
+						  <span style="font-weight: 600; color: var(--qm-text-1); width: 100px;">数据根类型</span>
 						  <el-select 
 							v-model="one_step_obj.api_json_type" 
 							class="select" size='large' popper-class='select-dropdown-rounded'
@@ -1146,7 +1146,7 @@
 				  ></Check>
 				</el-tab-pane>
 			    <el-tab-pane lazy="true"  label="JSON 文档结构校验" v-if="one_step_obj.type === StepType.Request || one_step_obj.com_step_type === StepType.Request">
-			  	  <el-row style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 10px; background-color: #f8f9fa; border-radius: 8px; height: 70px;">
+			  	  <el-row style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 0 10px; background-color: var(--qm-bg-1); border-radius: 8px; height: 70px;">
 			  	    <div style="display: flex; align-items: center;">
 			  	      <span style="margin-right: 8px; font-weight: 500; white-space: nowrap;">JSON根类型</span>
 			  	      <el-select 
@@ -3073,7 +3073,7 @@ export default {
 <style scoped>
 .case-edit-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -3090,7 +3090,7 @@ export default {
   overflow-y: auto;
   border-radius: 16px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   max-width: 50vw;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -3138,8 +3138,8 @@ export default {
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 2px solid var(--qm-line-strong);
   padding-bottom: 8px;
   word-break: break-all;
   overflow-wrap: break-word;
@@ -3154,9 +3154,9 @@ export default {
 .log-item {
   margin-bottom: 12px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .log-item:last-child {
@@ -3187,11 +3187,11 @@ export default {
 .log-content {
   margin-top: 8px;
   padding: 8px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 4px;
   font-size: 12px;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  color: var(--qm-text-2);
+  border: 1px solid var(--qm-line-strong);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -3209,7 +3209,7 @@ export default {
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -3220,7 +3220,7 @@ export default {
 
 .step_item_card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   margin: 0px 10px 20px 10px;
   border: none;
   border-radius: 16px;
@@ -3234,8 +3234,8 @@ export default {
 /* 整体样式 */
 .content-header {
   padding: 0px 10px 10px 10px;
-  /* border-bottom: 1px solid #f1f5f9; */
-  background: white;
+  /* border-bottom: 1px solid var(--qm-bg-3); */
+  background: var(--qm-bg-2);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -3243,8 +3243,8 @@ export default {
 
 .fixed-content-header {
   padding: 0px 10px 10px 10px;
-  /* border-bottom: 1px solid #f1f5f9; */
-  background: white;
+  /* border-bottom: 1px solid var(--qm-bg-3); */
+  background: var(--qm-bg-2);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -3270,7 +3270,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3287,7 +3287,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 20px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -3321,14 +3321,14 @@ export default {
 
 /* 按钮颜色 - 保留您原来的颜色方案 */
 .back-btn {
-  background: white;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong) !important;
+  color: var(--qm-text-2);
 }
 
 .back-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1 !important;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong) !important;
   transform: translateY(-1px);
 }
 
@@ -3353,23 +3353,23 @@ export default {
 }
 
 .load-btn {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: white;
 }
 
 .load-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
 .add-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .add-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .control-dropdown {
@@ -3377,13 +3377,13 @@ export default {
 }
 
 .control-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .control-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .control-menu {
@@ -3402,11 +3402,11 @@ export default {
 }
 
 .control-item:hover {
-  background-color: #f8fafc;
+  background-color: var(--qm-bg-1);
 }
 
 .control-item .el-icon {
-  color: #6366f1;
+  color: #f59e0b;
 }
 
 .data-btn {
@@ -3420,7 +3420,7 @@ export default {
 }
 
 .params-btn {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
@@ -3442,7 +3442,7 @@ export default {
   gap: 16px;
   flex-wrap: wrap;
   font-size: 13px;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .meta-item {
@@ -3452,24 +3452,24 @@ export default {
 }
 
 .meta-label {
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-weight: 500;
 }
 
 .meta-value {
-  color: #475569;
+  color: var(--qm-text-2);
   font-weight: 600;
 }
 
 .meta-time {
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
   font-size: 12px;
 }
 
 .meta-divider {
   width: 1px;
   height: 14px;
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
 }
 
 .stats-item {
@@ -3477,17 +3477,17 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .stat-value {
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   font-weight: 600;
 }
 
@@ -3508,7 +3508,7 @@ export default {
   }
   
   .action-buttons::-webkit-scrollbar-track {
-    background: #f5f5f5;
+    background: var(--qm-bg-3);
     border-radius: 2px;
   }
   
@@ -3576,7 +3576,7 @@ export default {
     width: 100%;
     justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--qm-bg-3);
   }
   
   .stats-item {
@@ -3637,7 +3637,7 @@ export default {
 
 .user-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -3647,7 +3647,7 @@ export default {
 
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3659,11 +3659,11 @@ export default {
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--qm-bg-3);
 }
 
 .elegant-vxe-table :deep(.vxe-table--header-wrapper) {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 }
 
 .elegant-vxe-table :deep(.vxe-table--header-wrapper .vxe-header--row) {
@@ -3672,9 +3672,9 @@ export default {
 
 .elegant-vxe-table :deep(.vxe-table--header-wrapper th) {
   background: transparent;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--qm-line-strong);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   padding: 10px 0;
 }
 
@@ -3683,28 +3683,28 @@ export default {
 }
 
 .elegant-vxe-table :deep(.vxe-table--body-wrapper .vxe-body--row:nth-child(even)) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-vxe-table :deep(.vxe-table--body-wrapper .vxe-body--row:hover) {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
 .elegant-vxe-table :deep(.vxe-table--body-wrapper .vxe-body--column) {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
 
 .step-link {
   font-weight: 500;
-  color: #3b82f6;
+  color: #f59e0b;
   transition: all 0.3s ease;
 }
 
 .step-link:hover {
-  color: #1d4ed8;
+  color: #d97706;
   text-decoration: underline;
 }
 
@@ -3724,7 +3724,7 @@ export default {
 }
 
 .method-tag {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .keyword-tag {
@@ -3739,7 +3739,7 @@ export default {
 
 .run-switch {
   --el-switch-on-color: #10b981;
-  --el-switch-off-color: #94a3b8;
+  --el-switch-off-color: var(--qm-text-3);
 }
 
 .table-action-buttons {
@@ -3773,11 +3773,11 @@ export default {
 }
 
 .table-action-btn.copy-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .table-action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .table-action-btn .el-icon {
@@ -3790,7 +3790,7 @@ export default {
   border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4) !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   backdrop-filter: blur(10px) !important;
 }
@@ -3810,7 +3810,7 @@ export default {
 .dialog-title {
   font-size: 20px !important;
   font-weight: 700 !important;
-  color: #1a1a1a !important;
+  color: var(--qm-text-1) !important;
   margin: 0 !important;
 }
 
@@ -3825,7 +3825,7 @@ export default {
 }
 
 .elegant-dialog :deep(.el-dialog__headerbtn:hover) {
-  background: rgba(99, 102, 241, 0.1) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
   transform: rotate(90deg) !important;
 }
 
@@ -3840,27 +3840,27 @@ export default {
 
 .dialog-form-item :deep(.el-form-item__label) {
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
   font-size: 14px;
 }
 
 .dialog-input :deep(.el-input__inner) {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .dialog-input :deep(.el-input__inner:hover) {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input :deep(.el-input__inner:focus) {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .api-uri-input :deep(.el-input-group__prepend) {
@@ -3871,7 +3871,7 @@ export default {
 
 .elegant-dialog :deep(.el-dialog__footer) {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -3892,28 +3892,28 @@ export default {
 }
 
 .dialog-cancel-btn {
-  border: 1px solid #e2e8f0 !important;
-  background: white !important;
-  color: #64748b !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 .dialog-confirm-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
 }
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
 }
 
 /* 按钮文字容器 */
@@ -3939,12 +3939,12 @@ export default {
 
 /* 取消按钮下划线颜色 */
 .dialog-cancel-btn .button-text::after {
-  background: #3b82f6; /* 蓝色下划线 */
+  background: #f59e0b; /* 蓝色下划线 */
 }
 
 /* 确认按钮下划线颜色 */
 .dialog-confirm-btn .button-text::after {
-  background: white; /* 白色下划线 */
+  background: var(--qm-bg-2); /* 白色下划线 */
 }
 
 /* 鼠标悬停时显示下划线 */
@@ -3978,12 +3978,12 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
 }
 
 .download-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
 }
 
 .elegant-tabs :deep(.el-tabs__header) {
@@ -4000,7 +4000,7 @@ export default {
 
 .elegant-tabs :deep(.el-tabs__nav-wrap::after) {
   height: 1px;
-  background-color: #e2e8f0;
+  background-color: var(--qm-line-strong);
 }
 
 .elegant-tabs :deep(.el-tabs__active-bar) {
@@ -4011,7 +4011,7 @@ export default {
   position: relative;
   font-size: 16px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--qm-text-2);
   padding: 0;
   margin: 0 16px;
   height: 48px;
@@ -4033,22 +4033,22 @@ export default {
 }
 
 .elegant-tabs :deep(.el-tabs__item:hover) {
-  color: #6366f1;
+  color: #f59e0b;
 }
 
 .elegant-tabs :deep(.el-tabs__item:hover::after) {
   width: 100%;
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(245, 158, 11, 0.5);
 }
 
 .elegant-tabs :deep(.el-tabs__item.is-active) {
-  color: #6366f1;
+  color: #f59e0b;
   font-weight: 600;
 }
 
 .elegant-tabs :deep(.el-tabs__item.is-active::after) {
   width: 100%;
-  background: #6366f1;
+  background: #f59e0b;
 }
 
 /* 抽屉样式 */
@@ -4060,8 +4060,8 @@ export default {
 .elegant-drawer :deep(.el-drawer__header) {
   margin-bottom: 0;
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
+  border-bottom: 1px solid var(--qm-bg-3);
+  background: var(--qm-bg-2);
 }
 
 .drawer-header {
@@ -4081,7 +4081,7 @@ export default {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .result-radio-group {
@@ -4102,7 +4102,7 @@ export default {
 }
 
 .result-radio-group :deep(.el-radio-button.is-active .el-radio-button__inner) {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-color: transparent;
   box-shadow: none;
 }
@@ -4118,7 +4118,7 @@ export default {
 
 .elegant-collapse :deep(.el-collapse-item__header) {
   font-weight: 600;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 8px;
@@ -4126,7 +4126,7 @@ export default {
 
 .elegant-collapse :deep(.el-collapse-item__content) {
   padding: 16px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
 }
 
@@ -4144,7 +4144,7 @@ export default {
   border-radius: 4px;             /* 圆角 */
   padding: 12px 16px;             /* 内边距 */
   margin-bottom: 10px;
-  background-color: #fff;         /* 背景色，可选 */
+  background-color: var(--qm-bg-2);         /* 背景色，可选 */
   transition: border-color 0.2s;  /* 可选悬停效果 */
 }
 
@@ -4155,7 +4155,7 @@ export default {
   font-weight: 500;
   font-size: 14px;          /* 增大字体，可根据实际需要调整 */
   white-space: nowrap;
-  color: #606266;           /* 更深的灰色，接近黑色 */
+  color: var(--qm-text-2);           /* 更深的灰色，接近黑色 */
 }
 
 .control-group {
@@ -4180,37 +4180,37 @@ export default {
 
 .step-detail-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
+  border-bottom: 1px solid var(--qm-bg-3);
+  background: var(--qm-bg-2);
 }
 
 .step-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .step-collapse-panel {
   flex: 1;
   /* overflow-y: scroll; */
   padding: 24px 0px;
-  background: white;
+  background: var(--qm-bg-2);
 }
 
 .step-collapse-panel :deep(.el-collapse-item__header) {
   font-weight: 600;
-  background: white;
+  background: var(--qm-bg-2);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .step-collapse-panel :deep(.el-collapse-item__content) {
   padding: 20px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   border-top: none;
   margin-bottom: 16px;
 }
@@ -4226,20 +4226,20 @@ export default {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .section-icon {
-  color: #94a3b8;
+  color: var(--qm-text-3);
   width: 16px;
   height: 16px;
 }
 
 .step-base-info {
-  background: white;
+  background: var(--qm-bg-2);
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   margin-bottom: 20px;
 }
 
@@ -4249,7 +4249,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
   transition: all 0.3s ease;
@@ -4257,7 +4257,7 @@ export default {
 
 .action-icon-btn:hover {
   transform: translateY(-2px) scale(1.1);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .info-icon {
@@ -4275,8 +4275,8 @@ export default {
 
 .drawer-footer {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
-  background: white;
+  border-top: 1px solid var(--qm-bg-3);
+  background: var(--qm-bg-2);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -4385,7 +4385,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -4427,12 +4427,12 @@ export default {
   /* 固定字体，防止缩放 */
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: #303133 !important;
+  color: var(--qm-text-1) !important;
   
   /* 恢复原有的背景色和边框 */
-  background: #f8fafc !important;
+  background: var(--qm-bg-1) !important;
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   margin-bottom: 8px !important;
   
   /* 保持原有的过渡效果 */
@@ -4460,7 +4460,7 @@ export default {
   padding-left: 20px !important; /* 为左边蓝色竖条留出空间 */
   font-size: 16px !important;
   font-weight: 600 !important;
-  color: #334155 !important;
+  color: var(--qm-text-2) !important;
   line-height: 1.5 !important;
   
   /* 确保垂直居中 */
@@ -4517,8 +4517,8 @@ export default {
 
 /* 8. 添加hover效果，保持原有的交互体验 */
 .step-collapse-panel :deep(.el-collapse-item__header:hover) {
-  background: #f1f8ff !important;
-  border-color: #cbd5e1 !important;
+  background: var(--qm-warning-soft) !important;
+  border-color: var(--qm-line-strong) !important;
   transform: translateX(2px) !important;
 }
 
@@ -4531,16 +4531,16 @@ export default {
 /* 10. 修复内容区域的样式 */
 .step-collapse-panel :deep(.el-collapse-item__content) {
   padding: 20px !important;
-  background: white !important;
+  background: var(--qm-bg-2) !important;
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-top: none !important;
   margin-bottom: 16px !important;
 }
 
 /* 11. 修复激活状态下的样式 */
 .step-collapse-panel :deep(.el-collapse-item.is-active .el-collapse-item__header) {
-  background: #f1f8ff !important;
+  background: var(--qm-warning-soft) !important;
   border-bottom-left-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
   border-bottom: none !important;
@@ -4586,12 +4586,12 @@ export default {
   box-sizing: border-box !important;
   
   /* 保持原有样式 */
-  background: #f8fafc !important;
+  background: var(--qm-bg-1) !important;
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   font-weight: 600 !important;
   font-size: 14px !important;
-  color: #303133 !important;
+  color: var(--qm-text-1) !important;
 }
 
 /* 2. 修复第二层步骤折叠面板 */
@@ -4608,8 +4608,8 @@ export default {
   box-sizing: border-box !important;
   
   /* 保持原有样式 */
-  background: white !important;
-  border: 1px solid #e4e7ed !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line) !important;
   border-radius: 6px !important;
   margin-bottom: 4px !important;
   font-size: 14px !important;
@@ -4629,8 +4629,8 @@ export default {
   box-sizing: border-box !important;
   
   /* 保持原有样式 */
-  background: #f9fafb !important;
-  border: 1px solid #e5e7eb !important;
+  background: var(--qm-bg-1) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-radius: 4px !important;
   margin-bottom: 2px !important;
   font-size: 13px !important;
@@ -4654,8 +4654,8 @@ export default {
 /* 6. 修复折叠面板内容区域的样式 */
 .elegant-drawer :deep(.el-collapse-item__content) {
   padding: 16px !important;
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   border-top: none !important;
   border-radius: 0 0 8px 8px !important;
   margin-bottom: 8px !important;

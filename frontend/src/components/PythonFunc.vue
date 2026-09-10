@@ -1,5 +1,5 @@
 <template>
-	<el-row style='background-color: white;'>
+	<el-row style='background-color: var(--qm-bg-2);'>
 	   <el-col :span="10">
 		   <el-table :data="func_params" empty-text="选择函数自动带出参数" :span-method="spanMethod">
 			<el-table-column label="参数名" prop="type" align="center" min-width="150px">
@@ -37,7 +37,7 @@
 					<el-button  type='primary' @click="singleRunFunction()" style='margin-left: 20px;'>调试</el-button>
 				</el-col>
 			</el-row>
-			<el-row style='background-color: white;'>
+			<el-row style='background-color: var(--qm-bg-2);'>
 				<el-col :span=24>
 					<el-collapse v-model="activeNames" style="margin-top: 15px;">
 						  <el-collapse-item title="函数说明" name="0">

@@ -1,6 +1,6 @@
-# BlackBagTest 自动化测试平台
+# Q·M 测试平台 自动化测试平台
 
-**🧠 AI 赋能 · 开源 · 全栈 · 一体化** —— BlackBagTest 是一个覆盖接口全生命周期管理与端到端测试的 **智能化自动化测试平台**。通过 **AI 辅助生成用例与脚本**、**自然语言驱动 UI 自动化** 等创新体验，以及一站式的测试管理能力，显著降低自动化测试门槛，提升团队协作与交付效率。
+**🧠 AI 赋能 · 开源 · 全栈 · 一体化** —— Q·M 测试平台 是一个覆盖接口全生命周期管理与端到端测试的 **智能化自动化测试平台**。通过 **AI 辅助生成用例与脚本**、**自然语言驱动 UI 自动化** 等创新体验，以及一站式的测试管理能力，显著降低自动化测试门槛，提升团队协作与交付效率。
 
 
 ## 🎯 核心特性
@@ -70,9 +70,6 @@
 
 
 ## 🚀 快速开始
-> **您的星星是对我最大的支持 💖**  
-> [点击查看快速开始文档](https://gitee.com/zengqicheng/black-bag-test/wikis/pages?sort_id=17217230&doc_id=6511433)
-
 
 ## 🔮 后期规划
 
@@ -81,17 +78,12 @@
 3. **完善性能压测**：增加阶梯压测功能，并提高单机压测并发数。
 
 
-## 💬 学习交流
-- QQ 群：`1042573503`
-- 微信号：`1991150972`
-
-
 ## 🧱 软件架构
 
 | 层级 | 技术栈 |
 |------|--------|
 | **后端** | Python + Django + RestFramework + Django-filter |
-| **前端** | Vue3 + ElementPlus + Vxe-table + Axios + Vue-router（[前端项目地址](https://gitee.com/zengqicheng/black-bag-web)） |
+| **前端** | Vue3 + ElementPlus + Vxe-table + Axios + Vue-router |
 | **自动化工具** | Requests + Selenium + Appium + Playwright + Faker + Jsonpath + PyMySQL + Psycopg2-binary |
 | **数据库** | MySQL |
 | **中间件** | Redis |
@@ -199,4 +191,4 @@
 ![数据驱动测试](images/case_data_test.png)
 
 
-> BlackBagTest —— 让自动化测试更简单、更智能。欢迎使用、贡献和反馈！
+> Q·M 测试平台 —— 让自动化测试更简单、更智能。欢迎使用、贡献和反馈！

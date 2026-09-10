@@ -30,11 +30,6 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ '../views/Navigation.vue')
   },
   {
-    path: '/project/tools',
-    name: 'Tools',
-    component: () => import(/* webpackChunkName: "about" */ '../views/user/Tools.vue')
-  },
-  {
     path: '/user/help',
     name: 'help',
     component: () => import(/* webpackChunkName: "about" */ '../views/Help.vue')
@@ -97,15 +92,20 @@ const routes = [
 	]
   },
   {
-  	path: '/project/systemSetting',
-  	name: 'systemSetting',
-  	component: () => import(/* webpackChunkName: "systemSetting" */ '../views/user/SystemSetting.vue'),
-  },
-  {
 	path: '/project',
 	name: 'projectHome',
 	component: () => import(/* webpackChunkName: "projectHome" */ '../views/ProjectHome.vue'),
 	children: [
+		{
+			path: '/project/systemSetting',
+			name: 'systemSetting',
+			component: () => import(/* webpackChunkName: "systemSetting" */ '../views/user/SystemSetting.vue'),
+		},
+		{
+			path: '/project/tools',
+			name: 'Tools',
+			component: () => import(/* webpackChunkName: "about" */ '../views/user/Tools.vue')
+		},
 		{
 			path: '/project/index',
 			name: 'index',

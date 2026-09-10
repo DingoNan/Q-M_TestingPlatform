@@ -1,5 +1,5 @@
 <template>
-	 <el-row style='background-color: white;'>
+	 <el-row style='background-color: var(--qm-bg-2);'>
 	    <el-col :span="16">
 			<el-table :data="keyData" empty-text="该函数无入参">
 					<el-table-column label="序号" width="70" type="index"/>
@@ -48,11 +48,11 @@
 					<el-button :icon="VideoPause" size="small" type='primary' @click="singleRunFunction" :disabled="readOnly">单独调试函数</el-button>
 					<el-tooltip placement="right" effect="light">
 					    <template #content> 鼠标悬浮函数入参Tab标题可查看函数功能介绍</template>
-					    <el-icon color='#409eff' style='float:right'><InfoFilled /></el-icon>
+					    <el-icon color='#f59e0b' style='float:right'><InfoFilled /></el-icon>
 					</el-tooltip>
 				</el-col>
 			</el-row>
-			<el-row style='background-color: white;'>
+			<el-row style='background-color: var(--qm-bg-2);'>
 				<el-col :span='24'>
 					<el-divider style='margin: 5px 0px'/>
 					<el-input

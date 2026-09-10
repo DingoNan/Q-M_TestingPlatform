@@ -3,21 +3,21 @@
 /* 输入框样式 */
 .input .el-input__wrapper {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .input .el-input__wrapper:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .input .el-input__wrapper.is-focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* ==================== */
@@ -26,8 +26,8 @@
 .date .el-range-editor.el-input__wrapper,
 .el-date-picker.date .el-range-editor.el-input__wrapper {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 12px; /* 减小水平内边距 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
@@ -39,67 +39,67 @@
 .date.el-range-editor.el-input__wrapper:hover,
 .date .el-range-editor.el-input__wrapper:hover,
 .el-date-picker.date .el-range-editor.el-input__wrapper:hover {
-  border: 2px solid #6366f1 !important;
+  border: 2px solid #f59e0b !important;
 }
 
 
 /* 选择框样式 */
 .select .el-select__wrapper {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .select .el-select__wrapper:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .select .el-select__wrapper.is-focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.3);
 }
 
 .select .el-select__wrapper.is-focus .el-select__caret {
-  color: #2563eb;
+  color: #ea580c;
 }
 
 /* el-tree-select 使用 el-input__wrapper，需要同步样式 */
 .select .el-input__wrapper {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .select .el-input__wrapper:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .select .el-input__wrapper.is-focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.3);
 }
 
 /* 级联选择框样式 */
 .cascader .el-input__wrapper {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .cascader .el-input__wrapper:hover {
-  border-color: #6366f1;
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 /* 下拉框样式 */
@@ -111,7 +111,7 @@
   /* 下拉框与输入框的间距 */
   margin-top: 0px !important;
   /* 边框颜色 */
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   /* 阴影效果 */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
 }
@@ -133,32 +133,32 @@
   /* 过渡效果 */
   transition: all 0.2s ease !important;
   /* 文字颜色 */
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
 }
 
 /* 悬停状态 */
 .select-dropdown-rounded .el-select-dropdown__item:hover {
-  background-color: #f8fafc !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-bg-1) !important;
+  color: #f59e0b !important;
   /* 轻微移动效果 */
   transform: translateX(3px);
   /* 悬停阴影 */
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1) !important;
 }
 
 /* 选中状态 */
 .select-dropdown-rounded .el-select-dropdown__item.selected {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
   /* 内边框效果 */
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 /* 禁用状态 */
 .select-dropdown-rounded .el-select-dropdown__item.is-disabled {
-  color: #9ca3af !important;
-  background-color: #f9fafb !important;
+  color: var(--qm-text-3) !important;
+  background-color: var(--qm-bg-1) !important;
   cursor: not-allowed !important;
 }
 
@@ -167,7 +167,7 @@
   max-height: 280px !important;
   /* 滚动条样式 */
   scrollbar-width: thin !important;
-  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  scrollbar-color: var(--qm-line-strong) var(--qm-bg-3) !important;
 }
 
 /* Webkit 浏览器滚动条样式 */
@@ -176,17 +176,17 @@
 }
 
 .select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-track {
-  background: #f1f5f9 !important;
+  background: var(--qm-bg-3) !important;
   border-radius: 3px !important;
 }
 
 .select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb {
-  background: #cbd5e1 !important;
+  background: var(--qm-line-strong) !important;
   border-radius: 3px !important;
 }
 
 .select-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8 !important;
+  background: var(--qm-text-3) !important;
 }
 
 /* =========================================== */
@@ -198,22 +198,22 @@
   border-radius: 12px !important;  /* 弹窗整体圆角 */
   overflow: hidden !important;      /* 防止内容溢出 */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;  /* 更柔和的阴影 */
-  border: 1px solid #e2e8f0 !important;  /* 添加边框 */
+  border: 1px solid var(--qm-line-strong) !important;  /* 添加边框 */
 }
 
 /* 弹窗头部样式 */
 .el-dialog__header {
   padding: 20px 24px 16px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
   margin-right: 0 !important;  /* 覆盖默认右边距 */
-  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
+  background: linear-gradient(to right, var(--qm-bg-1), var(--qm-bg-2)) !important;
   border-radius: 12px 12px 0 0 !important;  /* 顶部圆角 */
 }
 
 .el-dialog__title {
   font-size: 18px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--qm-text-1) !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -227,12 +227,12 @@
   width: 32px !important;
   height: 32px !important;
   border-radius: 8px !important;  /* 关闭按钮圆角 */
-  background-color: #f1f5f9 !important;
+  background-color: var(--qm-bg-3) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.2s ease !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
 }
 
 .el-dialog__headerbtn:hover {
@@ -246,7 +246,7 @@
 }
 
 .el-dialog__close {
-  color: #64748b !important;
+  color: var(--qm-text-2) !important;
   font-size: 16px !important;
   font-weight: bold !important;
   transition: color 0.2s ease !important;
@@ -255,7 +255,7 @@
 /* 弹窗内容区域 */
 .el-dialog__body {
   padding: 24px !important;
-  color: #475569 !important;
+  color: var(--qm-text-2) !important;
   font-size: 14px !important;
   line-height: 1.6 !important;
   max-height: 80vh !important;  /* 限制最大高度 */
@@ -268,24 +268,24 @@
 }
 
 .el-dialog__body::-webkit-scrollbar-track {
-  background: #f1f5f9 !important;
+  background: var(--qm-bg-3) !important;
   border-radius: 3px !important;
 }
 
 .el-dialog__body::-webkit-scrollbar-thumb {
-  background: #cbd5e1 !important;
+  background: var(--qm-line-strong) !important;
   border-radius: 3px !important;
 }
 
 .el-dialog__body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8 !important;
+  background: var(--qm-text-3) !important;
 }
 
 /* 弹窗底部样式 */
 .el-dialog__footer {
   padding: 16px 24px 24px !important;
-  border-top: 1px solid #f1f5f9 !important;
-  background-color: #f8fafc !important;
+  border-top: 1px solid var(--qm-bg-3) !important;
+  background-color: var(--qm-bg-1) !important;
   border-radius: 0 0 12px 12px !important;  /* 底部圆角 */
   display: flex !important;
   justify-content: flex-end !important;
@@ -303,27 +303,27 @@
 
 /* 主要按钮样式 */
 .el-dialog__footer .el-button--primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3) !important;
 }
 
 .el-dialog__footer .el-button--primary:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4) !important;
 }
 
 /* 默认按钮样式 */
 .el-dialog__footer .el-button--default {
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .el-dialog__footer .el-button--default:hover {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  background-color: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
 }
 
 /* =========================================== */
@@ -419,7 +419,7 @@
 }
 
 .el-dialog.warning-dialog .el-dialog__header {
-  background: linear-gradient(to right, #fef3c7, #ffffff) !important;
+  background: linear-gradient(to right, var(--qm-warning-soft-2), var(--qm-bg-2)) !important;
 }
 
 /* 错误类型弹窗 */
@@ -428,7 +428,7 @@
 }
 
 .el-dialog.error-dialog .el-dialog__header {
-  background: linear-gradient(to right, #fee2e2, #ffffff) !important;
+  background: linear-gradient(to right, #fee2e2, var(--qm-bg-2)) !important;
 }
 
 /* 成功类型弹窗 */
@@ -437,16 +437,16 @@
 }
 
 .el-dialog.success-dialog .el-dialog__header {
-  background: linear-gradient(to right, #d1fae5, #ffffff) !important;
+  background: linear-gradient(to right, #d1fae5, var(--qm-bg-2)) !important;
 }
 
 /* 信息类型弹窗 */
 .el-dialog.info-dialog {
-  border-left: 4px solid #3b82f6 !important;
+  border-left: 4px solid #f59e0b !important;
 }
 
 .el-dialog.info-dialog .el-dialog__header {
-  background: linear-gradient(to right, #dbeafe, #ffffff) !important;
+  background: linear-gradient(to right, var(--qm-warning-soft-2), var(--qm-bg-2)) !important;
 }
 
 /* =========================================== */
@@ -459,7 +459,7 @@
   display: inline-block !important;
   width: 4px !important;
   height: 18px !important;
-  background: linear-gradient(to bottom, #6366f1, #8b5cf6) !important;
+  background: linear-gradient(to bottom, #f59e0b, #f97316) !important;
   border-radius: 2px !important;
   margin-right: 8px !important;
 }
@@ -478,7 +478,7 @@
 }
 
 .info-dialog .el-dialog__title::before {
-  background: linear-gradient(to bottom, #3b82f6, #60a5fa) !important;
+  background: linear-gradient(to bottom, #f59e0b, #fbbf24) !important;
 }
 
 /* =========================================== */
@@ -541,9 +541,9 @@
   --el-input-transition-border: none !important;
   
   /* 我们的自定义样式 */
-  border: 2px solid #d1d5db !important;
+  border: 2px solid var(--qm-line-strong) !important;
   border-radius: 12px !important;
-  background: white !important;
+  background: var(--qm-bg-2) !important;
   padding: 12px 16px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
   transition: all 0.3s ease !important;
@@ -566,7 +566,7 @@
   padding: 0 !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
   resize: vertical !important;
   min-height: 50px !important;
 }
@@ -583,14 +583,14 @@
 
 /* 悬停效果 */
 .text.el-textarea:hover {
-  border-color: #6366f1 !important;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 /* 聚焦效果 */
 .text.el-textarea.is-focus {
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25) !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25) !important;
 }
 
 
@@ -601,29 +601,29 @@
 /* 1. 级联选择器输入框样式 */
 .el-cascader {
   --el-cascader-border-radius: 10px !important;
-  --el-cascader-border-color: #e2e8f0 !important;
-  --el-cascader-hover-border-color: #cbd5e1 !important;
-  --el-cascader-focus-border-color: #6366f1 !important;
+  --el-cascader-border-color: var(--qm-line-strong) !important;
+  --el-cascader-hover-border-color: var(--qm-line-strong) !important;
+  --el-cascader-focus-border-color: #f59e0b !important;
 }
 
 /* 级联选择器输入框 */
 .el-cascader .el-input .el-input__wrapper {
   border-radius: 10px !important;
-  border: 2px solid #e2e8f0 !important;
-  background: white !important;
+  border: 2px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2) !important;
   padding: 1px 15px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease !important;
 }
 
 .el-cascader .el-input .el-input__wrapper:hover {
-  border-color: #cbd5e1 !important;
+  border-color: var(--qm-line-strong) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 .el-cascader .el-input .el-input__wrapper.is-focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
 }
 
 /* 2. 级联选择器下拉框样式 */
@@ -631,7 +631,7 @@
   border-radius: 10px !important;
   overflow: hidden !important;
   margin-top: 4px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -647,7 +647,7 @@
 }
 
 .el-cascader__dropdown .el-cascader-menu:not(:last-child) {
-  border-right: 1px solid #f1f5f9 !important;
+  border-right: 1px solid var(--qm-bg-3) !important;
 }
 
 /* 3. 级联菜单项样式 */
@@ -658,24 +658,24 @@
   margin: 2px 8px !important;
   border-radius: 8px !important;
   transition: all 0.2s ease !important;
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
   font-size: 14px !important;
 }
 
 .el-cascader__dropdown .el-cascader-node:hover {
-  background-color: #f8fafc !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-bg-1) !important;
+  color: #f59e0b !important;
   transform: translateX(2px);
 }
 
 .el-cascader__dropdown .el-cascader-node.is-active {
-  background-color: #eff6ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-warning-soft) !important;
+  color: #f59e0b !important;
   font-weight: 500 !important;
 }
 
 .el-cascader__dropdown .el-cascader-node.is-selectable.in-active-path {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 4. 级联菜单项前的复选框样式 */
@@ -685,19 +685,19 @@
 
 .el-cascader__dropdown .el-cascader-node .el-checkbox__inner {
   border-radius: 4px !important;
-  border-color: #cbd5e1 !important;
+  border-color: var(--qm-line-strong) !important;
 }
 
 .el-cascader__dropdown .el-cascader-node .el-checkbox__inner:hover {
-  border-color: #6366f1 !important;
+  border-color: #f59e0b !important;
 }
 
 /* 5. 级联选择器标签样式（多选时） */
 .el-cascader .el-cascader__tags .el-tag {
   margin: 2px 6px 2px 0 !important;
   border-radius: 6px !important;
-  background-color: #f3f4f6 !important;
-  border: 1px solid #d1d5db !important;
+  background-color: var(--qm-bg-3) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   height: 28px !important;
   line-height: 26px !important;
   padding: 0 10px !important;
@@ -706,45 +706,45 @@
 }
 
 .el-cascader .el-cascader__tags .el-tag:hover {
-  background-color: #e5e7eb !important;
-  border-color: #9ca3af !important;
+  background-color: var(--qm-line-strong) !important;
+  border-color: var(--qm-text-3) !important;
 }
 
 .el-cascader .el-cascader__tags .el-tag .el-tag__close {
-  color: #6b7280 !important;
+  color: var(--qm-text-2) !important;
   margin-left: 4px !important;
 }
 
 .el-cascader .el-cascader__tags .el-tag .el-tag__close:hover {
-  color: #374151 !important;
-  background-color: #d1d5db !important;
+  color: var(--qm-text-1) !important;
+  background-color: var(--qm-line-strong) !important;
 }
 
 /* 6. 级联选择器搜索框样式 */
 .el-cascader__dropdown .el-cascader__search-input {
   padding: 10px 16px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
 }
 
 .el-cascader__dropdown .el-cascader__search-input .el-input__wrapper {
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   padding: 4px 12px !important;
 }
 
 .el-cascader__dropdown .el-cascader__search-input .el-input__wrapper:hover {
-  border-color: #cbd5e1 !important;
+  border-color: var(--qm-line-strong) !important;
 }
 
 .el-cascader__dropdown .el-cascader__search-input .el-input__wrapper.is-focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1) !important;
 }
 
 /* 7. 级联选择器空状态样式 */
 .el-cascader__dropdown .el-cascader__empty {
   padding: 24px 16px !important;
-  color: #9ca3af !important;
+  color: var(--qm-text-3) !important;
   font-size: 14px !important;
 }
 
@@ -754,11 +754,11 @@
 }
 
 .el-cascader__dropdown .el-scrollbar__thumb {
-  background-color: #cbd5e1 !important;
+  background-color: var(--qm-line-strong) !important;
 }
 
 .el-cascader__dropdown .el-scrollbar__thumb:hover {
-  background-color: #94a3b8 !important;
+  background-color: var(--qm-text-3) !important;
 }
 
 /* 9. 级联选择器尺寸变体 */
@@ -772,13 +772,13 @@
 
 /* 10. 级联选择器禁用状态 */
 .el-cascader.is-disabled .el-input .el-input__wrapper {
-  background-color: #f9fafb !important;
-  border-color: #e5e7eb !important;
+  background-color: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
   cursor: not-allowed !important;
 }
 
 .el-cascader.is-disabled .el-input .el-input__wrapper:hover {
-  border-color: #e5e7eb !important;
+  border-color: var(--qm-line-strong) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
@@ -818,16 +818,16 @@
 
 /* 13. 级联选择器箭头图标样式 */
 .el-cascader .el-input .el-input__suffix .el-icon {
-  color: #6b7280 !important;
+  color: var(--qm-text-2) !important;
   transition: all 0.3s ease !important;
 }
 
 .el-cascader .el-input .el-input__wrapper:hover .el-icon {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .el-cascader .el-input .el-input__wrapper.is-focus .el-icon {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 14. 级联选择器多选时的计数器 */
@@ -866,7 +866,7 @@
 /* 弹窗头部 */
 .confirm-dialog .el-message-box__header {
   padding: 20px 24px 10px !important;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 }
 
 
@@ -916,16 +916,16 @@
   /* 过渡效果 */
   transition: all 0.2s ease !important;
   /* 文字颜色 */
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
   /* 确保背景色覆盖整个节点 */
   background: transparent !important;
 }
 
 /* 树节点悬停状态 - 强制统一与select组件颜色 */
 .select-tree-dropdown-rounded .el-tree-node__content:hover {
-  background-color: #f8fafc !important;
+  background-color: var(--qm-bg-1) !important;
   /* 悬停阴影 */
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1) !important;
 }
 
 /* 强制覆盖所有可能的文字颜色 - 使用最具体的选择器 */
@@ -935,7 +935,7 @@
 .select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label *,
 .select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label span,
 .select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__label span * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 强制覆盖选中状态的所有文字颜色 - 使用最具体的选择器 */
@@ -951,58 +951,58 @@
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label *,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label span,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label span * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 树节点选中状态 - 覆盖所有可能的选中类名 */
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
   /* 内边框效果 */
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 /* 强制覆盖所有可能的选中状态 - 使用最直接的方法 */
 
 /* 方法1: 直接覆盖所有el-tree-node__content元素的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 /* 方法2: 强制覆盖所有子元素的颜色 */
 .select-tree-dropdown-rounded .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded .el-tree-node__content .el-tree-node__label * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法3: 针对el-tree-select组件的特定结构 */
 .select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded .el-tree-select__dropdown .el-tree-node__content .el-tree-node__label * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法4: 使用属性选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded [class*="current"] .el-tree-node__content,
 .select-tree-dropdown-rounded [class*="selected"] .el-tree-node__content,
 .select-tree-dropdown-rounded [class*="checked"] .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded [class*="current"] .el-tree-node__content *,
@@ -1011,17 +1011,17 @@
 .select-tree-dropdown-rounded [class*="current"] .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded [class*="selected"] .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded [class*="checked"] .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法5: 强制覆盖所有可能的选中状态 - 使用最高优先级 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1030,28 +1030,28 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法6: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法7: 强制覆盖所有可能的颜色属性 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法8: 使用最高优先级的选择器覆盖所有可能的选中状态 */
@@ -1061,10 +1061,10 @@
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1073,38 +1073,38 @@
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法9: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法10: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法11: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1113,38 +1113,38 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法12: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法13: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法14: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1153,38 +1153,38 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法15: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法16: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法17: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1193,38 +1193,38 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法18: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法19: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法20: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1233,38 +1233,38 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法21: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法22: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法23: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1273,38 +1273,38 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法24: 使用最直接的方法 - 强制覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #6366f1 !important;
-  background-color: #eef2ff !important;
+  color: #f59e0b !important;
+  background-color: var(--qm-accent-soft) !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 方法25: 使用内联样式属性选择器覆盖 */
 .select-tree-dropdown-rounded .el-tree-node__content[style*="color"] {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content[style*="background-color"] {
-  background-color: #eef2ff !important;
+  background-color: var(--qm-accent-soft) !important;
 }
 
 /* 方法26: 使用最高优先级的选择器覆盖所有可能的选中状态 */
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content *,
@@ -1313,49 +1313,49 @@
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-selected > .el-tree-node__content .el-tree-node__label,
 .select-tree-dropdown-rounded.el-tree-select__popper .el-tree-select__dropdown .el-tree .el-tree-node.is-checked > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 修复：只针对选中和悬浮状态应用主题色 */
 
 /* 默认状态 - 恢复默认颜色 */
 .select-tree-dropdown-rounded .el-tree-node__content {
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
   background-color: transparent !important;
   font-weight: normal !important;
   box-shadow: none !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content * {
-  color: #374151 !important;
+  color: var(--qm-text-1) !important;
 }
 
 /* 悬浮状态 - 应用主题色 */
 .select-tree-dropdown-rounded .el-tree-node__content:hover {
-  background-color: #f8fafc !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-bg-1) !important;
+  color: #f59e0b !important;
   transform: translateX(3px);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content:hover * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 选中状态 - 应用主题色 */
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content,
 .select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content {
-  background-color: #eef2ff !important;
-  color: #6366f1 !important;
+  background-color: var(--qm-accent-soft) !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-node.is-selected > .el-tree-node__content *,
 .select-tree-dropdown-rounded .el-tree-node.is-checked > .el-tree-node__content * {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 树节点选中状态悬停 */
@@ -1365,8 +1365,8 @@
 
 /* 树节点禁用状态 */
 .select-tree-dropdown-rounded .el-tree-node.is-disabled > .el-tree-node__content {
-  color: #9ca3af !important;
-  background-color: #f9fafb !important;
+  color: var(--qm-text-3) !important;
+  background-color: var(--qm-bg-1) !important;
   cursor: not-allowed !important;
 }
 
@@ -1375,7 +1375,7 @@
   max-height: 280px !important;
   /* 滚动条样式 */
   scrollbar-width: thin !important;
-  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  scrollbar-color: var(--qm-line-strong) var(--qm-bg-3) !important;
 }
 
 /* Webkit 浏览器滚动条样式 */
@@ -1384,57 +1384,57 @@
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-track {
-  background: #f1f5f9 !important;
+  background: var(--qm-bg-3) !important;
   border-radius: 3px !important;
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb {
-  background: #cbd5e1 !important;
+  background: var(--qm-line-strong) !important;
   border-radius: 3px !important;
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8 !important;
+  background: var(--qm-text-3) !important;
 }
 
 /* 树形选择器搜索框样式 */
 .select-tree-dropdown-rounded .el-select-dropdown .el-input {
   padding: 12px 16px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper {
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--qm-line-strong) !important;
   padding: 4px 12px !important;
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper:hover {
-  border-color: #cbd5e1 !important;
+  border-color: var(--qm-line-strong) !important;
 }
 
 .select-tree-dropdown-rounded .el-select-dropdown .el-input .el-input__wrapper.is-focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1) !important;
 }
 
 /* 树形选择器空状态样式 */
 .select-tree-dropdown-rounded .el-select-dropdown .el-select-dropdown__empty {
   padding: 24px 16px !important;
-  color: #9ca3af !important;
+  color: var(--qm-text-3) !important;
   font-size: 14px !important;
 }
 
 /* 树形选择器树节点展开/收起图标 */
 .select-tree-dropdown-rounded .el-tree-node__expand-icon {
-  color: #6b7280 !important;
+  color: var(--qm-text-2) !important;
   transition: all 0.3s ease !important;
   font-size: 16px !important;
   margin-right: 8px !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content:hover .el-tree-node__expand-icon {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
 }
 
 /* 树形选择器多选样式 */
@@ -1444,16 +1444,16 @@
 
 .select-tree-dropdown-rounded .el-tree-node__content .el-checkbox .el-checkbox__inner {
   border-radius: 4px !important;
-  border: 1px solid #d1d5db !important;
+  border: 1px solid var(--qm-line-strong) !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content .el-checkbox .el-checkbox__inner:hover {
-  border-color: #6366f1 !important;
+  border-color: #f59e0b !important;
 }
 
 .select-tree-dropdown-rounded .el-tree-node__content .el-checkbox.is-checked .el-checkbox__inner {
-  background-color: #6366f1 !important;
-  border-color: #6366f1 !important;
+  background-color: #f59e0b !important;
+  border-color: #f59e0b !important;
 }
 
 /* 树节点标签样式 */
@@ -1464,7 +1464,7 @@
 
 /* 树节点选中时的标签样式 */
 .select-tree-dropdown-rounded .el-tree-node.is-current > .el-tree-node__content .el-tree-node__label {
-  color: #6366f1 !important;
+  color: #f59e0b !important;
   font-weight: 600 !important;
 }
 
@@ -1486,7 +1486,7 @@
 .confirm-dialog .el-message-box__title {
   font-size: 18px !important;
   font-weight: 600 !important;
-  color: #1a1a1a !important;
+  color: var(--qm-text-1) !important;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1496,20 +1496,20 @@
   content: '';
   width: 4px;
   height: 20px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   border-radius: 2px;
 }
 
 /* 弹窗内容 */
 .confirm-dialog .el-message-box__content {
   padding: 24px !important;
-  background: white;
+  background: var(--qm-bg-2);
 }
 
 .confirm-dialog .el-message-box__message {
   font-size: 15px !important;
   line-height: 1.6 !important;
-  color: #475569 !important;
+  color: var(--qm-text-2) !important;
   padding: 0 !important;
 }
 
@@ -1520,8 +1520,8 @@
 /* 弹窗底部样式 - 与对话框风格统一 */
 .confirm-dialog .el-message-box__btns {
   padding: 16px 24px 24px !important;
-  border-top: 1px solid #f1f5f9 !important;
-  background-color: #f8fafc !important;
+  border-top: 1px solid var(--qm-bg-3) !important;
+  background-color: var(--qm-bg-1) !important;
   border-radius: 0 0 16px 16px !important;
   display: flex !important;
   justify-content: flex-end !important;
@@ -1542,30 +1542,30 @@
 
 /* 默认按钮样式 */
 .confirm-dialog .el-button--default {
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .confirm-dialog .el-button--default:hover {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  background-color: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* 主要按钮样式 - 优化为一致的紫色渐变 */
 .confirm-dialog .el-button--primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3) !important;
   color: white !important;
 }
 
 .confirm-dialog .el-button--primary:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4) !important;
 }
 
 /* 危险按钮样式 - 使用相似的渐变和阴影效果 */
@@ -1606,7 +1606,7 @@
 
 /* 信息图标 */
 .confirm-dialog .el-message-box__status.el-icon-info {
-  color: #3b82f6 !important;
+  color: #f59e0b !important;
 }
 
 /* 关闭按钮 */
@@ -1616,18 +1616,18 @@
   width: 32px !important;
   height: 32px !important;
   border-radius: 8px !important;
-  background: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  background: var(--qm-bg-3) !important;
+  border: 1px solid var(--qm-line-strong) !important;
   transition: all 0.3s ease !important;
 }
 
 .confirm-dialog .el-message-box__headerbtn:hover {
-  background: #e2e8f0 !important;
+  background: var(--qm-line-strong) !important;
   transform: rotate(90deg);
 }
 
 .confirm-dialog .el-message-box__headerbtn .el-message-box__close {
-  color: #64748b !important;
+  color: var(--qm-text-2) !important;
   font-size: 18px !important;
   font-weight: 600 !important;
 }
@@ -1635,7 +1635,7 @@
 /* 不同弹窗类型的特殊样式 */
 /* 警告类型弹窗 */
 .confirm-dialog.el-message-box--warning .el-message-box__header {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  background: linear-gradient(135deg, var(--qm-warning-soft-2) 0%, var(--qm-warning-line) 100%) !important;
 }
 
 .confirm-dialog.el-message-box--warning .el-message-box__title {
@@ -1674,15 +1674,15 @@
 
 /* 信息类型弹窗 */
 .confirm-dialog.el-message-box--info .el-message-box__header {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  background: linear-gradient(135deg, var(--qm-warning-soft-2) 0%, var(--qm-warning-line) 100%) !important;
 }
 
 .confirm-dialog.el-message-box--info .el-message-box__title {
-  color: #1e40af !important;
+  color: #b45309 !important;
 }
 
 .confirm-dialog.el-message-box--info .el-message-box__title::before {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
 }
 
 /* 响应式适配 */
@@ -1749,7 +1749,7 @@
 
 .el-message-box__header {
   padding: 20px 24px 10px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
 }
 
 .el-message-box__content {
@@ -1758,8 +1758,8 @@
 
 .el-message-box__btns {
   padding: 16px 24px 24px !important;
-  border-top: 1px solid #f1f5f9 !important;
-  background-color: #f8fafc !important;
+  border-top: 1px solid var(--qm-bg-3) !important;
+  background-color: var(--qm-bg-1) !important;
   display: flex !important;
   justify-content: flex-end !important;
   gap: 12px !important;
@@ -1772,27 +1772,27 @@
 }
 
 .el-message-box__btns .el-button--primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3) !important;
   color: white !important;
 }
 
 .el-message-box__btns .el-button--primary:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4) !important;
 }
 
 .el-message-box__btns .el-button--default {
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
+  background: var(--qm-bg-2) !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .el-message-box__btns .el-button--default:hover {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  background-color: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .el-message-box__headerbtn {
@@ -1809,7 +1809,7 @@
   border-radius: 16px !important;  /* 弹窗整体圆角 */
   overflow: hidden !important;      /* 防止内容溢出 */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;  /* 更柔和的阴影 */
-  border: 1px solid #e2e8f0 !important;  /* 添加边框 */
+  border: 1px solid var(--qm-line-strong) !important;  /* 添加边框 */
   padding: 0 !important;  /* 重置内边距 */
 }
 
@@ -1827,18 +1827,18 @@
 .step-log-title {
   padding: 20px 24px 16px !important;
   margin: 0 !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
+  background: linear-gradient(to right, var(--qm-bg-1), var(--qm-bg-2)) !important;
   border-radius: 16px 16px 0 0 !important;  /* 顶部圆角 */
   font-size: 18px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--qm-text-1) !important;
 }
 
 /* 弹窗内容区域样式 */
 .step-log-popover-content > div:not(.step-log-title) {
   padding: 24px !important;
-  color: #475569 !important;
+  color: var(--qm-text-2) !important;
   font-size: 14px !important;
   line-height: 1.6 !important;
 }

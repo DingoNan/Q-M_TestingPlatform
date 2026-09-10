@@ -1,276 +1,114 @@
 <template>
 	<div class="login-page">
-		<!-- 动态背景 -->
-		<div class="dynamic-bg">
-			<div class="bg-layer layer-1"></div>
-			<div class="bg-layer layer-2"></div>
-			<div class="bg-layer layer-3"></div>
-			
-			<!-- 数据流动线 -->
-			<canvas ref="flowCanvas" class="flow-canvas"></canvas>
-		</div>
-		
-		<!-- 浮动元素 - 移动到主容器同级，调整z-index -->
-		<div class="float-elements-container">
-			<div class="float-element api">
-				<div class="float-content">
-					<svg viewBox="0 0 24 24">
-						<path d="M4.5,19.5l15-15M9,6l6,6M6,9l6,6M3,21h18"></path>
-					</svg>
-					<span>API</span>
+		<!-- 纯 CSS 几何背景装饰 -->
+		<div class="bg-deco deco-1"></div>
+		<div class="bg-deco deco-2"></div>
+		<div class="bg-deco deco-3"></div>
+
+		<div class="login-center">
+			<div class="login-card">
+				<!-- 品牌区 -->
+				<div class="brand">
+					<div class="brand-logo">
+						<svg viewBox="0 0 100 100">
+							<path d="M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z" class="logo-hexagon"></path>
+							<circle cx="50" cy="50" r="20" class="logo-center"></circle>
+							<path d="M35,35 L65,35 L65,65 L35,65 Z" class="logo-square"></path>
+						</svg>
+					</div>
+					<h1 class="brand-name">Q·M 测试平台</h1>
+					<p class="brand-slogan">智能测试解决方案</p>
 				</div>
-				<div class="float-tooltip">接口测试</div>
-			</div>
-			<div class="float-element ui">
-				<div class="float-content">
-					<svg viewBox="0 0 24 24">
-						<rect x="3" y="3" width="18" height="18" rx="2"></rect>
-						<line x1="3" y1="9" x2="21" y2="9"></line>
-						<line x1="9" y1="21" x2="9" y2="9"></line>
-					</svg>
-					<span>UI</span>
+
+				<!-- 错误提示 -->
+				<div class="error-alert" v-if="loginError.show" :class="{shake: loginError.shake}">
+					<div class="error-content">
+						<el-icon class="error-icon"><Warning /></el-icon>
+						<div class="error-text">
+							<h4>{{ loginError.title }}</h4>
+							<p>{{ loginError.message }}</p>
+						</div>
+						<el-icon class="close-icon" @click="dismissError"><Close /></el-icon>
+					</div>
+					<div class="error-progress" :style="{width: loginError.progress + '%'}"></div>
 				</div>
-				<div class="float-tooltip">UI测试</div>
-			</div>
-			<div class="float-element performance">
-				<div class="float-content">
-					<svg viewBox="0 0 24 24">
-						<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-						<polyline points="17 6 23 6 23 12"></polyline>
-					</svg>
-					<span>Perf</span>
-				</div>
-				<div class="float-tooltip">性能测试</div>
-			</div>
-			<div class="float-element mock">
-				<div class="float-content">
-					<svg viewBox="0 0 24 24">
-						<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-						<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-						<line x1="12" y1="22.08" x2="12" y2="12"></line>
-					</svg>
-					<span>Mock</span>
-				</div>
-				<div class="float-tooltip">Mock服务</div>
-			</div>
-		</div>
-		
-		<!-- 主内容 -->
-		<div class="main-container">
-			<!-- 左侧介绍区域 -->
-			<div class="intro-section">
-				<div class="intro-content">
-					<!-- Logo和标题 -->
-					<div class="logo-header">
-						<div class="logo-wrapper">
-							<div class="logo-circle">
-								<svg class="logo-icon" viewBox="0 0 100 100">
-									<path d="M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z" class="logo-hexagon"></path>
-									<circle cx="50" cy="50" r="20" class="logo-center"></circle>
-									<path d="M35,35 L65,35 L65,65 L35,65 Z" class="logo-square"></path>
-								</svg>
-								<div class="logo-glow"></div>
+
+				<!-- 登录表单 -->
+				<el-form :model="loginForm" :rules="loginRules" ref='loginRef' class="login-form">
+					<el-form-item prop="username">
+						<div class="form-input" :class="{focused: focusedField === 'username', 'has-error': loginError.show}">
+							<div class="input-icon">
+								<el-icon><User /></el-icon>
 							</div>
-							<div class="logo-text">
-								<h1 class="platform-name">BlackBagTest</h1>
-								<p class="platform-slogan">智能测试解决方案</p>
+							<el-input
+								v-model="loginForm.username"
+								placeholder="请输入用户名"
+								@focus="handleInputFocus('username')"
+								@blur="focusedField = ''"
+								@input="clearError">
+							</el-input>
+						</div>
+					</el-form-item>
+
+					<el-form-item prop="password">
+						<div class="form-input" :class="{focused: focusedField === 'password', 'has-error': loginError.show}">
+							<div class="input-icon">
+								<el-icon><Lock /></el-icon>
 							</div>
+							<el-input
+								v-model="loginForm.password"
+								placeholder="请输入密码"
+								type="password"
+								show-password
+								@focus="handleInputFocus('password')"
+								@blur="focusedField = ''"
+								@input="clearError">
+							</el-input>
+						</div>
+					</el-form-item>
+
+					<div class="form-options">
+						<div class="remember-me">
+							<el-switch
+								v-model="loginForm.status"
+								:active-color="switchColor"
+								class="custom-switch">
+							</el-switch>
+							<span>记住登录状态</span>
+						</div>
+
+						<div class="forgot-password">
+							<router-link class="forgot-link">忘记密码?</router-link>
 						</div>
 					</div>
-					
-					<!-- 功能特性展示 -->
-					<div class="features-showcase">
-						<div class="features-title">
-							<h2>一体化测试平台</h2>
-							<p>为您的产品质量保驾护航</p>
-						</div>
-						
-						<div class="feature-cards">
-							<div class="feature-card" @mouseenter="activeFeature = 'api'" @mouseleave="activeFeature = ''">
-								<div class="feature-icon api">
-									<svg viewBox="0 0 24 24">
-										<path d="M4.5,19.5l15-15M9,6l6,6M6,9l6,6M3,21h18"></path>
-									</svg>
-								</div>
-								<h3>接口测试</h3>
-								<p>全面支持REST、GraphQL、SOAP等多种接口协议，自动化测试用例管理</p>
-								<div class="feature-wave" :class="{active: activeFeature === 'api'}"></div>
-							</div>
-							
-							<div class="feature-card" @mouseenter="activeFeature = 'ui'" @mouseleave="activeFeature = ''">
-								<div class="feature-icon ui">
-									<svg viewBox="0 0 24 24">
-										<rect x="3" y="3" width="18" height="18" rx="2"></rect>
-										<line x1="3" y1="9" x2="21" y2="9"></line>
-										<line x1="9" y1="21" x2="9" y2="9"></line>
-									</svg>
-								</div>
-								<h3>UI测试</h3>
-								<p>可视化UI测试，支持Web、移动端自动化测试，智能元素识别</p>
-								<div class="feature-wave" :class="{active: activeFeature === 'ui'}"></div>
-							</div>
-							
-							<div class="feature-card" @mouseenter="activeFeature = 'performance'" @mouseleave="activeFeature = ''">
-								<div class="feature-icon performance">
-									<svg viewBox="0 0 24 24">
-										<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-										<polyline points="17 6 23 6 23 12"></polyline>
-									</svg>
-								</div>
-								<h3>性能测试</h3>
-								<p>高并发压力测试，性能监控与分析，瓶颈定位与优化建议</p>
-								<div class="feature-wave" :class="{active: activeFeature === 'performance'}"></div>
-							</div>
-							
-							<div class="feature-card" @mouseenter="activeFeature = 'mock'" @mouseleave="activeFeature = ''">
-								<div class="feature-icon mock">
-									<svg viewBox="0 0 24 24">
-										<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-										<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-										<line x1="12" y1="22.08" x2="12" y2="12"></line>
-									</svg>
-								</div>
-								<h3>Mock服务</h3>
-								<p>灵活的数据模拟服务，支持动态响应、场景化配置，提升测试效率</p>
-								<div class="feature-wave" :class="{active: activeFeature === 'mock'}"></div>
-							</div>
-						</div>
+
+					<el-form-item>
+						<el-button
+							type="primary"
+							@click="login"
+							class="login-btn"
+							:loading="loading">
+							<span v-if="!loading">立即登录</span>
+							<span v-else>登录中...</span>
+						</el-button>
+					</el-form-item>
+
+					<div class="login-footer">
+						<p>还没有账号？</p>
+						<router-link :to="{ name: 'register' }" class="nav-link">
+							去注册
+							<el-icon><ArrowRight /></el-icon>
+						</router-link>
 					</div>
-				</div>
+				</el-form>
 			</div>
-			
-			<!-- 右侧登录区域 -->
-			<div class="login-section">
-				<div class="login-card">
-					<!-- 登录表单标题 -->
-					<div class="login-header">
-						<h2>用户登录</h2>
-						<p>请输入您的账号信息</p>
-					</div>
-					
-					<!-- 错误提示区域 -->
-					<div class="error-alert" v-if="loginError.show" :class="{shake: loginError.shake}">
-						<div class="error-content">
-							<el-icon class="error-icon"><Warning /></el-icon>
-							<div class="error-text">
-								<h4>{{ loginError.title }}</h4>
-								<p>{{ loginError.message }}</p>
-							</div>
-							<el-icon class="close-icon" @click="dismissError"><Close /></el-icon>
-						</div>
-						<div class="error-progress" :style="{width: loginError.progress + '%'}"></div>
-					</div>
-					
-					<!-- 表单区域 -->
-					<el-form :model="loginForm" :rules="loginRules" ref='loginRef' class="login-form">
-						<el-form-item prop="username">
-							<div class="form-input" :class="{focused: focusedField === 'username', 'has-error': loginError.show}">
-								<div class="input-icon">
-									<el-icon><User /></el-icon>
-								</div>
-								<el-input 
-									v-model="loginForm.username" 
-									placeholder="请输入用户名"
-									@focus="handleInputFocus('username')"
-									@blur="focusedField = ''"
-									@input="clearError">
-								</el-input>
-								<div class="input-underline">
-									<div class="underline-active" :class="{active: focusedField === 'username'}"></div>
-								</div>
-							</div>
-						</el-form-item>
-						
-						<el-form-item prop="password">
-							<div class="form-input" :class="{focused: focusedField === 'password', 'has-error': loginError.show}">
-								<div class="input-icon">
-									<el-icon><Lock /></el-icon>
-								</div>
-								<el-input 
-									v-model="loginForm.password" 
-									placeholder="请输入密码"
-									type="password"
-									show-password
-									@focus="handleInputFocus('password')"
-									@blur="focusedField = ''"
-									@input="clearError">
-								</el-input>
-								<div class="input-underline">
-									<div class="underline-active" :class="{active: focusedField === 'password'}"></div>
-								</div>
-							</div>
-						</el-form-item>
-						
-						<div class="form-options">
-							<div class="remember-me">
-								<el-switch 
-									v-model="loginForm.status" 
-									:active-color="switchColor"
-									class="custom-switch">
-								</el-switch>
-								<span>记住登录状态</span>
-							</div>
-							
-							<div class="forgot-password">
-								<router-link  class="forgot-link">忘记密码?</router-link>
-							</div>
-						</div>
-						
-						<el-form-item>
-							<el-button 
-								type="primary" 
-								@click="login" 
-								class="login-btn"
-								:loading="loading"
-								@mouseenter="hoverBtn = true"
-								@mouseleave="hoverBtn = false">
-								<span v-if="!loading">立即登录</span>
-								<span v-else>登录中...</span>
-								<div class="btn-ripple"></div>
-								<div class="btn-shine" :class="{active: hoverBtn}"></div>
-							</el-button>
-						</el-form-item>
-						
-						<div class="login-footer">
-										<p>还没有账号？</p>
-										<router-link 
-											:to="{ name: 'register' }"
-											class="nav-link">
-											去注册
-											<el-icon><ArrowRight /></el-icon>
-										</router-link>
-									</div>
-					</el-form>
-					
-					<!-- 平台状态 -->
-					<div class="platform-status">
-						<div class="status-item">
-							<div class="status-dot online"></div>
-							<span>平台状态: 运行中</span>
-						</div>
-						<div class="status-item">
-							<div class="status-dot active"></div>
-							<span>在线用户: {{ onlineUsers }}</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<!-- 粒子效果 -->
-		<canvas ref="particleCanvas" class="particle-canvas"></canvas>
-		
-		<!-- 底部信息 -->
-		<div class="footer">
-			<div class="footer-content">
-				<p>© 2025 BlackBagTest 智能测试平台 | 版本 3.0.0</p>
-				<div class="footer-links">
-						<a href="#" @click="openHelp">帮助文档</a>
-						<a href="#">API文档</a>
-						<a href="#">服务状态</a>
-						<a href="#">联系我们</a>
-						<router-link :to="{ name: 'navigation' }">平台导航</router-link>
-					</div>
+
+			<!-- 页脚状态 -->
+			<div class="page-foot">
+				<span class="status-dot"></span>
+				<span>平台运行中 · 在线 {{ onlineUsers }} 人</span>
+				<span class="foot-sep">|</span>
+				<span>© 2025 Q·M 测试平台</span>
 			</div>
 		</div>
 	</div>
@@ -298,7 +136,7 @@ export default {
 			focusedField: '',
 			activeFeature: '',
 			onlineUsers: 124,
-			switchColor: '#6366f1',
+			switchColor: '#f59e0b',
 			role_permissions: '',
 			loginError: {
 				show: false,
@@ -331,10 +169,8 @@ export default {
 		}
 	},
 	mounted() {
-		this.initCanvasEffects();
-		this.startAnimations();
+		// 聚焦单栏新版登录页：仅保留在线人数获取（canvas/浮动动画已随旧布局移除）
 		this.updateOnlineUsers();
-		this.initFloatElements();
 	},
 	methods: {
 		async getUser(id){
@@ -348,7 +184,8 @@ export default {
 		},
 		openHelp(){
 			// window.open('/#/user/help', '_blank');
-			window.open('https://gitee.com/zengqicheng/black-bag-test/wikis/pages', '_blank');
+			const routeData = this.$router.resolve({ name: 'help' });
+			window.open(routeData.href, '_blank');
 		},
 		async login(){
 			// 清除之前的错误提示
@@ -364,7 +201,7 @@ export default {
 							this.$store.commit('saveUserInfo', response.data.result)
 							// 登录成功 - 使用Toast提示
 							ElMessage({
-								message: '登录成功，欢迎使用BlackBagTest智能测试平台',
+								message: '登录成功，欢迎使用 Q·M 测试平台',
 								type: 'success',
 								duration: 2000
 							})
@@ -495,7 +332,7 @@ export default {
 					length: Math.random() * 200 + 100,
 					speed: Math.random() * 2 + 1,
 					width: Math.random() * 2 + 0.5,
-					color: `rgba(99, 102, 241, ${Math.random() * 0.3 + 0.1})`,
+					color: `rgba(245, 158, 11, ${Math.random() * 0.3 + 0.1})`,
 					direction: Math.random() > 0.5 ? 1 : -1
 				});
 			}
@@ -627,1125 +464,275 @@ export default {
 </script>
 
 <style scoped>
+/* ============================================================
+   Q·M 登录页 · 聚焦单栏设计（浅色默认 / 深色自适应）
+   ============================================================ */
 .login-page {
 	min-height: 100vh;
-	background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-	display: flex;
-	flex-direction: column;
-	position: relative;
-	overflow: hidden;
-	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-}
-
-/* 动态背景 */
-.dynamic-bg {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	z-index: 1;
-}
-
-.bg-layer {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-}
-
-.layer-1 {
-	background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
-	animation: pulse-1 8s ease-in-out infinite;
-}
-
-.layer-2 {
-	background: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-	animation: pulse-2 10s ease-in-out infinite;
-}
-
-.layer-3 {
-	background: radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
-	animation: pulse-3 12s ease-in-out infinite;
-}
-
-@keyframes pulse-1 {
-	0%, 100% { opacity: 0.8; }
-	50% { opacity: 0.4; }
-}
-
-@keyframes pulse-2 {
-	0%, 100% { opacity: 0.6; }
-	50% { opacity: 0.2; }
-}
-
-@keyframes pulse-3 {
-	0%, 100% { opacity: 0.7; }
-	50% { opacity: 0.3; }
-}
-
-/* 数据流动画 */
-.flow-canvas {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	z-index: 1;
-}
-
-/* 浮动元素容器 */
-.float-elements-container {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	z-index: 3; /* 调整z-index，位于背景之上，主内容之下 */
-	pointer-events: none; /* 确保不干扰交互 */
-}
-
-/* 浮动元素 */
-.float-element {
-	position: absolute;
-	width: 70px;
-	height: 70px;
-	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.08);
-	backdrop-filter: blur(15px);
-	border: 1px solid rgba(255, 255, 255, 0.15);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	background: var(--qm-bg-1, #f5f7fa);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-weight: 600;
-	color: white;
-	font-size: 14px;
-	z-index: 3;
-	pointer-events: auto;
-	cursor: pointer;
-	animation: float-element 6s ease-in-out infinite;
+	position: relative;
 	overflow: hidden;
 }
 
-.float-element::before {
-	content: '';
+/* 几何装饰 */
+.bg-deco {
 	position: absolute;
-	width: 100%;
-	height: 100%;
-	border-radius: inherit;
-	background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.3), transparent);
-	animation: rotate 4s linear infinite;
-	z-index: -1;
-	opacity: 0.5;
-}
-
-.float-element::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-	transition: left 0.7s ease;
-}
-
-.float-element:hover::after {
-	left: 100%;
-}
-
-.float-element:hover {
-	transform: translateY(-10px) scale(1.1);
-	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-	background: rgba(255, 255, 255, 0.12);
-	border-color: rgba(99, 102, 241, 0.4);
-}
-
-.float-content {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	z-index: 2;
-}
-
-.float-element svg {
-	width: 24px;
-	height: 24px;
-	stroke: white;
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	fill: none;
-	transition: all 0.3s ease;
-}
-
-.float-element:hover svg {
-	transform: scale(1.2);
-}
-
-.float-tooltip {
-	position: absolute;
-	bottom: -35px;
-	left: 50%;
-	transform: translateX(-50%);
-	background: rgba(0, 0, 0, 0.8);
-	color: white;
-	padding: 6px 12px;
-	border-radius: 6px;
-	font-size: 12px;
-	white-space: nowrap;
-	opacity: 0;
-	visibility: hidden;
-	transition: all 0.3s ease;
-	backdrop-filter: blur(10px);
-	z-index: 100;
-}
-
-.float-element:hover .float-tooltip {
-	opacity: 1;
-	visibility: visible;
-	bottom: -40px;
-}
-
-/* 浮动元素位置 */
-.float-element.api { 
-	top: 20%; 
-	left: 5%; 
-	animation-delay: 0s;
-}
-
-.float-element.ui { 
-	top: 65%; 
-	left: 8%; 
-	animation-delay: 0.5s;
-}
-
-.float-element.performance { 
-	top: 25%; 
-	right: 5%; 
-	animation-delay: 1s;
-}
-
-.float-element.mock { 
-	top: 70%; 
-	right: 8%; 
-	animation-delay: 1.5s;
-}
-
-/* 浮动动画 */
-@keyframes float-element {
-	0%, 100% { 
-		transform: translateY(0) rotate(0deg); 
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	}
-	25% { 
-		transform: translateY(-15px) rotate(3deg);
-		box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-	}
-	75% { 
-		transform: translateY(10px) rotate(-3deg);
-		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-	}
-}
-
-@keyframes rotate {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
-}
-
-/* 主容器 */
-.main-container {
-	display: flex;
-	flex: 1;
-	position: relative;
-	z-index: 4; /* 主内容位于浮动元素之上 */
-	padding: 20px;
-	max-width: 1400px;
-	margin: 0 auto;
-	width: 100%;
-}
-
-/* 左侧介绍区域 */
-.intro-section {
-	flex: 1;
-	display: flex;
-	align-items: center;
-	padding-right: 40px;
-	position: relative;
-	z-index: 5; /* 确保介绍区域内容在浮动元素之上 */
-}
-
-.intro-content {
-	width: 100%;
-	animation: slideInLeft 0.8s ease-out;
-}
-
-.logo-header {
-	margin-bottom: 60px;
-}
-
-.logo-wrapper {
-	display: flex;
-	align-items: center;
-	gap: 20px;
-	margin-bottom: 30px;
-}
-
-.logo-circle {
-	position: relative;
-	width: 80px;
-	height: 80px;
-}
-
-.logo-icon {
-	width: 100%;
-	height: 100%;
-	filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));
-	animation: logoFloat 6s ease-in-out infinite;
-}
-
-.logo-hexagon {
-	fill: none;
-	stroke: #6366f1;
-	stroke-width: 4;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	animation: hexagonPulse 3s ease-in-out infinite;
-}
-
-.logo-center {
-	fill: #6366f1;
-	opacity: 0.8;
-	animation: centerPulse 2s ease-in-out infinite;
-}
-
-.logo-square {
-	fill: rgba(255, 255, 255, 0.9);
-}
-
-.logo-glow {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
 	border-radius: 50%;
-	background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
-	animation: glowPulse 4s ease-in-out infinite;
+	pointer-events: none;
+}
+.deco-1 {
+	width: 440px;
+	height: 440px;
+	background: var(--qm-accent-soft, rgba(245,158,11,.12));
+	top: -160px;
+	right: -120px;
+}
+.deco-2 {
+	width: 280px;
+	height: 280px;
+	background: var(--qm-accent-soft, rgba(245,158,11,.12));
+	bottom: -100px;
+	left: -80px;
+}
+.deco-3 {
+	width: 110px;
+	height: 110px;
+	background: transparent;
+	border: 2px solid var(--qm-accent-line, rgba(245,158,11,.35));
+	top: 16%;
+	left: 10%;
+	border-radius: 24px;
+	transform: rotate(18deg);
 }
 
-.logo-text {
-	text-align: left;
-}
-
-.platform-name {
-	font-size: 42px;
-	font-weight: 800;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-	margin: 0 0 8px 0;
-	letter-spacing: -0.5px;
-}
-
-.platform-slogan {
-	color: rgba(255, 255, 255, 0.7);
-	font-size: 18px;
-	margin: 0;
-}
-
-.features-showcase {
-	margin-top: 40px;
+.login-center {
 	position: relative;
-	z-index: 5;
+	z-index: 1;
+	width: 100%;
+	max-width: 400px;
+	padding: 24px;
 }
 
-.features-title h2 {
-	font-size: 32px;
-	color: white;
-	margin: 0 0 10px 0;
-	font-weight: 700;
-}
-
-.features-title p {
-	color: rgba(255, 255, 255, 0.6);
-	font-size: 16px;
-	margin: 0 0 40px 0;
-}
-
-.feature-cards {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 25px;
-}
-
-.feature-card {
-	background: rgba(255, 255, 255, 0.05);
-	backdrop-filter: blur(10px);
-	border-radius: 20px;
-	padding: 25px;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-	position: relative;
-	overflow: hidden;
-	cursor: pointer;
-}
-
-.feature-card:hover {
-	transform: translateY(-8px);
-	background: rgba(255, 255, 255, 0.08);
-	border-color: rgba(99, 102, 241, 0.3);
-	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-.feature-icon {
-	width: 60px;
-	height: 60px;
+/* 登录卡片 */
+.login-card {
+	background: var(--qm-bg-2, #ffffff);
+	border: 1px solid var(--qm-line, rgba(15,23,42,.08));
 	border-radius: 16px;
+	padding: 36px 32px 26px;
+	box-shadow: var(--qm-shadow, 0 4px 20px rgba(15,23,42,.06));
+}
+
+/* 品牌区 */
+.brand {
+	text-align: center;
+	margin-bottom: 26px;
+}
+.brand-logo {
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
+	background: var(--qm-accent, #f59e0b);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-bottom: 20px;
-	position: relative;
-	overflow: hidden;
+	margin: 0 auto 12px;
 }
-
-.feature-icon svg {
+.brand-logo svg {
 	width: 30px;
 	height: 30px;
-	stroke: white;
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	fill: none;
 }
-
-.feature-icon.api {
-	background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
-	border: 1px solid rgba(99, 102, 241, 0.3);
-}
-
-.feature-icon.ui {
-	background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
-	border: 1px solid rgba(139, 92, 246, 0.3);
-}
-
-.feature-icon.performance {
-	background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%);
-	border: 1px solid rgba(14, 165, 233, 0.3);
-}
-
-.feature-icon.mock {
-	background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%);
-	border: 1px solid rgba(236, 72, 153, 0.3);
-}
-
-.feature-card h3 {
-	color: white;
+.logo-hexagon { fill: none; stroke: rgba(255,255,255,.92); stroke-width: 6; }
+.logo-center { fill: rgba(255,255,255,.92); }
+.logo-square { fill: var(--qm-accent, #f59e0b); }
+.brand-name {
 	font-size: 20px;
-	font-weight: 600;
-	margin: 0 0 12px 0;
+	font-weight: 500;
+	color: var(--qm-text-1, #1f2937);
+	margin: 0 0 4px;
 }
-
-.feature-card p {
-	color: rgba(255, 255, 255, 0.6);
-	font-size: 14px;
-	line-height: 1.6;
+.brand-slogan {
+	font-size: 13px;
+	color: var(--qm-text-3, #9ca3af);
 	margin: 0;
 }
 
-.feature-wave {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	height: 3px;
-	background: linear-gradient(90deg, transparent, #6366f1, transparent);
-	transform: translateX(-100%);
-	transition: transform 0.6s ease;
-}
-
-.feature-wave.active {
-	transform: translateX(100%);
-}
-
-/* 右侧登录区域 */
-.login-section {
-	width: 420px;
-	display: flex;
-	align-items: center;
-	position: relative;
-	z-index: 5; /* 确保登录区域在浮动元素之上 */
-}
-
-.login-card {
-	background: rgba(255, 255, 255, 0.97);
-	backdrop-filter: blur(20px);
-	border-radius: 24px;
-	padding: 40px;
-	width: 100%;
-	box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-	border: 1px solid rgba(255, 255, 255, 0.25);
-	animation: slideInRight 0.8s ease-out;
-	position: relative;
-	overflow: hidden;
-}
-
-.login-card::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 6px;
-	background: linear-gradient(90deg, #6366f1, #8b5cf6, #0ea5e9, #ec4899);
-	background-size: 300% 100%;
-	animation: gradientShift 3s ease infinite;
-}
-
-.login-header {
-	text-align: center;
-	margin-bottom: 30px;
-}
-
-.login-header h2 {
-	font-size: 28px;
-	color: #1e293b;
-	margin: 0 0 10px 0;
-	font-weight: 700;
-}
-
-.login-header p {
-	color: #64748b;
-	font-size: 15px;
-	margin: 0;
-}
-
-/* 错误提示样式 */
+/* 错误提示 */
 .error-alert {
-	background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-	border: 1px solid #f87171;
-	border-radius: 12px;
-	padding: 16px;
-	margin-bottom: 24px;
-	position: relative;
+	border: 1px solid var(--qm-red, #ef4444);
+	border-radius: 10px;
+	margin-bottom: 16px;
 	overflow: hidden;
-	transform: translateY(0);
-	opacity: 1;
-	transition: all 0.3s ease;
+	background: var(--qm-red-soft, #fef2f2);
 }
-
-.error-alert.shake {
-	animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-.error-alert.hide {
-	transform: translateY(-10px);
-	opacity: 0;
-	height: 0;
-	padding: 0;
-	margin: 0;
-	border: none;
-}
-
 .error-content {
 	display: flex;
 	align-items: flex-start;
-	gap: 12px;
+	gap: 10px;
+	padding: 10px 12px;
 }
-
 .error-icon {
-	color: #dc2626;
-	font-size: 20px;
-	flex-shrink: 0;
+	color: var(--qm-red, #ef4444);
+	font-size: 16px;
 	margin-top: 2px;
 }
-
-.error-text {
-	flex: 1;
-}
-
 .error-text h4 {
-	color: #dc2626;
-	font-size: 16px;
-	font-weight: 600;
-	margin: 0 0 4px 0;
+	font-size: 13px;
+	color: var(--qm-text-1, #1f2937);
+	margin: 0 0 2px;
 }
-
 .error-text p {
-	color: #7f1d1d;
-	font-size: 14px;
+	font-size: 12px;
+	color: var(--qm-text-2, #4b5563);
 	margin: 0;
-	line-height: 1.4;
+	line-height: 1.5;
 }
-
 .close-icon {
-	color: #dc2626;
-	font-size: 16px;
+	margin-left: auto;
 	cursor: pointer;
-	transition: all 0.2s ease;
-	flex-shrink: 0;
+	color: var(--qm-text-3, #9ca3af);
+	font-size: 14px;
 }
-
-.close-icon:hover {
-	transform: scale(1.1);
-}
-
 .error-progress {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	height: 3px;
-	background: linear-gradient(90deg, #dc2626, #ef4444);
-	transition: width 0.05s linear;
-}
-
-/* 抖动动画 */
-@keyframes shake {
-	10%, 90% { transform: translateX(-1px); }
-	20%, 80% { transform: translateX(2px); }
-	30%, 50%, 70% { transform: translateX(-3px); }
-	40%, 60% { transform: translateX(3px); }
-}
-
-/* 表单区域 */
-.login-form {
-	margin-bottom: 30px;
-}
-
-.form-input {
-	position: relative;
-	margin-bottom: 24px;
-	width: 100%;
-}
-
-/* 修复输入框宽度问题 */
-:deep(.el-form-item) {
-	margin-bottom: 0;
-}
-
-:deep(.el-form-item__content) {
-	width: 100%;
-	line-height: normal;
-}
-
-.input-icon {
-	position: absolute;
-	left: 16px;
-	top: 50%;
-	transform: translateY(-50%);
-	color: #6366f1;
-	z-index: 2;
-	transition: all 0.3s ease;
-}
-
-.form-input.focused .input-icon {
-	color: #8b5cf6;
-	margin-bottom: 10px;
-	transform: translateY(-50%) scale(1.2);
-}
-
-.form-input.has-error .input-icon {
-	color: #dc2626;
-}
-
-/* 统一输入框样式 */
-:deep(.el-input) {
-	width: 100%;
-}
-
-:deep(.el-input__wrapper) {
-	width: 100%;
-	background: rgba(255, 255, 255, 0.95);
-	border: 2px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 16px 16px 16px 48px;
-	height: 56px;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-	transition: all 0.3s ease;
-	box-sizing: border-box;
-}
-
-.form-input.has-error :deep(.el-input__wrapper) {
-	border-color: #dc2626;
-	background: #fef2f2;
-}
-
-:deep(.el-input__wrapper:hover),
-:deep(.el-input__wrapper.is-focus) {
-	border-color: #6366f1;
-	box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-	background: white;
-}
-
-.form-input.has-error :deep(.el-input__wrapper:hover),
-.form-input.has-error :deep(.el-input__wrapper.is-focus) {
-	border-color: #dc2626;
-	box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
-}
-
-.input-underline {
-	position: absolute;
-	bottom: -2px;
-	left: 16px;
-	right: 16px;
 	height: 2px;
-	background: #e2e8f0;
-	overflow: hidden;
+	background: var(--qm-red, #ef4444);
+	transition: width .3s linear;
+}
+.shake {
+	animation: shakeX .4s ease;
+}
+@keyframes shakeX {
+	0%, 100% { transform: translateX(0); }
+	25% { transform: translateX(-5px); }
+	75% { transform: translateX(5px); }
 }
 
-.form-input.has-error .input-underline {
-	background: #fecaca;
+/* 表单 */
+.login-form :deep(.el-form-item) {
+	margin-bottom: 16px;
 }
-
-.underline-active {
-	height: 100%;
-	width: 100%;
-	background: linear-gradient(90deg, #6366f1, #8b5cf6);
-	transform: translateX(-100%);
-	transition: transform 0.3s ease;
-}
-
-.form-input.has-error .underline-active {
-	background: linear-gradient(90deg, #dc2626, #ef4444);
-}
-
-.underline-active.active {
-	transform: translateX(0);
-}
-
-.form-options {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 30px;
-}
-
-.remember-me {
+.form-input {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	color: #64748b;
-	font-size: 14px;
-}
-
-:deep(.custom-switch .el-switch__core) {
-	transition: all 0.3s ease;
-}
-
-.forgot-link {
-	color: #6366f1;
-	text-decoration: none;
-	font-size: 14px;
-	font-weight: 500;
-	transition: all 0.3s ease;
-	position: relative;
-}
-
-.forgot-link::after {
-	content: '';
-	position: absolute;
-	bottom: -2px;
-	left: 0;
-	width: 0;
-	height: 1px;
-	background: #6366f1;
-	transition: width 0.3s ease;
-}
-
-.forgot-link:hover {
-	color: #8b5cf6;
-}
-
-.forgot-link:hover::after {
 	width: 100%;
+	height: 44px;
+	padding: 0 14px;
+	border: 1px solid var(--qm-line-strong, rgba(15,23,42,.14));
+	border-radius: 10px;
+	background: var(--qm-bg-2, #fff);
+	box-sizing: border-box;
+	transition: border-color .2s ease, box-shadow .2s ease;
 }
-
-.login-btn {
-	position: relative;
-	width: 100%;
-	height: 56px;
-	border: none;
-	border-radius: 12px;
+.form-input.focused {
+	border-color: var(--qm-accent, #f59e0b);
+	box-shadow: 0 0 0 3px var(--qm-accent-soft, rgba(245,158,11,.12));
+}
+.form-input.has-error {
+	border-color: var(--qm-red, #ef4444);
+}
+.input-icon {
+	display: flex;
+	align-items: center;
+	color: var(--qm-text-3, #9ca3af);
 	font-size: 16px;
-	font-weight: 600;
-	letter-spacing: 0.5px;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-	overflow: hidden;
-	transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-	margin-bottom: 20px;
+}
+.form-input.focused .input-icon {
+	color: var(--qm-accent, #f59e0b);
+}
+.login-form :deep(.el-input__wrapper) {
+	box-shadow: none !important;
+	background: transparent;
+	padding: 0;
+}
+.login-form :deep(.el-input__inner) {
+	color: var(--qm-text-1, #1f2937);
+	height: 42px;
+}
+.login-form :deep(.el-input__inner::placeholder) {
+	color: var(--qm-text-3, #9ca3af);
 }
 
-.login-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+/* 选项行 */
+.form-options {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 2px 0 18px;
 }
-
-.login-btn:active {
-	transform: translateY(0);
-}
-
-.btn-ripple {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 0;
-	height: 0;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.5);
-	transform: translate(-50%, -50%);
-	transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
-}
-
-.login-btn:hover .btn-ripple {
-	width: 200%;
-	height: 200%;
-	opacity: 0;
-}
-
-.btn-shine {
-	position: absolute;
-	top: -100%;
-	left: -100%;
-	width: 50%;
-	height: 300%;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-	transform: rotate(30deg);
-	transition: left 0.8s ease;
-}
-
-.btn-shine.active {
-	left: 150%;
-}
-
-.login-footer {
-	text-align: center;
-	border-top: 1px solid #e2e8f0;
-	padding-top: 20px;
-}
-
-.login-footer p {
-	color: #64748b;
-	font-size: 14px;
-	margin: 0 0 15px 0;
-}
-
-.nav-link {
-	display: inline-flex;
+.remember-me {
+	display: flex;
 	align-items: center;
 	gap: 8px;
-	color: #6366f1;
+	font-size: 13px;
+	color: var(--qm-text-2, #4b5563);
+}
+.forgot-link {
+	font-size: 13px;
+	color: var(--qm-text-3, #9ca3af);
 	text-decoration: none;
-	font-weight: 600;
-	font-size: 14px;
-	transition: all 0.3s ease;
-	padding: 8px 16px;
-	border-radius: 8px;
-	background: rgba(99, 102, 241, 0.1);
+}
+.forgot-link:hover {
+	color: var(--qm-accent, #f59e0b);
 }
 
-.nav-link:hover {
-	color: white;
-	background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-	transform: translateY(-2px);
-	box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
-}
-
-.platform-status {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 25px;
-	padding-top: 25px;
-	border-top: 1px solid #e2e8f0;
-}
-
-.status-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	color: #64748b;
-	font-size: 14px;
-}
-
-.status-dot {
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-}
-
-.status-dot.online {
-	background: #10b981;
-	animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.status-dot.active {
-	background: #f59e0b;
-}
-
-@keyframes pulse-dot {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.5; }
-}
-
-/* 粒子画布 */
-.particle-canvas {
-	position: absolute;
-	top: 0;
-	left: 0;
+/* 登录按钮 */
+.login-btn {
 	width: 100%;
-	height: 100%;
-	pointer-events: none;
-	z-index: 0; /* 调整到最底层 */
+	height: 44px;
+	font-size: 15px;
+	font-weight: 500;
+	border-radius: 10px;
+	border: none;
+	background: var(--qm-accent, #f59e0b);
+}
+.login-btn:hover {
+	background: var(--qm-accent-2, #f97316);
 }
 
-/* 底部信息 */
-.footer {
-	position: relative;
-	z-index: 6; /* 底部在最上层 */
-	padding: 20px;
-	background: rgba(0, 0, 0, 0.3);
-	backdrop-filter: blur(15px);
-	border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.footer-content {
-	max-width: 1400px;
-	margin: 0 auto;
+/* 注册 */
+.login-footer {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 4px;
 }
-
-.footer-content p {
-	color: rgba(255, 255, 255, 0.7);
-	font-size: 14px;
+.login-footer p {
+	font-size: 13px;
+	color: var(--qm-text-3, #9ca3af);
 	margin: 0;
 }
-
-.footer-links {
+.nav-link {
 	display: flex;
-	gap: 20px;
-}
-
-.footer-links a {
-	color: rgba(255, 255, 255, 0.7);
+	align-items: center;
+	gap: 2px;
+	font-size: 13px;
+	color: var(--qm-accent, #f59e0b);
 	text-decoration: none;
-	font-size: 14px;
-	transition: color 0.3s ease;
-	position: relative;
+	font-weight: 500;
 }
 
-.footer-links a:hover {
-	color: white;
+/* 页脚 */
+.page-foot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 18px;
+	font-size: 12px;
+	color: var(--qm-text-3, #9ca3af);
 }
-
-.footer-links a::after {
-	content: '';
-	position: absolute;
-	bottom: -4px;
-	left: 0;
-	width: 0;
-	height: 1px;
-	background: white;
-	transition: width 0.3s ease;
+.status-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--qm-green, #10b981);
+	display: inline-block;
 }
-
-.footer-links a:hover::after {
-	width: 100%;
-}
-
-/* 动画关键帧 */
-@keyframes slideInLeft {
-	from {
-		opacity: 0;
-		transform: translateX(-50px);
-	}
-	to {
-		opacity: 1;
-		transform: translateX(0);
-	}
-}
-
-@keyframes slideInRight {
-	from {
-		opacity: 0;
-		transform: translateX(50px);
-	}
-	to {
-		opacity: 1;
-		transform: translateX(0);
-	}
-}
-
-@keyframes logoFloat {
-	0%, 100% { transform: translateY(0) rotate(0deg); }
-	25% { transform: translateY(-10px) rotate(5deg); }
-	75% { transform: translateY(5px) rotate(-5deg); }
-}
-
-@keyframes hexagonPulse {
-	0%, 100% { stroke-width: 4; }
-	50% { stroke-width: 6; }
-}
-
-@keyframes centerPulse {
-	0%, 100% { opacity: 0.8; r: 20; }
-	50% { opacity: 1; r: 22; }
-}
-
-@keyframes glowPulse {
-	0%, 100% { opacity: 0.5; transform: scale(1); }
-	50% { opacity: 0.8; transform: scale(1.1); }
-}
-
-@keyframes gradientShift {
-	0%, 100% { background-position: 0% 50%; }
-	50% { background-position: 100% 50%; }
-}
-
-/* 响应式设计 */
-@media (max-width: 1200px) {
-	.main-container {
-		flex-direction: column;
-		gap: 40px;
-	}
-	
-	.intro-section {
-		padding-right: 0;
-		padding-bottom: 40px;
-	}
-	
-	.login-section {
-		width: 100%;
-		max-width: 500px;
-		margin: 0 auto;
-	}
-	
-	/* 调整浮动元素位置 */
-	.float-element.api { left: 2%; }
-	.float-element.ui { left: 3%; }
-	.float-element.performance { right: 2%; }
-	.float-element.mock { right: 3%; }
-}
-
-@media (max-width: 992px) {
-	.float-element {
-		width: 60px;
-		height: 60px;
-		font-size: 12px;
-	}
-	
-	.float-element svg {
-		width: 20px;
-		height: 20px;
-	}
-	
-	.float-tooltip {
-		font-size: 10px;
-		padding: 4px 8px;
-		bottom: -30px;
-	}
-	
-	.float-element.api { top: 15%; }
-	.float-element.ui { top: 70%; }
-	.float-element.performance { top: 20%; }
-	.float-element.mock { top: 75%; }
-}
-
-@media (max-width: 768px) {
-	.main-container {
-		padding: 10px;
-	}
-	
-	.feature-cards {
-		grid-template-columns: 1fr;
-	}
-	
-	.logo-wrapper {
-		flex-direction: column;
-		text-align: center;
-		gap: 15px;
-	}
-	
-	.platform-name {
-		font-size: 32px;
-	}
-	
-	.features-title h2 {
-		font-size: 24px;
-	}
-	
-	.login-card {
-		padding: 30px 20px;
-	}
-	
-	.footer-content {
-		flex-direction: column;
-		gap: 15px;
-		text-align: center;
-	}
-	
-	/* 在小屏幕上隐藏浮动元素 */
-	.float-element {
-		display: none;
-	}
-	
-	.error-alert {
-		padding: 12px;
-	}
-	
-	.error-content {
-		gap: 8px;
-	}
-	
-	.error-text h4 {
-		font-size: 14px;
-	}
-	
-	.error-text p {
-		font-size: 12px;
-	}
-}
-
-@media (max-width: 480px) {
-	.feature-card {
-		padding: 20px;
-	}
-	
-	.login-header h2 {
-		font-size: 24px;
-	}
-	
-	.platform-status {
-		flex-direction: column;
-		gap: 15px;
-		align-items: flex-start;
-	}
-	
-	.form-options {
-		flex-direction: column;
-		gap: 15px;
-		align-items: flex-start;
-	}
-	
-	.forgot-password {
-		align-self: flex-end;
-	}
-}
-
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-	width: 8px;
-}
-
-::-webkit-scrollbar-track {
-	background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-	background: rgba(99, 102, 241, 0.5);
-	border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-	background: rgba(99, 102, 241, 0.7);
+.foot-sep {
+	color: var(--qm-line-strong, rgba(15,23,42,.14));
 }
 </style>

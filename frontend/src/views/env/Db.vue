@@ -1054,9 +1054,9 @@ export default{
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -1365,7 +1365,7 @@ export default{
 <style scoped>
 .database-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -1379,7 +1379,7 @@ export default{
 
 .drawer-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -1391,18 +1391,18 @@ export default{
 .drawer-tabs >>> .el-tabs__header {
   margin: 0;
   padding: 0px 24px 0;
-  background: white;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--qm-bg-2);
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .drawer-tabs >>> .el-tabs__nav-wrap::after {
-  background-color: #f1f5f9;
+  background-color: var(--qm-bg-3);
 }
 
 .drawer-tabs >>> .el-tabs__item {
   font-size: 16px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--qm-text-2);
   padding: 0 24px;
   height: 48px;
   line-height: 48px;
@@ -1410,11 +1410,11 @@ export default{
 }
 
 .drawer-tabs >>> .el-tabs__item:hover {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .drawer-tabs >>> .el-tabs__item.is-active {
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
 }
 
@@ -1425,7 +1425,7 @@ export default{
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px 2px 0 0;
 }
 
@@ -1450,7 +1450,7 @@ export default{
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   margin-bottom: 20px;
   border: none;
   border-radius: 16px;
@@ -1463,7 +1463,7 @@ export default{
   justify-content: space-between;
   align-items: center;
   padding: 15px 5px 10px 5px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -1476,7 +1476,7 @@ export default{
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1499,7 +1499,7 @@ export default{
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -1507,8 +1507,8 @@ export default{
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1522,9 +1522,9 @@ export default{
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -1533,8 +1533,8 @@ export default{
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -1546,7 +1546,7 @@ export default{
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1557,7 +1557,7 @@ export default{
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn i {
@@ -1601,7 +1601,7 @@ export default{
   gap: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
   width: 90px;
   margin-right: 10px;
   flex-shrink: 0;
@@ -1631,7 +1631,7 @@ export default{
 }
 
 .icon-db-type {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 4px;
 }
 
@@ -1641,12 +1641,12 @@ export default{
 }
 
 .icon-creator {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 4px;
 }
 
 .icon-updater {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 4px;
 }
 
@@ -1655,7 +1655,7 @@ export default{
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -1699,7 +1699,7 @@ export default{
 .content-header {
   padding: 20px 24px;
   margin-top: 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -1719,7 +1719,7 @@ export default{
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -1732,7 +1732,7 @@ export default{
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -1746,21 +1746,21 @@ export default{
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .add-btn {
@@ -1799,10 +1799,10 @@ export default{
 }
 
 .elegant-table :deep(.el-table__header-wrapper th) {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -1815,16 +1815,16 @@ export default{
 }
 
 .elegant-table :deep(.el-table__body-wrapper .el-table__row:nth-child(even)) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table :deep(.el-table__body-wrapper .el-table__row:hover) {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
 .elegant-table :deep(.el-table__body-wrapper .el-table__row.active-row) {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -1835,11 +1835,11 @@ export default{
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table :deep(.el-table__body-wrapper td) {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -1854,10 +1854,10 @@ export default{
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
   border-radius: 8px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   margin: 0 auto;
 }
 
@@ -1899,7 +1899,7 @@ export default{
 .dbname {
   font-weight: 500;
   text-align: center;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .type-tag {
@@ -1913,7 +1913,7 @@ export default{
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 13px;
 }
 
@@ -1958,7 +1958,7 @@ export default{
 }
 .user-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -1967,7 +1967,7 @@ export default{
 }
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2042,7 +2042,7 @@ export default{
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn i {
@@ -2059,11 +2059,11 @@ export default{
 .pagination-wrapper {
   padding: 20px 24px 0px 20px;
   float: right;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   display: block !important;
   min-height: 40px;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
 }
 
@@ -2076,7 +2076,7 @@ export default{
 .elegant-dialog :deep(.el-dialog) {
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
@@ -2088,7 +2088,7 @@ export default{
 .elegant-dialog :deep(.el-dialog__title) {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2098,7 +2098,7 @@ export default{
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -2137,7 +2137,7 @@ export default{
     gap: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #475569;
+    color: var(--qm-text-2);
     min-width: 100px;
     margin-right: 10px;
     flex-shrink: 0;
@@ -2164,7 +2164,7 @@ export default{
 }
 
 .icon-db-type-dialog {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 4px;
 }
 
@@ -2174,17 +2174,17 @@ export default{
 }
 
 .icon-connection {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 4px;
 }
 
 .icon-host {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 4px;
 }
 
 .icon-port {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 4px;
 }
 
@@ -2204,8 +2204,8 @@ export default{
 
 .elegant-dialog :deep(.el-input-number .el-input__inner) {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
@@ -2215,7 +2215,7 @@ export default{
 
 .elegant-dialog :deep(.el-dialog__footer) {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -2228,23 +2228,23 @@ export default{
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
 .dialog-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -2252,7 +2252,7 @@ export default{
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 /* 响应式设计 */

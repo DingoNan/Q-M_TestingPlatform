@@ -1,9 +1,9 @@
-name: blackbagtest
+name: qm-test-platform
 
 services:
   mysql:
     image: mysql:8.0
-    container_name: blackbag-mysql
+    container_name: qm-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-blackbag_root}
@@ -26,11 +26,11 @@ services:
       retries: 30
       start_period: 20s
     networks:
-      - blackbag-net
+      - qm-net
 
   redis:
     image: redis:7-alpine
-    container_name: blackbag-redis
+    container_name: qm-redis
     restart: unless-stopped
     command: >
       sh -c 'if [ -n "$$REDIS_PASSWORD" ]; then redis-server --requirepass "$$REDIS_PASSWORD"; else redis-server; fi'
@@ -44,11 +44,11 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      - blackbag-net
+      - qm-net
 
   qdrant:
     image: qdrant/qdrant:v1.12.4
-    container_name: blackbag-qdrant
+    container_name: qm-qdrant
     restart: unless-stopped
     ports:
       - "6333:6333"
@@ -56,13 +56,13 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
     networks:
-      - blackbag-net
+      - qm-net
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blackbag-backend
+    container_name: qm-backend
     restart: unless-stopped
     depends_on:
       mysql:
@@ -92,20 +92,20 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - blackbag-net
+      - qm-net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: blackbag-frontend
+    container_name: qm-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "8080:80"
     networks:
-      - blackbag-net
+      - qm-net
 
 volumes:
   mysql_data:
@@ -115,5 +115,5 @@ volumes:
   backend_uploads:
 
 networks:
-  blackbag-net:
+  qm-net:
     driver: bridge

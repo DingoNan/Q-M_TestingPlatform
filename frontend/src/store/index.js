@@ -7,8 +7,14 @@ export default createStore({
 	  pathPermission: {},
 	  cur_path: '',
 	  projectInfo: '',
-	  userInfo: '',
+	  // 登录后写入 localStorage（键 qm-userInfo），刷新/新标签页可恢复，
+	  // 否则超管页（/user/list 等）的 userInfo.is_superuser 判空会被误判为无权限
+	  userInfo: (() => {
+		  try { return JSON.parse(localStorage.getItem('qm-userInfo')) || '' } catch (e) { return '' }
+	  })(),
 	  interfaces: [],
+	  tags: [],
+	  theme: localStorage.getItem('qm-theme') || 'light',
   },
   mutations: {
 		  setPathPermission(state, path_permission){
@@ -25,9 +31,22 @@ export default createStore({
 		  },
 		  saveUserInfo(state, item){
 			  state.userInfo = {...item}
+			  try { localStorage.setItem('qm-userInfo', JSON.stringify(item)) } catch (e) {}
 		  },
 		  clearUserInfo(state){
 			  state.userInfo = ''
+			  try { localStorage.removeItem('qm-userInfo') } catch (e) {}
+		  },
+		  setTheme(state, theme){
+			  state.theme = theme
+			  localStorage.setItem('qm-theme', theme)
+			  document.documentElement.classList.toggle('dark', theme === 'dark')
+		  },
+		  toggleTheme(state){
+			  const next = state.theme === 'dark' ? 'light' : 'dark'
+			  state.theme = next
+			  localStorage.setItem('qm-theme', next)
+			  document.documentElement.classList.toggle('dark', next === 'dark')
 		  },
 	  addTags(state, obj_item){
 		  const obj = state.tags.find((item)=>{

@@ -1,2 +1,0 @@
-"use strict";(self["webpackChunkblack_bag_web"]=self["webpackChunkblack_bag_web"]||[]).push([[853],{83109:function(n,e,t){t.r(e),t.d(e,{default:function(){return l}});var u=t(54909);function c(n,e,t,c,r,a){const s=(0,u.g2)("ElementList");return(0,u.uX)(),(0,u.CE)("div",null,[(0,u.bF)(s)])}var r=t(5444),a={components:{ElementList:r.A}},s=t(62860);const b=(0,s.A)(a,[["render",c]]);var l=b}}]);
-//# sourceMappingURL=element.b485f19e.js.map

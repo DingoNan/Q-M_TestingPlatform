@@ -409,7 +409,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -417,8 +417,8 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           axisPointer: {
             type: 'cross',
             label: {
@@ -428,22 +428,22 @@ export default {
         },
         xAxis: {
           type: 'time',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         yAxis: {
           type: 'value',
           name: '请求数/秒',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         legend: {
           show: true,
           data: ['RPS', '失败率'],
           top: 10,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         grid: {
           left: '3%',
@@ -481,12 +481,12 @@ export default {
         ]
       },
       responseOption: {
-        color: ['#f59e0b', '#8b5cf6', '#3b82f6'],
+        color: ['#f59e0b', '#f97316', '#f59e0b'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -494,8 +494,8 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           axisPointer: {
             type: 'cross',
             label: {
@@ -505,22 +505,22 @@ export default {
         },
         xAxis: {
           type: 'time',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         yAxis: {
           type: 'value',
           name: '响应时间(ms)',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         legend: {
           show: true,
           data: ['50%分位数', '95%分位数', '平均响应时间'],
           top: 10,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         grid: {
           left: '3%',
@@ -557,8 +557,8 @@ export default {
                 type: 'linear',
                 x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
-                  { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
-                  { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }
+                  { offset: 0, color: 'rgba(245, 158, 11, 0.3)' },
+                  { offset: 1, color: 'rgba(245, 158, 11, 0.05)' }
                 ]
               }
             }
@@ -571,7 +571,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -579,8 +579,8 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           axisPointer: {
             type: 'cross',
             label: {
@@ -590,22 +590,22 @@ export default {
         },
         xAxis: {
           type: 'time',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         yAxis: {
           type: 'value',
           name: '用户数',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         legend: {
           show: true,
           data: ['并发用户数'],
           top: 10,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         grid: {
           left: '3%',
@@ -660,9 +660,9 @@ export default {
     getTableHeaderStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '2px solid #e2e8f0'
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '2px solid var(--qm-line-strong)'
       }
     },
     
@@ -795,7 +795,7 @@ export default {
 <style scoped>
 .performance-report-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 5px;
   box-sizing: border-box;
   display: flex;
@@ -810,7 +810,7 @@ export default {
               0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
 }
 
@@ -852,17 +852,17 @@ export default {
   gap: 6px;
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .back-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -870,7 +870,7 @@ export default {
   display: inline-block;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 10px;
   position: relative;
 }
@@ -882,7 +882,7 @@ export default {
   left: 7px;
   right: 7px;
   bottom: 7px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 5px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -891,7 +891,7 @@ export default {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .report-status {
@@ -919,7 +919,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -931,7 +931,7 @@ export default {
   left: 5px;
   right: 5px;
   bottom: 5px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 3px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -940,7 +940,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .info-content-grid {
@@ -965,7 +965,7 @@ export default {
   gap: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .icon-user,
@@ -1033,18 +1033,18 @@ export default {
 
 .info-value {
   font-size: 15px;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   font-weight: 500;
   padding: 10px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   transition: all 0.3s ease;
 }
 
 .info-value:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-2);
+  border-color: var(--qm-line-strong);
 }
 
 .case-link {
@@ -1065,7 +1065,7 @@ export default {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 
 .card-title-section {
@@ -1090,11 +1090,11 @@ export default {
 }
 
 .icon-response {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .icon-exception {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .icon-failure {
@@ -1111,7 +1111,7 @@ export default {
   left: 6px;
   right: 6px;
   bottom: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 4px;
 }
 
@@ -1119,12 +1119,12 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .card-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
@@ -1152,7 +1152,7 @@ export default {
 }
 
 .data-table ::v-deep(.el-table__row:hover) {
-  background-color: #f8fafc;
+  background-color: var(--qm-bg-1);
 }
 
 .data-table ::v-deep(.error-row) {
@@ -1173,11 +1173,11 @@ export default {
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
-.number-value { color: #3b82f6; }
+.number-value { color: #f59e0b; }
 .time-value { color: #10b981; }
-.size-value { color: #8b5cf6; }
+.size-value { color: #f97316; }
 .rps-value { color: #f59e0b; }
-.percentile-value { color: #64748b; }
+.percentile-value { color: var(--qm-text-2); }
 .error-count { color: #ef4444; }
 
 /* 图表容器 */
@@ -1241,12 +1241,12 @@ export default {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .chart-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--qm-text-2);
   margin-left: 32px;
 }
 
@@ -1371,7 +1371,7 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
@@ -1382,7 +1382,7 @@ export default {
 
 .loading-text {
   margin-top: 16px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 14px;
 }
 </style>

@@ -138,7 +138,7 @@ export default{
 		margin: 0px;
 	}
 	.top_border{
-		border: 1px solid #dcdfe6;
+		border: 1px solid var(--qm-line-strong);
 		padding: 10px;
 	}
 	.action .action_btn{

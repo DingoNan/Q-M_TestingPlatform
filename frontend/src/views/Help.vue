@@ -429,14 +429,14 @@ export default {
         id: 'quick-start',
         title: '快速开始',
         icon: 'fas fa-rocket',
-        description: '欢迎使用BlackBagTest测试平台！本指南将帮助您快速了解平台功能并开始使用。',
+        description: '欢迎使用 Q·M 测试平台！本指南将帮助您快速了解平台功能并开始使用。',
         content: `
           <h3 id="platform-overview">平台概述</h3>
-          <p>BlackBagTest 是一款现代化的开源 Web 应用测试平台，专为测试团队设计，自动化测试平台支持接口测试、Mock 服务、UI 自动化及性能测试，并提供可视化报告输出。平台集成多种主流测试框架，显著降低用例编写难度，助力团队高效开展自动化测试，提升整体测试效率与协作能力</p>
+          <p>Q·M 是一款现代化的 Web 应用测试平台，专为测试团队设计，自动化测试平台支持接口测试、Mock 服务、UI 自动化及性能测试，并提供可视化报告输出。平台集成多种主流测试框架，显著降低用例编写难度，助力团队高效开展自动化测试，提升整体测试效率与协作能力</p>
           
           <div class="info-box">
             <h3 id="create-interface"><i class="fas fa-lightbulb"></i> 创建我的第一个接口文档并调试</h3>
-			<p>下面会以BlackBagTest测试平台为测试对象，来介绍怎么去创建接口文档，创建API用例</p>
+			<p>下面会以 Q·M 测试平台为测试对象，来介绍怎么去创建接口文档，创建API用例</p>
             <ul class="step-list">
               <li>
                 <h4>1. 创建测试环境</h4>
@@ -1178,8 +1178,8 @@ export default {
 .help-documentation {
   display: flex;
   height: 100vh;
-  background-color: #303133;
-  color: #303133;
+  background-color: var(--qm-text-1);
+  color: var(--qm-text-1);
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
 }
 
@@ -1210,7 +1210,7 @@ export default {
 }
 
 .header h1 i {
-  color: #3498db;
+  color: #f59e0b;
 }
 
 .header p {
@@ -1235,7 +1235,7 @@ export default {
 }
 
 .search-box input:focus {
-  outline: 2px solid #3498db;
+  outline: 2px solid #f59e0b;
   background-color: #2c3e50;
 }
 
@@ -1257,7 +1257,7 @@ export default {
 }
 
 .nav-item:first-child.active .nav-item-header {
-  border-left: 4px solid #3498db;
+  border-left: 4px solid #f59e0b;
 }
 
 /* 父菜单展开状态 */
@@ -1268,7 +1268,7 @@ export default {
 /* 父菜单激活状态（自身被激活） */
 .nav-item .nav-item-header.active {
   background-color: rgba(52, 152, 219, 0.1);
-  border-left: 4px solid #3498db;
+  border-left: 4px solid #f59e0b;
 }
 
 .nav-item-header {
@@ -1316,8 +1316,8 @@ export default {
 
 .nav-subitem.active {
   background-color: rgba(52, 152, 219, 0.15);
-  border-left-color: #3498db;
-  color: #3498db;
+  border-left-color: #f59e0b;
+  color: #f59e0b;
   font-weight: 500;
 }
 
@@ -1332,7 +1332,7 @@ export default {
   flex: 1;
   overflow-y: auto;
   padding: 40px;
-  background-color: #fff;
+  background-color: var(--qm-bg-2);
   position: relative;
 }
 
@@ -1342,7 +1342,7 @@ export default {
   top: 40px;
   right: 40px;
   width: 220px;
-  background-color: #fff;
+  background-color: var(--qm-bg-2);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 100;
@@ -1361,7 +1361,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background-color: #f8f9fa;
+  background-color: var(--qm-bg-1);
   border-bottom: 1px solid #eaeaea;
 }
 
@@ -1375,7 +1375,7 @@ export default {
 }
 
 .anchor-header h3 i {
-  color: #3498db;
+  color: #f59e0b;
 }
 
 .anchor-toggle {
@@ -1390,7 +1390,7 @@ export default {
 }
 
 .anchor-toggle:hover {
-  color: #3498db;
+  color: #f59e0b;
   background-color: rgba(52, 152, 219, 0.1);
 }
 
@@ -1411,16 +1411,16 @@ export default {
 }
 
 .anchor-link:hover {
-  background-color: #f8f9fa;
-  color: #3498db;
-  border-left-color: #3498db;
+  background-color: var(--qm-bg-1);
+  color: #f59e0b;
+  border-left-color: #f59e0b;
 }
 
 .anchor-link.active {
   background-color: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  color: #f59e0b;
   font-weight: 500;
-  border-left-color: #3498db;
+  border-left-color: #f59e0b;
 }
 
 .anchor-link i {
@@ -1435,7 +1435,7 @@ export default {
   right: 40px;
   width: 50px;
   height: 50px;
-  background-color: #3498db;
+  background-color: #f59e0b;
   color: white;
   border: none;
   border-radius: 50%;
@@ -1507,7 +1507,7 @@ export default {
 }
 
 .section-header h2 i {
-  color: #3498db;
+  color: #f59e0b;
 }
 
 .section-header p {
@@ -1545,7 +1545,7 @@ export default {
 }
 
 .section-content code {
-  background-color: #f8f9fa;
+  background-color: var(--qm-bg-1);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
@@ -1554,8 +1554,8 @@ export default {
 }
 
 .info-box {
-  background-color: #f8f9fa;
-  border-left: 4px solid #3498db;
+  background-color: var(--qm-bg-1);
+  border-left: 4px solid #f59e0b;
   padding: 20px;
   margin: 25px 0;
   border-radius: 0 6px 6px 0;
@@ -1585,7 +1585,7 @@ export default {
 
 .step-list li:before {
   content: counter(step-counter);
-  background-color: #3498db;
+  background-color: #f59e0b;
   color: white;
   font-weight: bold;
   border-radius: 50%;
@@ -1607,7 +1607,7 @@ export default {
 }
 
 .feature-card {
-  background-color: #f8f9fa;
+  background-color: var(--qm-bg-1);
   border-radius: 8px;
   padding: 20px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1627,7 +1627,7 @@ export default {
 }
 
 .feature-card i {
-  color: #3498db;
+  color: #f59e0b;
 }
 
 /* 响应式设计 */

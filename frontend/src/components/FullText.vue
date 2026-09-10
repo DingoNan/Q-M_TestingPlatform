@@ -50,7 +50,7 @@ function registerMentionElement() {
           alignItems: 'center',
           padding: '1px 8px',
           margin: '0 2px',
-          background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+          background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
           color: '#fff',
           borderRadius: '10px',
           fontSize: '13px',
@@ -826,17 +826,17 @@ export default {
 <style scoped>
 .full-text-editor {
   width: 100%;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--qm-line-strong);
   border-radius: 4px;
   overflow: hidden;
-  background: white;
+  background: var(--qm-bg-2);
   display: flex;
   flex-direction: column;
 }
 
 #editor-toolbar {
   border-bottom: 1px solid #e8e8e8;
-  background: #fafafa;
+  background: var(--qm-bg-1);
   padding: 5px 10px;
   min-height: 46px;
   flex-shrink: 0;
@@ -936,14 +936,14 @@ export default {
 
 /* 代码块样式 */
 :deep(.w-e-text pre) {
-  background-color: #f5f5f5;
+  background-color: var(--qm-bg-3);
   border-radius: 4px;
   padding: 12px;
   overflow-x: auto;
 }
 
 :deep(.w-e-text code) {
-  background-color: #f5f5f5;
+  background-color: var(--qm-bg-3);
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Consolas', 'Monaco', monospace;
@@ -955,7 +955,7 @@ export default {
 }
 
 :deep(.w-e-full-screen-editor) {
-  background: white !important;
+  background: var(--qm-bg-2) !important;
 }
 
 /* 修复编辑区域光标和焦点问题 */
@@ -996,8 +996,8 @@ export default {
   width: 220px;
   max-height: 280px;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 10px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
   padding: 6px;
@@ -1006,7 +1006,7 @@ export default {
 .ft-mention-empty {
   padding: 12px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 13px;
 }
 .ft-mention-item {
@@ -1019,13 +1019,13 @@ export default {
   transition: background 0.15s ease;
 }
 .ft-mention-item.active {
-  background: #eef2ff;
+  background: var(--qm-accent-soft);
 }
 .ft-mention-avatar {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -1036,7 +1036,7 @@ export default {
 }
 .ft-mention-name {
   font-size: 14px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 </style>
@@ -1097,11 +1097,11 @@ export default {
 
 /* 图片上传相关样式 */
 .w-e-upload-container {
-  border: 2px dashed #d9d9d9 !important;
+  border: 2px dashed var(--qm-line-strong) !important;
   border-radius: 6px !important;
   padding: 40px 20px !important;
   text-align: center !important;
-  background-color: #fafafa !important;
+  background-color: var(--qm-bg-1) !important;
   cursor: pointer !important;
   transition: border-color 0.3s !important;
 }

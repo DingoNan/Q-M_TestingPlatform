@@ -1,7 +1,7 @@
 <template>
 	<div class="common-layout" style="width: 100%;">
 		<el-container>
-		      <el-header class='header' style="margin: 10px 20px; background-color: white; padding-top: 15px">
+		      <el-header class='header' style="margin: 10px 20px; background-color: var(--qm-bg-2); padding-top: 15px">
 				<el-form :inline="true" :model="interfaceSerarch" label-width="70px" style="min-width: 1200px;"> 
 				  <el-form-item label="接口名称">
 					<el-input v-model="interfaceSerarch.name" placeholder="请输入接口名称" clearable/>
@@ -34,7 +34,7 @@
 				  </el-form-item>
 				</el-form>
 			  </el-header>
-		      <el-main style="background-color: white; margin: 0 20px 20px 20px;">
+		      <el-main style="background-color: var(--qm-bg-2); margin: 0 20px 20px 20px;">
 				<el-dialog v-model="addDialogVisible" :title="interfaceFormTitle" style="width: 500px;">
 				    <el-form :model="interfaceForm" class='form'>
 						 <el-form-item label="接口类型" label-width="80px">
@@ -122,9 +122,12 @@ export default{
 				2: '外部接口'
 			},
 			interfaceFormTitle: '新增接口',
-			page_size_params: {
-				page: 1,
-				size: 10,
+			page_size_params: {
+
+				page: 1,
+
+				size: 10,
+
 			},
 			interfaces: '',
 			interfaceSerarch: {

@@ -279,7 +279,7 @@ export default {
 <style scoped>
 .selenium-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -302,7 +302,7 @@ export default {
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -314,7 +314,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 24px 10px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -347,8 +347,8 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -383,7 +383,7 @@ export default {
 .inline-label-text {
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
   white-space: nowrap;
 }
 
@@ -396,30 +396,30 @@ export default {
 
 .type-radio-button >>> .el-radio-button__inner {
   border-radius: 10px !important;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   padding: 8px 16px;
-  background: white;
-  color: #64748b;
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .type-radio-button >>> .el-radio-button__original-radio:checked + .el-radio-button__inner {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-color: transparent;
   color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .type-radio-button >>> .el-radio-button__inner:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-1);
 }
 
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -429,7 +429,7 @@ export default {
 
 .content-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -449,7 +449,7 @@ export default {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -476,21 +476,21 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 /* Selenium列表区域 */
@@ -512,7 +512,7 @@ export default {
 .selenium-item-card {
   border: none;
   border-radius: 12px;
-  background: white;
+  background: var(--qm-bg-2);
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -527,7 +527,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .item-tags {
@@ -547,7 +547,7 @@ export default {
   border-radius: 20px;
   padding: 6px 12px;
   font-weight: 500;
-  border: 1px solid #3b82f6;
+  border: 1px solid #f59e0b;
 }
 
 .item-actions {
@@ -600,12 +600,12 @@ export default {
 }
 
 .action-btn.choose-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
 }
 
 .action-btn.choose-btn:hover {
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .action-btn .el-icon {
@@ -639,7 +639,7 @@ export default {
 }
 
 .desc-text {
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 14px;
   line-height: 1.5;
   flex: 1;
@@ -653,7 +653,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .icon-empty {
@@ -669,19 +669,19 @@ export default {
 
 .empty-text {
   font-size: 16px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   margin: 0;
 }
 
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   float: right;
   flex-shrink: 0;
   display: block !important;
   min-height: 40px;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -693,7 +693,7 @@ export default {
 .elegant-dialog >>> .el-dialog {
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
@@ -705,7 +705,7 @@ export default {
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -725,7 +725,7 @@ export default {
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -737,16 +737,16 @@ export default {
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 

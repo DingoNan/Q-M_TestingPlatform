@@ -16,7 +16,7 @@
               <div class="logo-glow"></div>
             </div>
             <div class="platform-info">
-              <h1 class="platform-name">BlackBagTest</h1>
+              <h1 class="platform-name">Q·M 测试平台</h1>
               <p class="platform-slogan">智能测试解决方案</p>
             </div>
           </div>
@@ -157,8 +157,8 @@
                 <el-card
                   class="navigation-card elegant-shadow"
                   :style="{
-                    '--card-bg-color': navigation_obj.color || '#409eff',
-                    '--card-hover-bg-color': getHoverColor(navigation_obj.color || '#409eff')
+                    '--card-bg-color': navigation_obj.color || '#f59e0b',
+                    '--card-hover-bg-color': getHoverColor(navigation_obj.color || '#f59e0b')
                   }"
                   @click="jumpLink(navigation_obj.url)"
                 >
@@ -169,7 +169,7 @@
                         :src="navigation_obj.icon_url"
                         :size="48"
                         class="navigation-icon"
-                        :style="{ backgroundColor: navigation_obj.color || '#409eff' }"
+                        :style="{ backgroundColor: navigation_obj.color || '#f59e0b' }"
                       >
                         <span v-if="!navigation_obj.icon_url" class="icon-placeholder">
                           {{ getFirstChar(navigation_obj.name) }}
@@ -481,7 +481,7 @@ export default {
       saveNavigation: {
         name: '',
         url: '',
-        color: '#409EFF',
+        color: '#f59e0b',
         icon_url: '',
         group: '',
         group_name: ''
@@ -525,7 +525,7 @@ export default {
         ]
       },
       predefineColors: [
-        '#409EFF',
+        '#f59e0b',
         '#67C23A',
         '#E6A23C',
         '#F56C6C',
@@ -605,7 +605,7 @@ export default {
       this.saveNavigation = {
         name: '',
         url: '',
-        color: '#409EFF',
+        color: '#f59e0b',
         icon_url: '',
         group: group_obj.id,
         group_name: group_obj.name
@@ -814,7 +814,7 @@ export default {
 .navigation-management-container {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -885,13 +885,13 @@ export default {
 .logo-icon {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.5));
+  filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.5));
   animation: logoFloat 6s ease-in-out infinite;
 }
 
 .logo-hexagon {
   fill: none;
-  stroke: #6366f1;
+  stroke: #f59e0b;
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -899,7 +899,7 @@ export default {
 }
 
 .logo-center {
-  fill: #6366f1;
+  fill: #f59e0b;
   opacity: 0.8;
   animation: centerPulse 2s ease-in-out infinite;
 }
@@ -915,7 +915,7 @@ export default {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
   animation: glowPulse 4s ease-in-out infinite;
 }
 
@@ -928,7 +928,7 @@ export default {
 .platform-name {
   font-size: 20px;
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -981,7 +981,7 @@ export default {
 .search-container {
   display: flex;
   align-items: stretch;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -999,7 +999,7 @@ export default {
 }
 
 .search-container:focus-within {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2), 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* 分组选择器 - 调整垂直对齐 */
@@ -1023,7 +1023,7 @@ export default {
 /* 直接调整选择器位置 */
 .group-selector :deep(.el-input__wrapper) {
   border-radius: 12px 0 0 12px !important;
-  background: #f8fafc !important;
+  background: var(--qm-bg-1) !important;
   border: none !important;
   box-shadow: none !important;
   position: relative;
@@ -1101,7 +1101,7 @@ export default {
   box-shadow: none !important;
   border: none !important;
   padding: 0 16px 0 8px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   min-height: 48px;
   height: 48px;
   display: flex;
@@ -1117,7 +1117,7 @@ export default {
 
 /* 搜索图标 */
 .search-icon {
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 18px;
 }
 
@@ -1130,7 +1130,7 @@ export default {
 
 /* 搜索按钮 */
 .search-action-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1146,7 +1146,7 @@ export default {
 
 .search-action-btn:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .search-action-btn:active {
@@ -1198,8 +1198,8 @@ export default {
 
 .group-card {
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   overflow: hidden;
 }
 
@@ -1209,7 +1209,7 @@ export default {
 
 .group-card :deep(.el-card__header) {
   padding: 20px 24px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   border-bottom: none !important;
 }
 
@@ -1233,7 +1233,7 @@ export default {
 .group-indicator {
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 
@@ -1241,7 +1241,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .group-actions {
@@ -1253,7 +1253,7 @@ export default {
 .add-navigation-btn {
   padding: 8px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1261,15 +1261,15 @@ export default {
 
 .add-navigation-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .group-dropdown-btn {
   padding: 8px 16px;
   border-radius: 10px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
+  color: var(--qm-text-2);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1277,8 +1277,8 @@ export default {
 }
 
 .group-dropdown-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-1);
   transform: translateY(-1px);
 }
 
@@ -1414,18 +1414,18 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .empty-icon {
   font-size: 48px;
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
 }
 
 .empty-text {
   margin: 0;
   font-size: 16px;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .empty-state {
@@ -1433,9 +1433,9 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 20px;
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed var(--qm-line-strong);
   margin-top: 24px;
 }
 
@@ -1447,32 +1447,32 @@ export default {
 
 .empty-state-icon {
   font-size: 72px;
-  color: #cbd5e1;
+  color: var(--qm-line-strong);
   margin-bottom: 24px;
   display: inline-block;
 }
 
 .empty-state-icon.search-empty {
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .empty-state-title {
   margin: 0 0 12px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .empty-state-description {
   margin: 0 0 24px 0;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-size: 16px;
 }
 
 .empty-state-btn {
   padding: 12px 32px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
   font-weight: 500;
   display: inline-flex;
@@ -1483,14 +1483,14 @@ export default {
 
 .empty-state-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
 }
 
 /* 对话框样式 - 优化为与登录页一致的设计语言 */
 .elegant-dialog >>> .el-dialog {
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -1498,14 +1498,14 @@ export default {
 .elegant-dialog >>> .el-dialog__header {
   padding: 24px 24px 0;
   margin: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+  border-bottom: 1px solid var(--qm-line-strong);
 }
 
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1521,7 +1521,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 20px;
-  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
   border-radius: 2px;
 }
 
@@ -1544,7 +1544,7 @@ export default {
 .dialog-form-item >>> .el-form-item__label {
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -1553,14 +1553,14 @@ export default {
 
 .dialog-form-item >>> .el-form-item__label::before {
   content: '•';
-  color: #6366f1;
+  color: #f59e0b;
   font-size: 18px;
 }
 
 .dialog-input >>> .el-input__inner {
   border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   height: 48px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1569,19 +1569,19 @@ export default {
 }
 
 .dialog-input >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input >>> .el-input__inner:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .dialog-select >>> .el-input__inner {
   border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   height: 48px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1594,19 +1594,19 @@ export default {
 
 .sort-input >>> .el-input-number__increase,
 .sort-input >>> .el-input-number__decrease {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #64748b;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
+  color: var(--qm-text-2);
 }
 
 .sort-input >>> .el-input-number__increase:hover,
 .sort-input >>> .el-input-number__decrease:hover {
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
 }
 
 .sort-tip {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   margin-top: 8px;
   font-style: italic;
 }
@@ -1619,19 +1619,19 @@ export default {
 
 .color-picker-wrapper >>> .el-color-picker__trigger {
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--qm-line-strong);
   width: 40px;
   height: 40px;
 }
 
 .color-value {
   font-size: 14px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-family: 'Consolas', monospace;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   padding: 4px 8px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .icon-preview {
@@ -1643,13 +1643,13 @@ export default {
 
 .preview-label {
   font-size: 14px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .preview-icon {
-  border: 2px solid #e2e8f0;
-  background: white;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -1658,23 +1658,23 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  /* border-top: 1px solid #e2e8f0; */
-  background: #f8fafc;
+  /* border-top: 1px solid var(--qm-line-strong); */
+  background: var(--qm-bg-1);
 }
 
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
@@ -1682,7 +1682,7 @@ export default {
 .dialog-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1690,7 +1690,7 @@ export default {
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
 }
 
 /* 删除项样式 */
@@ -1876,12 +1876,12 @@ export default {
 }
 
 .navigation-management-container::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(245, 158, 11, 0.5);
   border-radius: 4px;
 }
 
 .navigation-management-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.7);
+  background: rgba(245, 158, 11, 0.7);
 }
 
 /* 页面加载动画 */

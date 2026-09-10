@@ -567,7 +567,7 @@
             
             <!-- 拖拽提示 -->
             <div v-if="isDraggingFile" class="drag-overlay">
-              <el-icon :size="48" color="#8b5cf6"><UploadFilled /></el-icon>
+              <el-icon :size="48" color="#f97316"><UploadFilled /></el-icon>
               <span>松开上传文件</span>
             </div>
 
@@ -788,9 +788,9 @@ export default {
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -1400,7 +1400,7 @@ export default {
 <style scoped>
 .tag-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -1425,7 +1425,7 @@ export default {
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   overflow: hidden;
@@ -1441,7 +1441,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 24px 10px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -1454,7 +1454,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1477,7 +1477,7 @@ export default {
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -1485,8 +1485,8 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1500,9 +1500,9 @@ export default {
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -1511,8 +1511,8 @@ export default {
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -1524,7 +1524,7 @@ export default {
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1535,7 +1535,7 @@ export default {
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -1574,7 +1574,7 @@ export default {
   gap: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
   width: 90px;
   margin-right: 10px;
   flex-shrink: 0;
@@ -1596,11 +1596,11 @@ export default {
 }
 
 .icon-database {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 .icon-keyword {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .icon-chunk {
@@ -1610,7 +1610,7 @@ export default {
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -1620,7 +1620,7 @@ export default {
 
 .content-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -1641,7 +1641,7 @@ export default {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -1654,7 +1654,7 @@ export default {
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -1669,17 +1669,17 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-item.stat-func {
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  background: var(--qm-warning-soft);
+  border-color: #fde68a;
 }
 .stat-item.stat-func .stat-value {
-  color: #2563eb;
+  color: #ea580c;
 }
 
 .stat-item.stat-api {
@@ -1703,19 +1703,19 @@ export default {
   border-color: #e9d5ff;
 }
 .stat-item.stat-element .stat-value {
-  color: #7c3aed;
+  color: #ea580c;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .header-action-btns {
@@ -1730,7 +1730,7 @@ export default {
   align-items: center;
   gap: 6px;
   font-weight: 500;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
   border: none !important;
   color: white !important;
   transition: all 0.3s ease !important;
@@ -1746,13 +1746,13 @@ export default {
 }
 
 .header-action-btns .batch-delete-btn:disabled {
-  background: #f1f5f9 !important;
-  color: #94a3b8 !important;
+  background: var(--qm-bg-3) !important;
+  color: var(--qm-text-3) !important;
   cursor: not-allowed;
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
   border: none !important;
   transition: all 0.3s ease !important;
 }
@@ -1769,8 +1769,8 @@ export default {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
   font-size: 13px;
   font-weight: 600;
 }
@@ -1787,16 +1787,16 @@ export default {
   padding: 10px 20px;
   border-radius: 10px !important;
   font-weight: 500 !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
   transition: all 0.3s ease !important;
 }
 
 .batch-dropdown .toolbar-btn:hover:not(:disabled) {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4) !important;
 }
 
 .batch-dropdown .toolbar-btn .el-icon {
@@ -1813,7 +1813,7 @@ export default {
   border-radius: 12px !important;
   border: none !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
-  background: white !important;
+  background: var(--qm-bg-2) !important;
   width: auto !important;
   min-width: 120px !important;
 }
@@ -1833,7 +1833,7 @@ export default {
   overflow: hidden;
   padding-bottom: 12px !important;
   margin-bottom: 12px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid var(--qm-bg-3) !important;
 }
 
 .batch-dropdown-popper .el-dropdown-menu__item:hover {
@@ -1859,18 +1859,18 @@ export default {
 }
 
 .batch-dropdown-item:hover {
-  background: #eff6ff !important;
+  background: var(--qm-warning-soft) !important;
 }
 
 .item-text {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-2);
   transition: all 0.2s ease;
 }
 
 .batch-dropdown-item:hover .item-text {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .add-btn {
@@ -1914,10 +1914,10 @@ export default {
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -1930,15 +1930,15 @@ export default {
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -1957,7 +1957,7 @@ export default {
 
 .name-link:hover {
   text-decoration: underline;
-  color: #1d4ed8 !important;
+  color: #d97706 !important;
 }
 
 .name-cell {
@@ -1990,7 +1990,7 @@ export default {
 }
 
 .doc-preview {
-  color: #475569;
+  color: var(--qm-text-2);
   font-size: 13px;
   line-height: 1.5;
   display: -webkit-box;
@@ -2050,7 +2050,7 @@ export default {
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn .el-icon {
@@ -2066,12 +2066,12 @@ export default {
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   float: right;
   display: block !important;
   min-height: 40px;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -2084,7 +2084,7 @@ export default {
 }
 
 .elegant-pagination >>> .el-pagination__total {
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
   margin-right: 20px;
 }
@@ -2095,8 +2095,8 @@ export default {
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
@@ -2114,13 +2114,13 @@ export default {
 }
 
 .elegant-pagination >>> .el-pager li:not(.disabled):hover {
-  color: #3b82f6;
-  border-color: #3b82f6;
-  background: white;
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background: var(--qm-bg-2);
 }
 
 .elegant-pagination >>> .el-pager li.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border-color: transparent;
 }
@@ -2128,8 +2128,8 @@ export default {
 .elegant-pagination >>> .btn-prev,
 .elegant-pagination >>> .btn-next {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   transition: all 0.3s ease;
   min-width: 36px;
   height: 36px;
@@ -2138,8 +2138,8 @@ export default {
 
 .elegant-pagination >>> .btn-prev:hover:not(.disabled),
 .elegant-pagination >>> .btn-next:hover:not(.disabled) {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
 .elegant-pagination >>> .el-pagination__jump {
@@ -2148,7 +2148,7 @@ export default {
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
@@ -2159,7 +2159,7 @@ export default {
   border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4) !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   backdrop-filter: blur(10px) !important;
 }
@@ -2172,7 +2172,7 @@ export default {
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px !important;
   font-weight: 700 !important;
-  color: #1a1a1a !important;
+  color: var(--qm-text-1) !important;
   letter-spacing: 0.5px !important;
 }
 
@@ -2187,7 +2187,7 @@ export default {
 }
 
 .elegant-dialog >>> .el-dialog__headerbtn:hover {
-  background: rgba(99, 102, 241, 0.1) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
   transform: rotate(90deg) !important;
 }
 
@@ -2229,7 +2229,7 @@ export default {
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .dialog-title {
@@ -2239,7 +2239,7 @@ export default {
   margin-bottom: 8px;
   font-size: 16px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .doc-content {
@@ -2251,14 +2251,14 @@ export default {
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #334155;
+  color: var(--qm-text-2);
   border: none;
 }
 
 .metadata-content {
   margin: 0;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--qm-bg-1);
+  color: var(--qm-text-2);
   padding: 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -2269,26 +2269,26 @@ export default {
 
 .dialog-input >>> .el-input__inner {
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   padding: 0 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
 .dialog-input >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dialog-input >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 0px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -2310,28 +2310,28 @@ export default {
 }
 
 .dialog-cancel-btn {
-  border: 1px solid #e2e8f0 !important;
-  background: white !important;
-  color: #64748b !important;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2) !important;
+  color: var(--qm-text-2) !important;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: var(--qm-bg-1) !important;
+  border-color: var(--qm-line-strong) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 .dialog-confirm-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   border: none !important;
   color: white !important;
 }
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
 }
 
 .button-text {
@@ -2354,11 +2354,11 @@ export default {
 }
 
 .dialog-cancel-btn .button-text::after {
-  background: #3b82f6;
+  background: #f59e0b;
 }
 
 .dialog-confirm-btn .button-text::after {
-  background: white;
+  background: var(--qm-bg-2);
 }
 
 .dialog-cancel-btn:hover .button-text::after,
@@ -2515,7 +2515,7 @@ export default {
 
 .user-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -2525,7 +2525,7 @@ export default {
 
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2561,11 +2561,11 @@ export default {
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .section-label .el-icon {
-  color: #8b5cf6;
+  color: #f97316;
   font-size: 16px;
 }
 
@@ -2576,7 +2576,7 @@ export default {
 
 .section-hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-weight: 400;
   margin-left: auto;
 }
@@ -2593,37 +2593,37 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--qm-line-strong);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #fff;
+  background: var(--qm-bg-2);
 }
 
 .chunk-type-card:hover {
   border-color: #c4b5fd;
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
 }
 
 .chunk-type-card.active {
-  border-color: #8b5cf6;
-  background: #f5f3ff;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+  border-color: #f97316;
+  background: var(--qm-accent-soft);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);
 }
 
 .chunk-icon {
   font-size: 20px;
-  color: #8b5cf6;
+  color: #f97316;
 }
 
 .chunk-label {
   font-size: 14px;
   font-weight: 500;
-  color: #334155;
+  color: var(--qm-text-2);
 }
 
 .chunk-type-card.active .chunk-label {
-  color: #6d28d9;
+  color: #d97706;
   font-weight: 600;
 }
 
@@ -2639,9 +2639,9 @@ export default {
   gap: 10px;
   margin-bottom: 12px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .attachment-item {
@@ -2649,14 +2649,14 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #fff;
+  background: var(--qm-bg-2);
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   position: relative;
 }
 
 .attachment-item.doc-item .doc-icon {
-  color: #3b82f6;
+  color: #f59e0b;
   font-size: 20px;
 }
 
@@ -2680,7 +2680,7 @@ export default {
 
 .attachment-name {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2690,7 +2690,7 @@ export default {
 
 .attachment-size {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .attachment-remove {
@@ -2718,21 +2718,21 @@ export default {
 /* 输入框容器 */
 .content-input-wrapper {
   position: relative;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--qm-line-strong);
   border-radius: 10px;
   transition: border-color 0.2s;
-  background: #fff;
+  background: var(--qm-bg-2);
 }
 
 .content-input-wrapper:focus-within {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .content-input-wrapper.is-dragging {
-  border-color: #8b5cf6;
+  border-color: #f97316;
   border-style: dashed;
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
 }
 
 .content-textarea {
@@ -2744,14 +2744,14 @@ export default {
   resize: vertical;
   font-size: 14px;
   line-height: 1.6;
-  color: #334155;
+  color: var(--qm-text-2);
   background: transparent;
   outline: none;
   font-family: inherit;
 }
 
 .content-textarea::placeholder {
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .content-textarea:focus {
@@ -2771,7 +2771,7 @@ export default {
   border-radius: 10px;
   z-index: 10;
   font-size: 14px;
-  color: #6d28d9;
+  color: #d97706;
   font-weight: 500;
 }
 
@@ -2794,19 +2794,19 @@ export default {
 .tool-btn {
   background: transparent;
   border: 1px solid transparent;
-  color: #64748b;
+  color: var(--qm-text-2);
   transition: all 0.2s;
 }
 
 .tool-btn:hover {
-  background: #f5f3ff;
+  background: var(--qm-accent-soft);
   border-color: #c4b5fd;
-  color: #8b5cf6;
+  color: #f97316;
 }
 
 .toolbar-right {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .hidden-input {
@@ -2819,7 +2819,7 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 0px 0px 24px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--qm-line-strong);
 }
 
 .dialog-cancel-btn {
@@ -2830,19 +2830,19 @@ export default {
 .dialog-confirm-btn {
   padding: 8px 24px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  background: linear-gradient(135deg, #f97316, #ea580c);
   border: none;
 }
 
 .dialog-confirm-btn:hover {
-  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  background: linear-gradient(135deg, #ea580c, #5b21b6);
 }
 
 /* 全局样式 */
 :deep(.el-dialog__title) {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--qm-text-1);
 }
 
 /* 详情弹窗 - 布局样式（已移到全局，因为 Teleport） */
@@ -2932,8 +2932,8 @@ body > .el-overlay:has(.detail-dialog) .el-dialog.detail-dialog .el-dialog__head
   flex-shrink: 0;
   padding: 16px 20px !important;
   margin: 0 !important;
-  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  background: linear-gradient(to right, var(--qm-bg-1), var(--qm-bg-2)) !important;
+  border-bottom: 1px solid var(--qm-line-strong) !important;
   border-radius: 0 !important;
   position: relative !important;
   display: flex !important;
@@ -2966,8 +2966,8 @@ body > .el-overlay:has(.detail-dialog) .el-dialog.detail-dialog .el-dialog__foot
 /* 基础信息卡片 - 占 1/3 */
 body > .el-overlay:has(.detail-dialog) .info-section {
   flex: 1;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
@@ -2977,8 +2977,8 @@ body > .el-overlay:has(.detail-dialog) .info-section {
 /* Metadata 区域 - 占 2/3 */
 body > .el-overlay:has(.detail-dialog) .metadata-section {
   flex: 2;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
@@ -2988,8 +2988,8 @@ body > .el-overlay:has(.detail-dialog) .metadata-section {
 /* 文档内容区域 - 全宽 */
 body > .el-overlay:has(.detail-dialog) .content-section {
   flex: 1;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
@@ -3001,12 +3001,12 @@ body > .el-overlay:has(.detail-dialog) .content-section {
 body > .el-overlay:has(.detail-dialog) .metadata-box {
   flex: 1;
   overflow-y: auto;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
   padding: 10px 12px;
   min-height: 0;
   max-height: 400px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 /* 基础信息内容框 - 与 metadata 高度一致 */
@@ -3015,8 +3015,8 @@ body > .el-overlay:has(.detail-dialog) .info-grid {
   grid-template-columns: 1fr;
   gap: 12px;
   flex: 1;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border: 1px solid var(--qm-line-strong);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -3025,10 +3025,10 @@ body > .el-overlay:has(.detail-dialog) .info-grid {
 body > .el-overlay:has(.detail-dialog) .doc-content-box {
   flex: 1;
   overflow-y: auto;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   min-height: 0;
 }
 
@@ -3090,14 +3090,14 @@ body > .el-overlay:has(.detail-dialog) .section-header {
 }
 
 body > .el-overlay:has(.detail-dialog) .section-icon {
-  color: #3b82f6;
+  color: #f59e0b;
   font-size: 16px;
 }
 
 body > .el-overlay:has(.detail-dialog) .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--qm-text-1);
 }
 
 body > .el-overlay:has(.detail-dialog) .char-count {
@@ -3113,13 +3113,13 @@ body > .el-overlay:has(.detail-dialog) .info-item {
 
 body > .el-overlay:has(.detail-dialog) .info-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   min-width: 64px;
 }
 
 body > .el-overlay:has(.detail-dialog) .info-value {
   font-size: 13px;
-  color: #334155;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
@@ -3127,7 +3127,7 @@ body > .el-overlay:has(.detail-dialog) .doc-content {
   margin: 0;
   font-size: 13px;
   line-height: 1.8;
-  color: #334155;
+  color: var(--qm-text-2);
   white-space: pre-wrap;
   word-break: break-word;
   font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
@@ -3137,7 +3137,7 @@ body > .el-overlay:has(.detail-dialog) .metadata-content {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
-  color: #334155;
+  color: var(--qm-text-2);
   white-space: pre-wrap;
   word-break: break-all;
   font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;

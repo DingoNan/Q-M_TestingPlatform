@@ -337,7 +337,7 @@ def send_dingtalk_message(webhook_url: str, report_url: str, project_name: str, 
 
         headers = {
             'Content-Type': 'application/json',
-            'User-Agent': 'BlackBagTest-AutoBot/1.0'
+            'User-Agent': 'QM-TestPlatform/1.0'
         }
 
         final_url = webhook_url

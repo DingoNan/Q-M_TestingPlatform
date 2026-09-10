@@ -1,10 +1,8 @@
 <template>
 	<div class="user_projects" :style="{backgroundColor: userColor.body_background_color}">
 		<el-container>
-			<el-header style="position: fixed; width: 100%; z-index: 1000; padding-left: 10px; padding-right: 10px;">
-				<Menu :userColor='userColor'  @collapse-change="handleCollapseChange" :showUser="true"></Menu>
-			</el-header>
-			<el-main style='padding: 10px; margin-top: 54px;'>
+			<Menu :userColor='userColor'  @collapse-change="handleCollapseChange" :showUser="true"></Menu>
+			<el-main class="qm-content-area">
 				<router-view :key="$route.path" :style="{backgroundColor: userColor.body_background_color}"></router-view>
 			</el-main>
 		</el-container>
@@ -50,6 +48,16 @@ export default {
 <style scoped>
 	.flex-grow {
 	  flex-grow: 1;
+	}
+	/* Q·M 重构布局：为左侧导航(220px) + 顶栏(56px) 留出偏移 */
+	.qm-content-area {
+		margin-left: 220px;
+		margin-top: 56px;
+		padding: 16px;
+		position: relative;
+		z-index: 1;
+		min-height: calc(100vh - 56px);
+		box-sizing: border-box;
 	}
 	.header .header_user:hover {
 	  cursor: pointer;

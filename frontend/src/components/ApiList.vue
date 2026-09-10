@@ -463,7 +463,7 @@
                     </el-tag>
                     <el-tag 
                       v-if='scope.row.status ===2' 
-                      color="#409EFF" 
+                      color="#f59e0b" 
                       effect='dark'
                       class="status-tag"
                     >
@@ -479,7 +479,7 @@
                     </el-tag>
                     <el-tag 
                       v-if='scope.row.status ===4' 
-                      color="#409EFF" 
+                      color="#f59e0b" 
                       effect='dark'
                       class="status-tag"
                     >
@@ -487,7 +487,7 @@
                     </el-tag>
                     <el-tag 
                       v-if='scope.row.status ===5' 
-                      color="#409EFF" 
+                      color="#f59e0b" 
                       effect='dark'
                       class="status-tag"
                     >
@@ -546,7 +546,7 @@
                   <template #default="scope">
                     <el-tag 
                       v-if='scope.row.method ==="GET"' 
-                      color='#409EFF' 
+                      color='#f59e0b' 
                       effect='dark'
                       class="method-tag"
                     >
@@ -1447,7 +1447,7 @@ export default{
       includeChildren: true,
       role_names: [],
       size: '20px',
-      color: '#409EFF',
+      color: '#f59e0b',
       check_methods: [],
       response_tab_active: 0,
       disabled: false,
@@ -1510,9 +1510,9 @@ export default{
     headerRowStyle() {
       return {
         'font-weight': '600',
-        'color': '#1a1a1a',
-        'background-color': '#f8fafc',
-        'border-bottom': '1px solid #e2e8f0',
+        'color': 'var(--qm-text-1)',
+        'background-color': 'var(--qm-bg-1)',
+        'border-bottom': '1px solid var(--qm-line-strong)',
         'height': '56px'
       }
     },
@@ -2257,7 +2257,7 @@ export default{
     async getApis(){
       this.apiSearch.project = this.projectInfo.id
       const data = Object.assign(this.apiSearch, this.page_size_params, this.sort_params)
-      this.apiSearch.module = this.apiSearch.module_list.join(',')
+      this.apiSearch.module = (this.apiSearch.module_list || []).join(',')
       const response = await this.$api.getApis(data)
       if (response.status === 200){
         this.api_list = {...response.data}
@@ -2429,7 +2429,7 @@ export default{
 <style scoped>
 .api-management-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 20px 15px 15px 15px;
   box-sizing: border-box;
   display: flex;
@@ -2455,7 +2455,7 @@ export default{
 
 /* 筛选卡片 */
 .filter-card {
-  background: white;
+  background: var(--qm-bg-2);
  
   border: none;
   border-radius: 16px;
@@ -2472,7 +2472,7 @@ export default{
   justify-content: space-between;
   align-items: center;
   padding: 15px 24px 10px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .header-title-section {
@@ -2485,7 +2485,7 @@ export default{
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -2508,7 +2508,7 @@ export default{
   left: 15px;
   width: 6px;
   height: 2px;
-  background: white;
+  background: var(--qm-bg-2);
   transform: rotate(45deg);
 }
 
@@ -2516,8 +2516,8 @@ export default{
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  color: var(--qm-text-1);
+  background: linear-gradient(135deg, var(--qm-text-1) 0%, var(--qm-text-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -2531,9 +2531,9 @@ export default{
 .reset-btn {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
@@ -2542,8 +2542,8 @@ export default{
 }
 
 .reset-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -2555,7 +2555,7 @@ export default{
 .search-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -2566,7 +2566,7 @@ export default{
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .search-btn .el-icon {
@@ -2606,7 +2606,7 @@ export default{
     gap: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #475569;
+    color: var(--qm-text-2);
     width: 90px;
     
     flex-shrink: 0;
@@ -2686,21 +2686,21 @@ export default{
   border-radius: 4px;
 }
 
-.inline-label-wrapper .icon-name { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
-.inline-label-wrapper .icon-url { background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%); }
+.inline-label-wrapper .icon-name { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.inline-label-wrapper .icon-url { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 .inline-label-wrapper .icon-method { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 .inline-label-wrapper .icon-case { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.inline-label-wrapper .icon-status { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.inline-label-wrapper .icon-status { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
 .inline-label-wrapper .icon-creator { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.inline-label-wrapper .icon-updater { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.inline-label-wrapper .icon-updater { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
 
 /* 内联输入框样式 */
 .input-inline >>> .el-input__inner,
 .select-inline >>> .el-input__inner,
 .cascader-inline >>> .el-input__inner {
  /* border-radius: 10px;
-  border: 1px solid #e2e8f0; */
-  /* background: #f8fafc; */
+  border: 1px solid var(--qm-line-strong); */
+  /* background: var(--qm-bg-1); */
   padding: 0 15px;
   box-shadow: none;
   transition: all 0.3s ease;
@@ -2712,15 +2712,15 @@ export default{
 .input-inline >>> .el-input__inner:hover,
 .select-inline >>> .el-input__inner:hover,
 .cascader-inline >>> .el-input__inner:hover {
-  border-color: #cbd5e1;
-  background: white;
+  border-color: var(--qm-line-strong);
+  background: var(--qm-bg-2);
 }
 
 .input-inline >>> .el-input__inner:focus,
 .select-inline >>> .el-input__inner:focus,
 .cascader-inline >>> .el-input__inner:focus {
-  border-color: #3b82f6;
-  /* box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); */
+  border-color: #f59e0b;
+  /* box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); */
 }
 
 /* 确保el-select也正确显示 */
@@ -2733,7 +2733,7 @@ export default{
 /* 内容卡片 */
 .content-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   margin-top: 15px;
   border: none;
   border-radius: 16px;
@@ -2745,7 +2745,7 @@ export default{
 
 .content-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
 }
 
@@ -2765,7 +2765,7 @@ export default{
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -2778,7 +2778,7 @@ export default{
   transform: translateY(-50%);
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -2792,21 +2792,21 @@ export default{
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .content-actions {
@@ -2837,13 +2837,13 @@ export default{
 }
 
 .import-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
 }
 
 .import-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .add-btn .el-icon,
@@ -2871,10 +2871,10 @@ export default{
 }
 
 .elegant-table >>> .el-table__header-wrapper th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   font-weight: 600;
-  color: #1a1a1a;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--qm-text-1);
+  border-bottom: 1px solid var(--qm-line-strong);
   padding: 16px 0;
 }
 
@@ -2887,11 +2887,11 @@ export default{
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:nth-child(even) {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
   transform: translateX(4px);
 }
 
@@ -2903,7 +2903,7 @@ export default{
   bottom: 0;
   width: 4px;
   boder: 0px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
   border-radius: 0 2px 2px 0;
 }
 
@@ -2919,11 +2919,11 @@ export default{
 }
 
 .custom-tree >>> .el-tree-node__content:hover {
-  background: #f1f8ff;
+  background: var(--qm-warning-soft);
 }
 
 .custom-tree >>> .el-tree-node.is-current > .el-tree-node__content {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -2938,7 +2938,7 @@ export default{
 
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row.active-row {
-  background: #ebf5ff;
+  background: var(--qm-warning-soft);
   position: relative;
 }
 
@@ -2949,11 +2949,11 @@ export default{
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 }
 
 .elegant-table >>> .el-table__body-wrapper td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
   padding: 16px 0;
   transition: all 0.3s ease;
 }
@@ -2968,10 +2968,10 @@ export default{
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-line-strong) 100%);
   border-radius: 8px;
   font-weight: 600;
-  color: #475569;
+  color: var(--qm-text-2);
   margin: 0 auto;
 }
 
@@ -3008,13 +3008,13 @@ export default{
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #3b82f6;
+  color: #f59e0b;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .copy-link:hover {
-  color: #1d4ed8;
+  color: #d97706;
 }
 
 .copy-icon {
@@ -3036,7 +3036,7 @@ export default{
 
 .url-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   text-align: center;
   line-height: 1.4;
   max-width: 100%;
@@ -3087,7 +3087,7 @@ export default{
 .user-name,
 .time-text {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   line-height: 1.4;
   max-width: 100%;
   overflow: hidden;
@@ -3110,16 +3110,16 @@ export default{
 
 .case-count-number {
   font-weight: 600;
-  color: #3b82f6;
+  color: #f59e0b;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 4px 8px;
   border-radius: 6px;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .case-count-number:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(245, 158, 11, 0.2);
   transform: scale(1.05);
 }
 
@@ -3132,7 +3132,7 @@ export default{
 .case-item {
   margin-bottom: 8px;
   padding: 4px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .case-item:last-child {
@@ -3186,7 +3186,7 @@ export default{
 }
 
 .action-btn.choose-btn:hover {
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .action-btn:active {
@@ -3202,11 +3202,11 @@ export default{
 }
 
 .action-btn.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
 }
 
 .action-btn.choose-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .action-btn .el-icon {
@@ -3222,12 +3222,12 @@ export default{
 /* 分页组件样式 */
 .pagination-wrapper {
   padding: 20px 24px 0px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
   flex-shrink: 0;
   display: block !important;
   min-height: 40px;
   float: right;
-  background: white;
+  background: var(--qm-bg-2);
   z-index: 10;
   position: relative;
   opacity: 1 !important;
@@ -3247,7 +3247,7 @@ export default{
 }
 
 .elegant-pagination >>> .el-pagination__total {
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
   margin-right: 20px;
 }
@@ -3258,15 +3258,15 @@ export default{
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__sizes .el-input .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
 }
 
 .elegant-pagination >>> .el-pager li {
@@ -3281,13 +3281,13 @@ export default{
 }
 
 .elegant-pagination >>> .el-pager li:not(.disabled):hover {
-  color: #3b82f6;
-  border-color: #3b82f6;
-  background: white;
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background: var(--qm-bg-2);
 }
 
 .elegant-pagination >>> .el-pager li.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border-color: transparent;
 }
@@ -3295,8 +3295,8 @@ export default{
 .elegant-pagination >>> .btn-prev,
 .elegant-pagination >>> .btn-next {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   transition: all 0.3s ease;
   min-width: 36px;
   height: 36px;
@@ -3305,8 +3305,8 @@ export default{
 
 .elegant-pagination >>> .btn-prev:hover:not(.disabled),
 .elegant-pagination >>> .btn-next:hover:not(.disabled) {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
 .elegant-pagination >>> .el-pagination__jump {
@@ -3315,21 +3315,21 @@ export default{
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   box-shadow: none;
   height: 32px;
   line-height: 32px;
 }
 
 .elegant-pagination >>> .el-pagination__jump .el-input .el-input__inner:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
 }
 
 /* 对话框样式 */
 .elegant-dialog >>> .el-dialog {
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
@@ -3341,7 +3341,7 @@ export default{
 .elegant-dialog >>> .el-dialog__title {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3351,7 +3351,7 @@ export default{
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 2px;
 }
 
@@ -3361,7 +3361,7 @@ export default{
 
 .elegant-dialog >>> .el-dialog__footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--qm-bg-3);
 }
 
 .dialog-footer {
@@ -3373,23 +3373,23 @@ export default{
 .dialog-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .dialog-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
 .dialog-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -3397,7 +3397,7 @@ export default{
 
 .dialog-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 /* ========== 导入对话框（Apifox 风格） ========== */
@@ -3410,13 +3410,13 @@ export default{
 }
 
 .import-steps >>> .el-step__icon.is-process {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
 .import-steps >>> .el-step__title.is-process,
 .import-steps >>> .el-step__title.is-finish {
-  color: #1d4ed8;
+  color: #d97706;
   font-weight: 600;
 }
 
@@ -3440,22 +3440,22 @@ export default{
   gap: 14px;
   padding: 18px 16px;
   border-radius: 14px;
-  border: 2px solid #e2e8f0;
-  background: #ffffff;
+  border: 2px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .format-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--qm-line-strong);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
 .format-card.active {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(29, 78, 216, 0.04) 100%);
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.18);
 }
 
 .format-card .format-icon {
@@ -3473,7 +3473,7 @@ export default{
 }
 
 .format-card.active .format-icon {
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
 }
 
 .format-info {
@@ -3484,13 +3484,13 @@ export default{
 .format-name {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   margin-bottom: 4px;
 }
 
 .format-desc {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .format-check {
@@ -3498,7 +3498,7 @@ export default{
   top: 10px;
   right: 10px;
   font-size: 18px;
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 /* Step 1：数据来源 Tabs */
@@ -3508,16 +3508,16 @@ export default{
 }
 
 .source-tabs >>> .el-tabs__nav-wrap::after {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
 }
 
 .source-tabs >>> .el-tabs__item.is-active {
-  color: #1d4ed8;
+  color: #d97706;
   font-weight: 600;
 }
 
 .source-tabs >>> .el-tabs__active-bar {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   height: 3px;
   border-radius: 2px;
 }
@@ -3526,8 +3526,8 @@ export default{
   width: 100%;
   height: 220px;
   border-radius: 14px;
-  border: 2px dashed #cbd5e1;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px dashed var(--qm-line-strong);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3536,31 +3536,31 @@ export default{
 }
 
 .import-uploader >>> .el-upload-dragger:hover {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(29, 78, 216, 0.02) 100%);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.04) 0%, rgba(217, 119, 6, 0.02) 100%);
 }
 
 .import-uploader >>> .el-upload__text {
-  color: #475569;
+  color: var(--qm-text-2);
   font-size: 14px;
   margin-top: 8px;
 }
 
 .import-uploader >>> .el-upload__text em {
-  color: #3b82f6;
+  color: #f59e0b;
   font-style: normal;
   font-weight: 600;
 }
 
 .import-uploader >>> .el-icon--upload {
   font-size: 56px;
-  color: #3b82f6;
+  color: #f59e0b;
   margin-bottom: 8px;
 }
 
 .import-uploader >>> .el-upload__tip {
   text-align: center;
-  color: #94a3b8;
+  color: var(--qm-text-3);
   font-size: 12px;
   margin-top: 12px;
 }
@@ -3568,7 +3568,7 @@ export default{
 .source-tip {
   margin-top: 10px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .curl-textarea >>> .el-textarea__inner {
@@ -3599,9 +3599,9 @@ export default{
 .match-mode-group >>> .el-radio-button__inner {
   padding: 10px 18px;
   border-radius: 0 !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.25s ease;
 }
@@ -3615,16 +3615,16 @@ export default{
 }
 
 .match-mode-group >>> .el-radio-button.is-active .el-radio-button__inner {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   color: #ffffff !important;
-  border-color: #1d4ed8 !important;
-  box-shadow: -1px 0 0 0 #1d4ed8 !important;
+  border-color: #d97706 !important;
+  box-shadow: -1px 0 0 0 #d97706 !important;
 }
 
 .form-tip {
   margin-top: 6px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 /* Step 3：导入结果 */
@@ -3634,7 +3634,7 @@ export default{
   gap: 18px;
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   margin-bottom: 18px;
 }
 
@@ -3662,12 +3662,12 @@ export default{
 .result-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .result-sub {
   font-size: 13px;
-  color: #64748b;
+  color: var(--qm-text-2);
   margin-top: 4px;
 }
 
@@ -3682,8 +3682,8 @@ export default{
   padding: 16px;
   border-radius: 12px;
   text-align: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--qm-bg-1);
+  border: 1px solid var(--qm-line-strong);
 }
 
 .stat-cell .num {
@@ -3694,17 +3694,17 @@ export default{
 
 .stat-cell .lbl {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   margin-top: 4px;
 }
 
 .stat-cell.success .num { color: #10b981; }
-.stat-cell.updated .num { color: #3b82f6; }
-.stat-cell.skipped .num { color: #94a3b8; }
+.stat-cell.updated .num { color: #f59e0b; }
+.stat-cell.skipped .num { color: var(--qm-text-3); }
 .stat-cell.failed .num  { color: #ef4444; }
 
 .error-list {
-  background: #fef2f2;
+  background: var(--qm-red-soft);
   border: 1px solid #fecaca;
   border-radius: 10px;
   padding: 12px 14px;
@@ -3764,7 +3764,7 @@ export default{
    抽屉样式优化 - 与列表样式保持一致
    ============================================ */
 .api-drawer >>> .el-drawer {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 }
 
 .api-drawer >>> .el-drawer__body {
@@ -3773,12 +3773,12 @@ export default{
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 }
 
 .drawer-card {
   flex: 1;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
   border-radius: 16px;
   display: flex;
@@ -3793,8 +3793,8 @@ export default{
 .drawer-tabs >>> .el-tabs__header {
   margin: 0;
   padding: 0px 24px 0;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--qm-bg-2);
+  border-bottom: 1px solid var(--qm-line-strong);
   overflow: visible !important;
 }
 
@@ -3818,7 +3818,7 @@ export default{
   position: relative;
   font-size: 16px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--qm-text-2);
   padding: 0;
   margin: 0 16px;
   height: 48px;
@@ -3840,22 +3840,22 @@ export default{
 }
 
 .drawer-tabs >>> .el-tabs__item:hover {
-  color: #6366f1;
+  color: #f59e0b;
 }
 
 .drawer-tabs >>> .el-tabs__item:hover::after {
   width: 100%;
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(245, 158, 11, 0.5);
 }
 
 .drawer-tabs >>> .el-tabs__item.is-active {
-  color: #6366f1;
+  color: #f59e0b;
   font-weight: 600;
 }
 
 .drawer-tabs >>> .el-tabs__item.is-active::after {
   width: 100%;
-  background: #6366f1;
+  background: #f59e0b;
 }
 
 .drawer-tabs >>> .el-tabs__content {
@@ -3879,24 +3879,24 @@ export default{
 
 /* 表单卡片样式 */
 .form-section-card {
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 12px;
   margin-bottom: 24px;
   padding: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .form-section-header {
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--qm-bg-3);
 }
 
 .section-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   position: relative;
   padding-left: 16px;
 }
@@ -3943,7 +3943,7 @@ export default{
   font-size: 14px;
   width:80px;
   font-weight: 500;
-  color: #475569;
+  color: var(--qm-text-2);
 }
 
 /* 抽屉输入框样式 */
@@ -3968,7 +3968,7 @@ export default{
 
 .drawer-method-select >>> .el-input__inner {
   border-radius: 10px 0 0 10px;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--qm-line-strong);
 }
 
 .drawer-method-url >>> .el-input__inner {
@@ -3977,9 +3977,9 @@ export default{
 
 /* 抽屉单选按钮组样式 */
 .drawer-radio-group >>> .el-radio-button__inner {
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -3993,7 +3993,7 @@ export default{
 }
 
 .drawer-radio-group >>> .el-radio-button__orig-radio:checked + .el-radio-button__inner {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-color: transparent;
   color: white;
   box-shadow: none;
@@ -4006,7 +4006,7 @@ export default{
 }
 
 .drawer-sub-tabs >>> .el-tabs__nav-wrap::after {
-  background-color: #e2e8f0;
+  background-color: var(--qm-line-strong);
 }
 
 .drawer-sub-tabs >>> .el-tabs__content {
@@ -4017,9 +4017,9 @@ export default{
 .body-type-header {
   margin-bottom: 16px;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .drawer-sub-select {
@@ -4030,7 +4030,7 @@ export default{
 .drawer-confirm-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -4038,22 +4038,22 @@ export default{
 
 .drawer-confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
 .drawer-cancel-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .drawer-cancel-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-1);
+  border-color: var(--qm-line-strong);
   transform: translateY(-1px);
 }
 
@@ -4065,8 +4065,8 @@ export default{
 /* 抽屉页脚样式 */
 .drawer-footer {
   padding: 20px 20px 0px 20px;
-  border-top: 1px solid #f1f5f9;
-  background: white;
+  border-top: 1px solid var(--qm-bg-3);
+  background: var(--qm-bg-2);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -4095,9 +4095,9 @@ export default{
   align-items: center;
   margin-bottom: 20px;
   padding: 16px 20px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .case-stat {
@@ -4108,17 +4108,17 @@ export default{
 
 .case-stat-label {
   font-size: 14px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
 }
 
 .case-stat-number {
   font-size: 16px;
   font-weight: 600;
-  color: #3b82f6;
+  color: #f59e0b;
   padding: 4px 12px;
   border-radius: 6px;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .case-tip {
@@ -4126,7 +4126,7 @@ export default{
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--qm-text-3);
 }
 
 .icon-case {
@@ -4135,7 +4135,7 @@ export default{
   height: 16px;
   border-radius: 4px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 /* 高级Mock管理样式 */
@@ -4153,9 +4153,9 @@ export default{
   align-items: center;
   margin-bottom: 20px;
   padding: 16px 20px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
 }
 
 .drawer-add-btn {
@@ -4188,21 +4188,21 @@ export default{
 
 .mock-link {
   font-size: 14px;
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 /* 响应标签页样式 */
 .response-tabs >>> .el-tabs__new-tab {
   margin-left: 8px;
   border-radius: 8px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--qm-bg-3);
+  border: 1px solid var(--qm-line-strong);
+  color: var(--qm-text-2);
 }
 
 .response-tabs >>> .el-tabs__new-tab:hover {
-  background: #e2e8f0;
-  color: #3b82f6;
+  background: var(--qm-line-strong);
+  color: #f59e0b;
 }
 
 /* 隐藏滚动条但保留功能 */
@@ -4212,17 +4212,17 @@ export default{
 }
 
 .api-management-container ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
   border-radius: 3px;
 }
 
 .api-management-container ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
   border-radius: 3px;
 }
 
 .api-management-container ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--qm-text-3);
 }
 
 /* 修复 el-drawer 滚动条问题 */
@@ -4257,7 +4257,7 @@ export default{
 	padding: 0;
 	width: 100%;
 	height: 100%;
-	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
 }
 
 .tab-container {
@@ -4286,7 +4286,7 @@ export default{
 }
 
 .tree-card {
-	background: white;
+	background: var(--qm-bg-2);
 	border: none;
 	border-radius: 16px;
 	display: flex;
@@ -4326,7 +4326,7 @@ export default{
 .tree-header {
 	padding: 16px 12px 12px 8px;
 	margin-bottom:10px;
-	border-bottom: 1px solid #f1f5f9;
+	border-bottom: 1px solid var(--qm-bg-3);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -4347,7 +4347,7 @@ export default{
 	margin: 0;
 	font-size: 16px;
 	font-weight: 600;
-	color: #1a1a1a;
+	color: var(--qm-text-1);
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -4369,8 +4369,8 @@ export default{
 
 :deep(.tree-search-input .el-input__inner) {
 	border-radius: 10px;
-	border: 1px solid #e2e8f0;
-	background: #f8fafc;
+	border: 1px solid var(--qm-line-strong);
+	background: var(--qm-bg-1);
 	padding: 0 16px 0 40px;
 	height: 36px;
 	line-height: 36px;
@@ -4378,8 +4378,8 @@ export default{
 }
 
 :deep(.tree-search-input .el-input__inner:hover) {
-	border-color: #cbd5e1;
-	background: white;
+	border-color: var(--qm-line-strong);
+	background: var(--qm-bg-2);
 }
 
 :deep(.tree-search-input .el-input__inner:focus) {
@@ -4392,7 +4392,7 @@ export default{
 	align-items: center;
 	justify-content: center;
 	left: 12px;
-	color: #94a3b8;
+	color: var(--qm-text-3);
 }
 
 .tree-wrapper {
@@ -4419,16 +4419,16 @@ export default{
 }
 
 :deep(.custom-tree .el-tree-node__content:hover) {
-	background-color: #f1f8ff;
+	background-color: var(--qm-warning-soft);
 }
 
 :deep(.custom-tree .el-tree-node:focus > .el-tree-node__content) {
-	background-color: #ebf5ff;
+	background-color: var(--qm-warning-soft);
 }
 
 :deep(.custom-tree .el-tree-node.is-current > .el-tree-node__content) {
-	background: linear-gradient(135deg, #ebf5ff 0%, #dbeafe 100%);
-	/* border: 1px solid #3b82f6; */
+	background: linear-gradient(135deg, var(--qm-warning-soft) 0%, var(--qm-warning-soft-2) 100%);
+	/* border: 1px solid #f59e0b; */
 }
 
 .custom-tree-node {
@@ -4454,7 +4454,7 @@ export default{
 	display: block;
 	font-size: 14px;
 	font-weight: 500;
-	color: #334155;
+	color: var(--qm-text-1);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -4496,13 +4496,13 @@ export default{
 	padding: 0;
 	border: none;
 	background: transparent;
-	color: #94a3b8;
+	color: var(--qm-text-3);
 	transition: all 0.3s ease;
 }
 
 .node-dropdown-btn:hover {
-	background: #f1f5f9;
-	color: #64748b;
+	background: var(--qm-bg-3);
+	color: var(--qm-text-2);
 }
 
 .danger-item {
@@ -4512,9 +4512,9 @@ export default{
 .tree-footer {
 	padding: 0px;
 	margin-top: 15px;
-	/* border-top: 1px solid #f1f5f9; */
+	/* border-top: 1px solid var(--qm-bg-3); */
 	flex-shrink: 0;
-	background: white;
+	background: var(--qm-bg-2);
 	position: relative;
 	z-index: 2;
 }
@@ -4572,9 +4572,9 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   padding: 6px 12px;
   font-size: 12px;
   border-radius: 0 !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--qm-line-strong) !important;
+  background: var(--qm-bg-2);
+  color: var(--qm-text-2);
   transition: all 0.3s ease;
 }
 
@@ -4583,16 +4583,16 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 }
 
 .tree-wrapper::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 4px;
 }
 
 .tree-wrapper::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--qm-line-strong);
   border-radius: 4px;
 }
 
 .tree-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
 }
 </style>

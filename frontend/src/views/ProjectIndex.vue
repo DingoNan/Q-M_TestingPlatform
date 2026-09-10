@@ -390,7 +390,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -398,28 +398,28 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' }
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' }
         },
         xAxis: {
           type: 'category',
           boundaryGap: false,
           data: ['1', '2', '3'],
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' }
         },
         yAxis: {
           type: 'value',
           name: '百分比(%)',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         legend: {
           show: true,
           data: ['成功率', '失败率', '错误率'],
           top: 10,
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         grid: {
           left: '3%',
@@ -489,7 +489,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -497,28 +497,28 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c}'
         },
         xAxis: {
           type: 'category',
           data: [],
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
           axisLabel: {
             rotate: 45,
             interval: 0,
             textStyle: { 
               fontSize: 12,
-              color: '#64748b'
+              color: 'var(--qm-text-2)'
             }
           }
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         grid: {
           left: '3%',
@@ -536,8 +536,8 @@ export default {
                 type: 'linear',
                 x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
-                  { offset: 0, color: '#3b82f6' },
-                  { offset: 1, color: '#1d4ed8' }
+                  { offset: 0, color: '#f59e0b' },
+                  { offset: 1, color: '#d97706' }
                 ]
               },
               borderRadius: [6, 6, 0, 0]
@@ -551,7 +551,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -559,28 +559,28 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c}'
         },
         xAxis: {
           type: 'category',
           data: [],
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
           axisLabel: {
             rotate: 45,
             interval: 0,
             textStyle: { 
               fontSize: 12,
-              color: '#64748b'
+              color: 'var(--qm-text-2)'
             }
           }
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         grid: {
           left: '3%',
@@ -598,8 +598,8 @@ export default {
                 type: 'linear',
                 x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
-                  { offset: 0, color: '#8b5cf6' },
-                  { offset: 1, color: '#6d28d9' }
+                  { offset: 0, color: '#f97316' },
+                  { offset: 1, color: '#d97706' }
                 ]
               },
               borderRadius: [6, 6, 0, 0]
@@ -613,7 +613,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -621,28 +621,28 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c}'
         },
         xAxis: {
           type: 'category',
           data: [],
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
           axisLabel: {
             rotate: 45,
             interval: 0,
             textStyle: { 
               fontSize: 12,
-              color: '#64748b'
+              color: 'var(--qm-text-2)'
             }
           }
         },
         yAxis: {
           type: 'value',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         grid: {
           left: '3%',
@@ -675,7 +675,7 @@ export default {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -683,16 +683,16 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c}'
         },
         xAxis: {
           type: 'category',
           data: [],
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
           axisLabel: {
-            color: '#64748b',
+            color: 'var(--qm-text-2)',
             rotate: 45,
             interval: 0,
             overflow: 'break',
@@ -702,9 +702,9 @@ export default {
         yAxis: {
           type: 'value',
           name: '数量',
-          axisLine: { lineStyle: { color: '#e2e8f0' } },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: '#f1f5f9' } }
+          axisLine: { lineStyle: { color: 'var(--qm-line-strong)' } },
+          axisLabel: { color: 'var(--qm-text-2)' },
+          splitLine: { lineStyle: { color: 'var(--qm-bg-3)' } }
         },
         grid: {
           left: '3%',
@@ -718,7 +718,7 @@ export default {
             type: 'bar',
             itemStyle: {
               color: function(params) {
-                const colorList = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                const colorList = ['#f59e0b', '#10b981', '#f59e0b', '#ef4444', '#f97316']
                 return colorList[params.dataIndex % colorList.length]
               },
               borderRadius: [6, 6, 0, 0]
@@ -728,12 +728,12 @@ export default {
         ]
       },
       apiOption: {
-        color: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'],
+        color: ['#f59e0b', '#f59e0b', '#10b981', '#ef4444', '#f97316', '#ec4899', 'var(--qm-text-2)'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -741,8 +741,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -750,7 +750,7 @@ export default {
           left: 'left',
           top: 'center',
           data: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -772,19 +772,19 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%'
             }
           }
         ]
       },
       caseCoverageOption: {
-        color: ['#10b981', '#e2e8f0'],
+        color: ['#10b981', 'var(--qm-line-strong)'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -792,8 +792,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -801,7 +801,7 @@ export default {
           left: 'center',
           bottom: 0,                // 放在底部
           data: ['已覆盖', '未覆盖'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -823,19 +823,19 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%'
             }
           }
         ]
       },
       apiCoverageOption: {
-        color: ['#3b82f6', '#e2e8f0'],
+        color: ['#f59e0b', 'var(--qm-line-strong)'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -843,8 +843,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -852,7 +852,7 @@ export default {
           left: 'center',
           bottom: 0,                // 放在底部
           data: ['已覆盖', '未覆盖'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -874,19 +874,19 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%'
             }
           }
         ]
       },
       testOption: {
-        color: ['#3b82f6', '#f59e0b'],
+        color: ['#f59e0b', '#f59e0b'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 16,
             fontWeight: 'bold'
           }
@@ -894,8 +894,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -903,7 +903,7 @@ export default {
           left: 'center',
           bottom: 0,                // 放在底部
           data: ['功能用例', '脚本用例'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -925,19 +925,19 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%'
             }
           }
         ]
       },
       testTypeOption: {
-        color: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899'],
+        color: ['#f59e0b', '#f59e0b', '#10b981', '#ef4444', '#f97316', '#ec4899'],
         title: {
           text: '',
           left: 'center',
           textStyle: {
-            color: '#1a1a1a',
+            color: '#94a3b8',
             fontSize: 14,
             fontWeight: 'bold',
             overflow: 'break',
@@ -947,8 +947,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -956,7 +956,7 @@ export default {
           left: 'center',
           bottom: 10,                // 放在底部
           data: ['接口用例数', 'WEB用例数', 'APP用例数', '造数用例数', '性能用例数'],
-          textStyle: { color: '#64748b' },
+          textStyle: { color: 'var(--qm-text-2)' },
           itemWidth: 25,
           itemHeight: 14
         },
@@ -980,7 +980,7 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%',
               fontSize: 11            // 稍微减小标签字体
             }
@@ -988,13 +988,13 @@ export default {
         ]
       },
       testResultOption: {
-        color: ['#52c41a', '#f5222d', '#a8071a', '#94a3b8'],
+        color: ['#52c41a', '#f5222d', '#a8071a', 'var(--qm-text-3)'],
         
 		title: {
 		  text: '',
 		  left: 'center',
 		  textStyle: {
-		    color: '#1a1a1a',
+		    color: '#94a3b8',
 		    fontSize: 14,
 		    fontWeight: 'bold',
 		    overflow: 'break',
@@ -1004,8 +1004,8 @@ export default {
         tooltip: {
           trigger: 'item',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderColor: '#e2e8f0',
-          textStyle: { color: '#1a1a1a' },
+          borderColor: 'var(--qm-line-strong)',
+          textStyle: { color: '#94a3b8' },
           formatter: '{b}: {c} ({d}%)'
         },
         legend: {
@@ -1013,7 +1013,7 @@ export default {
 		  left: 'center',
 		  bottom: 0,                // 放在底部
           data: ['成功', '失败', '错误', '未执行'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: 'var(--qm-text-2)' }
         },
         series: [
           {
@@ -1035,7 +1035,7 @@ export default {
               borderWidth: 2
             },
             label: {
-              color: '#64748b',
+              color: 'var(--qm-text-2)',
               formatter: '{b}: {d}%'
             }
           }
@@ -1097,7 +1097,7 @@ export default {
 <style scoped>
 .project-dashboard-container {
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
   padding: 15px;
   box-sizing: border-box;
   display: flex;
@@ -1112,7 +1112,7 @@ export default {
               0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
-  background: white;
+  background: var(--qm-bg-2);
   border: none;
 }
 
@@ -1147,7 +1147,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1159,7 +1159,7 @@ export default {
   left: 6px;
   right: 6px;
   bottom: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 4px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -1168,7 +1168,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 /* 紧凑型信息布局 */
@@ -1252,30 +1252,30 @@ export default {
 .compact-label-text {
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--qm-text-2);
 }
 
 .compact-value {
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   font-weight: 500;
   padding: 10px 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   transition: all 0.3s ease;
 }
 
 .compact-value:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-2);
+  border-color: var(--qm-line-strong);
 }
 
 .desc-value,
 .url-value {
   word-break: break-all;
-  border-left: 3px solid #3b82f6;
-  background: #f0f7ff;
+  border-left: 3px solid #f59e0b;
+  background: var(--qm-info-soft);
 }
 
 .url-value {
@@ -1301,7 +1301,7 @@ export default {
   display: inline-block;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 8px;
   position: relative;
 }
@@ -1313,7 +1313,7 @@ export default {
   left: 6px;
   right: 6px;
   bottom: 6px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 50%;
 }
 
@@ -1332,7 +1332,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .member-badge {
@@ -1353,17 +1353,17 @@ export default {
 }
 
 .members-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--qm-bg-3);
   border-radius: 3px;
 }
 
 .members-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--qm-line-strong);
   border-radius: 3px;
 }
 
 .members-list::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--qm-text-3);
 }
 
 .member-item {
@@ -1371,22 +1371,22 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .member-item:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-2);
+  border-color: var(--qm-line-strong);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .member-avatar {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: white;
   font-weight: 600;
 }
@@ -1399,12 +1399,12 @@ export default {
 .member-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 .member-role {
   font-size: 12px;
-  color: #64748b;
+  color: var(--qm-text-2);
   margin-top: 2px;
 }
 
@@ -1439,7 +1439,7 @@ export default {
   left: 5px;
   right: 5px;
   bottom: 5px;
-  background: white;
+  background: var(--qm-bg-2);
   border-radius: 4px;
 }
 
@@ -1458,7 +1458,7 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
 }
 
 /* 统计网格 */
@@ -1477,16 +1477,16 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: #f8fafc;
+  background: var(--qm-bg-1);
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--qm-line-strong);
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .stat-item:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--qm-bg-2);
+  border-color: var(--qm-line-strong);
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -1501,17 +1501,17 @@ export default {
 }
 
 .env-icon { background: linear-gradient(135deg, #61a0a8 0%, #2a7b88 100%); }
-.service-icon { background: linear-gradient(135deg, #409eff 0%, #1d4ed8 100%); }
-.plant-icon { background: linear-gradient(135deg, #6e7079 0%, #4b5563 100%); }
+.service-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.plant-icon { background: linear-gradient(135deg, #6e7079 0%, var(--qm-text-2) 100%); }
 .module-icon { background: linear-gradient(135deg, #ea7ccc 0%, #d946ef 100%); }
-.page-icon { background: linear-gradient(135deg, #9a60b4 0%, #7c3aed 100%); }
+.page-icon { background: linear-gradient(135deg, #9a60b4 0%, #ea580c 100%); }
 .element-icon { background: linear-gradient(135deg, #fc8452 0%, #f97316 100%); }
 .step-icon { background: linear-gradient(135deg, #3ba272 0%, #16a34a 100%); }
-.tag-icon { background: linear-gradient(135deg, #73c0de 0%, #0ea5e9 100%); }
+.tag-icon { background: linear-gradient(135deg, #73c0de 0%, #f97316 100%); }
 .suite-icon { background: linear-gradient(135deg, #ee6666 0%, #dc2626 100%); }
 .script-icon { background: linear-gradient(135deg, #fac858 0%, #f59e0b 100%); }
 .report-icon { background: linear-gradient(135deg, #91cc75 0%, #22c55e 100%); }
-.perf-report-icon { background: linear-gradient(135deg, #5470c6 0%, #3b82f6 100%); }
+.perf-report-icon { background: linear-gradient(135deg, #5470c6 0%, #f59e0b 100%); }
 
 .icon-env,
 .icon-service,
@@ -1582,13 +1582,13 @@ export default {
 .stat-value {
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #64748b;
+  color: var(--qm-text-2);
   font-weight: 500;
   margin-top: 4px;
 }
@@ -1643,7 +1643,7 @@ export default {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--qm-text-1);
   white-space: normal;
   word-break: break-word;
   line-height: 1.4;
