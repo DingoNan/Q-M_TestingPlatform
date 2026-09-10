@@ -369,10 +369,21 @@ class StepViewSet(BaseModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         case_step_id = self.kwargs.get('pk')
-        ids = case_step_id.split('_')
+        ids = str(case_step_id).split('_')
+        # 兼容「caseId_stepId_stepIndex」和纯 stepId 两种调用方式，
+        # 后者之前会 IndexError -> 500
+        if len(ids) == 1:
+            step_obj = Step.objects.filter(id=ids[0], is_delete=False).first()
+            if step_obj is None:
+                return Response({'detail': '步骤不存在'}, status=404)
+            step_obj.is_delete = True
+            step_obj.update_by_id = user.id
+            step_obj.save()
+            CaseSteps.objects.filter(step_id=ids[0]).update(is_delete=True, update_by_id=user.id)
+            return Response(data='成功', status=200)
         case_id = ids[0]
         step_id = ids[1]
-        step_index = ids[2]
+        step_index = ids[2] if len(ids) > 2 else 0
         step_number = len(CaseSteps.objects.filter(step_id=step_id, is_delete=False))
         # case_ids = list(set(case_ids))
         # case_ids 长度=1说明该步骤只有这个测试用例引用了可以删除了
