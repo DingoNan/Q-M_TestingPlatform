@@ -1271,6 +1271,15 @@ export default{
         this.$refs.treeRef.filter(val)
       }
     },
+    // 【AI 用例可见性修复】同组件内 query 变化不会重新触发 mounted，
+    // 因此 AI 生成完成通知链接（#/resource/funcCase?filter=ai）需要在
+    // query 变化时手动重新应用筛选条件并刷新列表。
+    '$route.query.filter'(val) {
+      if (val === 'ai') {
+        this.applyAiFilter()
+        this.getFCases()
+      }
+    },
   },
   props: {
     'isCanChoose': {
@@ -2259,11 +2268,23 @@ export default{
 	    this.case_list = {...response.data.results}
 	  }
 	},
+
+  // 【AI 用例可见性修复】统一的 AI 用例定位逻辑：
+  // 清空模块树记忆（localStorage['case_node']）与模块筛选，并只筛"待修改"(case_status=1)。
+  // 原因：AI 生成用例固定落在 case_status=1(待修改) 且可能位于用户当前未选中的模块，
+  // 沿用上次记忆的模块节点会导致新生成的用例在列表里"看不见"。
+  applyAiFilter() {
+    localStorage.removeItem('case_node')
+    this.selectNode = null
+    this.caseSearch.module_list = []
+    this.caseSearch.case_status = 1
+    this.$nextTick(() => {
+      this.$refs.treeRef?.setCurrentKey(null)
+    })
   },
-  async mounted() {
-    this.check_permission()
-	this.getPlantModule()
-    this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
+
+  // 应用模块树记忆：非 AI 场景下的默认行为（保持原有语义）
+  applyRememberedModule() {
     const node = JSON.parse(localStorage.getItem('case_node'))
     if (node) {
       this.selectNode = node.id
@@ -2273,6 +2294,57 @@ export default{
         }
       })
       this.caseSearch.module_list = this.getAllIds(node)
+    }
+  },
+
+  // URL query 路由分发（mounted 与 query 变化时共用，保证幂等）
+  async applyRouteQuery() {
+    const { filter, action, id } = this.$route.query
+    if (filter === 'ai') {
+      this.applyAiFilter()
+      await this.getFCases()
+      return
+    }
+    await this.getFCases()
+    // URL 参数打开编辑/查看弹窗
+    if (action && id) {
+      const res = await this.$api.getFCase(id)
+      if (res.status === 200) {
+        const data = { ...res.data.result, id: id }
+        if (action === 'view') {
+          this.viewCase(data)
+        } else if (action === 'edit') {
+          this.editCase(data)
+        }
+      }
+    }
+  },
+  },
+  async mounted() {
+    // 【AI 用例可见性修复 - 兜底】生成完成通知若以"整页跳转"打开链接，
+    // RouterLink/href 的 hash 变化可能在组件挂载前就被 hashchange 消费掉，
+    // 导致 mounted 里读到的 $route.query 不含 filter。
+    // 这里在 window 层监听 hashchange（capture 阶段），一旦 URL 里出现
+    // filter=ai 就直接应用筛选，不依赖路由时序。
+    this._onHashChange = () => {
+      if (window.location.hash.indexOf('filter=ai') !== -1) {
+        this.applyAiFilter()
+        this.getFCases()
+      }
+    }
+    window.addEventListener('hashchange', this._onHashChange, true)
+
+    this.check_permission()
+    this.getPlantModule()
+    this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
+    // 【AI 用例可见性修复】支持通过 URL 参数强制清空模块/状态筛选。
+    // 场景：AI 助手生成用例后跳转过来，用 case_mark='AI生成' 或 case_status=1 筛选，
+    // 若沿用 localStorage 记忆的模块节点，新用例会因模块不同而"看不见"。
+    const { filter } = this.$route.query
+    if (filter === 'ai') {
+      this.applyAiFilter()
+    } else {
+      this.applyRememberedModule()
     }
     await this.getFCases()
     this.getTags()
@@ -2289,6 +2361,9 @@ export default{
         }
       }
     }
+  },
+  beforeUnmount() {
+    window.removeEventListener('hashchange', this._onHashChange, true)
   },
 }
 </script>

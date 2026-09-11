@@ -85,13 +85,35 @@ def ai_generate_func_case_task(task_id: str, requirement: str, project_id: int,
         saved_cases = []
         failed_count = 0
 
+        # 【健壮性修复】模块解析改为"一次解析 + 显式报错"。
+        # 原实现把 _get_default_module() 放在循环内，若项目下无任何模块会抛
+        # ValueError 并被 except 吞掉，表现为"生成成功但 0 条落库"，
+        # 用户无从得知原因。现改为：模块无效时直接回写失败原因到站内信。
+        resolved_module_id = module_id
+        if not resolved_module_id:
+            try:
+                resolved_module_id = _get_default_module(project_id)
+            except ValueError as e:
+                error_msg = (
+                    f"无法保存用例：{e}。请先在该项目下创建「模块管理」中的模块，"
+                    f"再重新执行 AI 生成。"
+                )
+                logger.error(f"[AI任务 {task_id}] {error_msg}")
+                cache.set(f'ai_task_{task_id}', {
+                    'status': 'failed',
+                    'progress': '保存失败：项目下无可用模块',
+                    'error': error_msg,
+                }, timeout=settings.AI_TASK_CACHE_TIMEOUT)
+                _update_message(message_id, user_id, project_id, 0, 0, [], error_msg, task_id)
+                return
+
         for case_data in result.get('cases', []):
             try:
                 func_case = FuncCase(
                     name=case_data['name'],
                     project=project,
                     owner=user,
-                    module_id=module_id or _get_default_module(project_id),
+                    module_id=resolved_module_id,
                     setup_condition=case_data.get('setup_condition', ''),
                     case_mark=case_data.get('case_mark', 'AI生成，待人工审核'),
                     step_type=2,
@@ -125,7 +147,7 @@ def ai_generate_func_case_task(task_id: str, requirement: str, project_id: int,
                     case_name=func_case.name,
                     step_text='',
                     step_table=func_case.step_table or [],
-                    module_id=module_id,
+                    module_id=resolved_module_id,
                     create_time=str(func_case.create_time) if func_case.create_time else None,
                     create_by_name=func_case.create_by.username if func_case.create_by else None,
                     update_time=str(func_case.update_time) if func_case.update_time else None,
@@ -209,7 +231,9 @@ def _update_message(message_id: int, user_id: int, project_id: int, success_coun
                 success_count=success_count,
                 failed_count=failed_count,
                 fail_reason=error or '',
-                related_url='/resource/funcCase',
+                # 【AI 用例可见性】带 filter=ai，前端据此清空模块记忆筛选，
+                # 直接定位到本次生成的用例，避免用户"看不到已生成用例"。
+                related_url='/resource/funcCase?filter=ai',
                 is_read=False,
                 read_time=None,
                 duration=duration,
@@ -230,7 +254,7 @@ def _update_message(message_id: int, user_id: int, project_id: int, success_coun
                 message_type=Message.MessageType.TASK,
                 task_status=task_status,
                 is_read=False,
-                related_url='/resource/funcCase',
+                related_url='/resource/funcCase?filter=ai',
                 total_count=total_count,
                 success_count=success_count,
                 failed_count=failed_count,
