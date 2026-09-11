@@ -34,6 +34,15 @@ DATABASES = {
         'NAME': os.environ.get('MYSQL_DATABASE', 'blackbag'),
         'OPTIONS': {
             'charset': 'utf8mb4',
+            # 会话级提升排序/读取缓冲，防止大 JSON 字段排序时触发
+            # OperationalError (1038, 'Out of sort memory')。
+            # tb_case_run_log.logs 单行实测可达 1.6MB，服务器全局
+            # sort_buffer_size 为 8MB 仍会因多行累计超限而失败。
+            'init_command': (
+                'SET SESSION sort_buffer_size=268435456, '
+                'SESSION read_buffer_size=16777216, '
+                'SESSION max_sort_length=8388608'
+            ),
         },
     }
 }
