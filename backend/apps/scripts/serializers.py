@@ -26,7 +26,12 @@ class PythonScriptSerializers(BaseSerializer):
         script = attrs.get('script')
         pattern = r'^\s*def\s+([a-zA-Z_]\w*)\s*\('
         match_func_name = None
-        params_pattern = r'def\s+[a-zA-Z_]\w*\s*\(([\s\S]*?)\)\s*:'
+        # 【缺陷修复】原正则 r'def\s+[a-zA-Z_]\w*\s*\(([\s\S]*?)\)\s*:' 要求
+        # 右括号后紧跟冒号。当函数带返回值类型注解（def f(x: str) -> str:）时，
+        # 括号后是 '-> str' 而非 ':'，正则匹配为空列表，导致下方 for 循环中
+        # 的 params 变量从未被赋值 -> NameError -> 接口 500（且无友好提示）。
+        # 现放宽为：允许右括号后存在任意返回值注解，再以冒号结尾。
+        params_pattern = r'def\s+[a-zA-Z_]\w*\s*\(([\s\S]*?)\)\s*(?:->\s*[^:]+)?:'
 
         if name.startswith('faker'):
             raise ValidationError('函数名不能以系统函数名faker开头')
@@ -41,6 +46,8 @@ class PythonScriptSerializers(BaseSerializer):
         if match_func_name != name:
             raise ValidationError('函数名称请和函数体中的函数名称保持一致')
 
+        # 【健壮性修复】默认空列表，避免正则无匹配时 params 未定义引发 NameError
+        params = []
         params_matches = re.findall(params_pattern, script)
         for param_list in params_matches:
             # 移除换行符和多余空格
