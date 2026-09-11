@@ -4,6 +4,7 @@ import time
 from threading import Thread
 from django.http import StreamingHttpResponse
 from django.db import models
+from django.db.models import Case as DjCase, When, IntegerField
 from django_q.tasks import async_task
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, action
@@ -283,7 +284,8 @@ class StepViewSet(BaseModelViewSet):
         # 之前用 request.data['type'] 硬取值，缺字段直接 KeyError -> 500
         step_type = request.data.get('type')
         case_step_id = request.data.pop('case_step_id', None)
-        request.data.pop('step_index', None)
+        step_index = request.data.pop('step_index', None)
+        # step_params 为 None 时写回 NOT NULL 列会 IntegrityError -> 500，改为仅在显式传入时更新
         step_params = request.data.pop('step_params', None)
         is_run = request.data.pop('is_run', None)
         fail_is_continue = request.data.pop('fail_is_continue', None)
@@ -296,9 +298,12 @@ class StepViewSet(BaseModelViewSet):
         # 走非公共步骤逻辑
         if step_type != StepType.ComStep:
             case_step_obj = CaseSteps.objects.get(id=case_step_id, case_id=case_id, step_id=step_id, is_delete=False)
-            case_step_obj.step_params = step_params
-            case_step_obj.is_run = is_run
-            case_step_obj.fail_is_continue = fail_is_continue
+            if step_params is not None:
+                case_step_obj.step_params = step_params
+            if is_run is not None:
+                case_step_obj.is_run = is_run
+            if fail_is_continue is not None:
+                case_step_obj.fail_is_continue = fail_is_continue
             case_step_obj.update_by_id = user.id
             case_step_obj.save()
             response = super().update(request, *args, **kwargs)
@@ -308,15 +313,23 @@ class StepViewSet(BaseModelViewSet):
             response = super().update(request, *args, **kwargs)
             # 如果有case_step_id有值就走更新逻辑
             if case_step_id:
-                CaseSteps.objects.filter(id=case_step_id).update(case_id=case_id, step_id=step_id, step_index=step_index,
-                                         step_params=step_params, create_by_id=user.id, update_by_id=user.id,
-                                         fail_is_continue=fail_is_continue, is_run=is_run)
+                update_kwargs = {'case_id': case_id, 'step_id': step_id, 'step_index': step_index,
+                                 'create_by_id': user.id, 'update_by_id': user.id}
+                if step_params is not None:
+                    update_kwargs['step_params'] = step_params
+                if fail_is_continue is not None:
+                    update_kwargs['fail_is_continue'] = fail_is_continue
+                if is_run is not None:
+                    update_kwargs['is_run'] = is_run
+                CaseSteps.objects.filter(id=case_step_id).update(**update_kwargs)
             else:
                 # if not CaseSteps.objects.filter(case_id=case_id, step_id=step_id, id=case_step_id, is_delete=False):
                 step_index = len(CaseSteps.objects.filter(case_id=case_id, is_delete=False))
                 obj = CaseSteps.objects.create(case_id=case_id, step_id=step_id, step_index=step_index,
-                                               step_params=step_params, create_by_id=user.id, update_by_id=user.id,
-                                               fail_is_continue=fail_is_continue, is_run=is_run)
+                                               step_params=step_params or [],
+                                               create_by_id=user.id, update_by_id=user.id,
+                                               fail_is_continue=fail_is_continue if fail_is_continue is not None else 0,
+                                               is_run=is_run if is_run is not None else True)
                 case_step_id = obj.id
         response.data['case_step_id'] = case_step_id
         return response
@@ -348,12 +361,24 @@ class StepViewSet(BaseModelViewSet):
         # 改为带默认值取值，并对真正必填的 case_id 显式返回 400。
         request.data.pop('id', None)
         case_id = request.data.pop('case_id', None)
-        step_params = request.data.pop('step_params', None)
-        fail_is_continue = request.data.pop('fail_is_continue', 0)
+        # 之前 step_params 缺省为 None，而 tb_case_step.step_params 是 NOT NULL，
+        # 新建步骤不带该字段会直接 IntegrityError -> 500。这里兜底为空列表。
+        step_params = request.data.pop('step_params', None) or []
+        fail_is_continue = request.data.pop('fail_is_continue', 0) or 0
         is_run = request.data.pop('is_run', True)
         request.data.pop('step_index', None)
         if not case_id:
             return Response({'case_id': ['所属用例ID不能为空']}, status=400)
+        if request.data.get('api_data') is None:
+            request.data['api_data'] = []
+        if request.data.get('api_json_tree') is None:
+            request.data['api_json_tree'] = []
+        if request.data.get('api_headers') is None:
+            request.data['api_headers'] = []
+        if request.data.get('api_params') is None:
+            request.data['api_params'] = []
+        if request.data.get('check_params') is None:
+            request.data['check_params'] = []
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         step_obj = serializer.save()
@@ -406,11 +431,64 @@ class StepViewSet(BaseModelViewSet):
         return Response(data='成功', status=200)
 
 
+class CaseRunLogsPagination(BasePageNumberPagination):
+    """
+    专用于「用例执行日志」列表的分页器。
+
+    背景：tb_case_run_log.logs 为 JSONField 大字段，实测单行体积可达 1.6MB。
+    默认分页会对 SELECT *（含 logs）的结果集做 ORDER BY create_time 的 filesort，
+    行宽 × 行数很快超过 MySQL sort_buffer_size，触发
+    OperationalError (1038, 'Out of sort memory')，导致 /test/logs/ 恒 500。
+
+    解决：两段式分页 ——
+      1) 仅对主键列排序并切片（窄行 filesort，代价极低）；
+      2) 按本页主键回查完整行，用 CASE WHEN 保持步骤 1 的顺序。
+    这样大字段永远不参与排序，从根本上消除 1038。
+    """
+
+    def paginate_queryset(self, queryset, request, view=None):
+        try:
+            page_number = request.query_params.get(self.page_query_param, 1)
+            try:
+                page_number = int(page_number)
+            except (TypeError, ValueError):
+                page_number = 1
+            page_size = self.get_page_size(request) or self.page_size
+            start = (page_number - 1) * page_size
+            end = start + page_size
+
+            # 关键：先把 queryset 收敛为「仅主键」的窄查询，
+            # 后续 count() 与切片都只涉及 id 列，大 JSON 字段完全不参与排序。
+            order_by = tuple(queryset.query.order_by) or ('-create_time',)
+            id_qs = queryset.order_by(*order_by, '-id').values_list('id', flat=True)
+            total = id_qs.count()
+            ids = list(id_qs[start:end])
+            self._total_override = total
+            if not ids:
+                return []
+            preserved = DjCase(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)],
+                               output_field=IntegerField())
+            return list(CaseRunLog.objects.filter(pk__in=ids).order_by(preserved))
+        except Exception:
+            # 兜底：任何异常退回默认实现，保证接口可用
+            return super().paginate_queryset(queryset, request, view)
+
+    def get_paginated_response(self, data):
+        from collections import OrderedDict
+        total = getattr(self, '_total_override', None)
+        if total is None:
+            return super().get_paginated_response(data)
+        return Response(OrderedDict([
+            ('count', total),
+            ('results', data),
+        ]))
+
+
 class CaseRunLogsViewSet(BaseModelViewSet):
     serializer_class = CaseRunLogsSerializers
     queryset = CaseRunLog.objects.all()
     permission_classes = [IsAuthenticated]
-    pagination_class = BasePageNumberPagination
+    pagination_class = CaseRunLogsPagination
     filterset_class = CaseRunLogsFilter
 
 
@@ -419,8 +497,8 @@ def get_logs_by_report(request: Request):
     """
      通过功能用例ID获取分组
     """
-    page = int(request.query_params.get('page'))
-    size = int(request.query_params.get('size'))
+    page = int(request.query_params.get('page') or 1)
+    size = int(request.query_params.get('size') or 100)
     result = request.query_params.get('result')
     result = result.split(',') if result else []
     tag = request.query_params.get('tag')
@@ -902,8 +980,8 @@ def get_selenium_keys(request: Request):
     is_group = True if is_group else False
     page = request.query_params.get('page')
     size = request.query_params.get('size')
-    page = int(page)if page else None
-    size = int(size) if size else None
+    page = int(page) if page else 1
+    size = int(size) if size else 100
     find_equal = request.query_params.get('find_equal')
     name = request.query_params.get('name')
     step_type = request.query_params.get('type')
@@ -972,8 +1050,8 @@ def get_playwright_keys(request: Request):
     is_group = True if is_group else False
     page = request.query_params.get('page')
     size = request.query_params.get('size')
-    page = int(page) if page else None
-    size = int(size) if size else None
+    page = int(page) if page else 1
+    size = int(size) if size else 100
     find_equal = request.query_params.get('find_equal')
     name = request.query_params.get('name')
     step_type = request.query_params.get('type')
@@ -1042,8 +1120,8 @@ def get_appium_keys(request: Request):
     is_group = True if is_group else False
     page = request.query_params.get('page')
     size = request.query_params.get('size')
-    page = int(page) if page else None
-    size = int(size) if size else None
+    page = int(page) if page else 1
+    size = int(size) if size else 100
     find_equal = request.query_params.get('find_equal')
     name = request.query_params.get('name')
     step_type = request.query_params.get('type')
