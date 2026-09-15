@@ -1783,7 +1783,10 @@ export default {
 		flex-direction: column;
 		background: var(--qm-bg-2, #fff);
 		border-right: 1px solid var(--qm-line, rgba(15,23,42,.08));
-		z-index: 1001;
+		/* 侧栏固定定位，但 z-index 必须低于全屏弹窗/抽屉(>=1000)，
+		   否则会压住右侧深层全屏界面（功能用例编辑、脚本步骤编辑等）。
+		   改为 100，仍处于页面内容(auto=0)之上、所有模态之下。 */
+		z-index: 100;
 		transition: width .25s ease;
 	}
 	.qm-sidebar.is-collapsed {

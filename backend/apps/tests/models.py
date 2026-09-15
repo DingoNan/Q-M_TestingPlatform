@@ -29,7 +29,10 @@ class FuncCase(BaseModel):
         PENDING = 2, '待评审'
         REVIEWED = 3, '已评审'
 
-    name = models.CharField(verbose_name='用例名称', max_length=50, unique=True, error_messages={'unique': '用例名称不能重复'})
+    # 名称唯一性改由序列化器在「未软删除」集合内校验（见 apps/tests/serializers.py）。
+    # 原来数据库层 unique=True 会让软删除(is_delete=1)的历史记录永久占用名称，
+    # 导致同名用例/功能用例删除后无法重建。
+    name = models.CharField(verbose_name='用例名称', max_length=50)
     tag = models.ManyToManyField('Tag', help_text='标签')
     project = models.ForeignKey('projects.Project', on_delete=models.PROTECT)
     owner = models.ForeignKey('users.User', on_delete=models.PROTECT, help_text='用例负责人')
@@ -69,7 +72,10 @@ class Case(BaseModel):
         CREATE_DATA = 4, 'DATA CASE'
         Performer = 5, 'Performance Case'
 
-    name = models.CharField(verbose_name='用例名称', max_length=50, unique=True, error_messages={'unique': '用例名称不能重复'})
+    # 名称唯一性改由序列化器在「未软删除」集合内校验（见 apps/tests/serializers.py）。
+    # 原来数据库层 unique=True 会让软删除(is_delete=1)的历史记录永久占用名称，
+    # 导致同名用例/功能用例删除后无法重建。
+    name = models.CharField(verbose_name='用例名称', max_length=50)
     type = models.IntegerField(verbose_name='用例类型', default=FunctionCaseType.API, choices=FunctionCaseType.choices)
     tag = models.ManyToManyField('Tag', help_text='标签', blank=True)
     project = models.ForeignKey('projects.Project', on_delete=models.PROTECT)

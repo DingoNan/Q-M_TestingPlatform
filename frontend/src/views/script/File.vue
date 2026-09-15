@@ -323,7 +323,7 @@
           ref='fileRef' 
           label-position='top'
         >
-          <el-form-item class="dialog-form-item">
+          <el-form-item class="dialog-form-item" prop="desc">
             <label class="dialog-label">
               <i class="icon-desc-dialog"></i>
               文件描述
@@ -340,7 +340,7 @@
             />
           </el-form-item>
           
-          <el-form-item class="dialog-form-item" v-if='isAdd'>
+          <el-form-item class="dialog-form-item" prop="raw" v-if='isAdd'>
             <label class="dialog-label">
               <i class="icon-upload"></i>
               上传文件
@@ -444,6 +444,11 @@ export default{
 					message: '请输入文件描述',
 					trigger: 'blur',
 				}],
+				raw: [{
+					required: true,
+					message: '请先选择并上传文件',
+					trigger: 'change',
+				}],
 			},
 			role_names: [],
 		}
@@ -461,7 +466,24 @@ export default{
 	},
 	methods:{
 		...mapActions(['getRolePermission']),
-		
+
+		// 把后端返回的错误整理成可读文案：优先 non_field_errors，其次字段级错误(如 "该字段不能为空")
+		extractFileErr(response) {
+			const d = (response && response.data) || {}
+			const fe = d.result && d.result.non_field_errors
+			if (fe && fe.length) return fe[0]
+			if (d.non_field_errors && d.non_field_errors.length) return d.non_field_errors[0]
+			if (d.msg) return d.msg
+			const parts = []
+			for (const k of Object.keys(d)) {
+				if (['non_field_errors','msg','code','detail'].includes(k)) continue
+				const v = d[k]
+				if (Array.isArray(v)) parts.push(v.join('；'))
+				else if (typeof v === 'string') parts.push(v)
+			}
+			return parts.length ? parts.join('；') : '保存失败'
+		},
+
 		formatTime(time) {
       if (!time) return '-'
       return new Date(time).toLocaleString('zh-CN', {
@@ -540,7 +562,7 @@ export default{
 			this.fileView = false
 			this.getFile(row_data.id)
 			this.editDialogVisible = true
-			this.$refs.fileRef.resetFields();
+			this.$refs.fileRef?.resetFields();
 		},
 		
 		viewFile(row_data){
@@ -549,7 +571,7 @@ export default{
 			this.fileView = true
 			this.getFile(row_data.id)
 			this.editDialogVisible = true
-			this.$refs.fileRef.resetFields();
+			this.$refs.fileRef?.resetFields();
 		},
 		
 		addFile(){
@@ -558,7 +580,7 @@ export default{
 			this.title = '新增文件'
 			this.editDialogVisible = true
 			this.isAdd = true
-			this.$refs.fileRef.resetFields();
+			this.$refs.fileRef?.resetFields();
 		},
 		
 		save(){
@@ -580,11 +602,13 @@ export default{
 						this.editDialogVisible = false
 						this.getFiles()
 						ElMessage({message: "保存成功", type: 'success'})
+					} else {
+						ElMessage({message: this.extractFileErr(response), type: 'error'})
 					}
 				}
 			})
 		},
-		
+
 		async updateFile(){
 			this.$refs['fileRef'].validate(async (valid, fields)=>{
 				if(valid){
@@ -594,6 +618,8 @@ export default{
 						this.editDialogVisible = false
 						this.getFiles()
 						ElMessage({message: "保存成功", type: 'success'})
+					} else {
+						ElMessage({message: this.extractFileErr(response), type: 'error'})
 					}
 				}
 			})

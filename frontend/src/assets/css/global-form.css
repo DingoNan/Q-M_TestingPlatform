@@ -199,6 +199,11 @@
   overflow: hidden !important;      /* 防止内容溢出 */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;  /* 更柔和的阴影 */
   border: 1px solid var(--qm-line-strong) !important;  /* 添加边框 */
+  /* 修复：弹窗内容超长时整体超出视口、上下被裁切且无滚动（显示不全）
+     配合 .el-dialog__body 的 overflow-y:auto，让内容在框内滚动 */
+  max-height: calc(100vh - 32px) !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* 弹窗头部样式 */
@@ -260,6 +265,7 @@
   line-height: 1.6 !important;
   max-height: 80vh !important;  /* 限制最大高度 */
   overflow-y: auto !important;  /* 内容过多时滚动 */
+  flex: 1 1 auto !important;    /* flex 纵向布局下占满剩余高度，内容在框内滚动 */
 }
 
 /* 弹窗内容区域滚动条样式 */
@@ -1846,4 +1852,17 @@
 /* 隐藏箭头 */
 .el-popper__arrow {
   display: none !important;
+}
+
+/* ===== Q·M 深层弹窗/抽屉内容超高滚动兜底 =====
+   深层全屏 el-dialog / el-drawer（如角色新增、步骤编辑、查看测试套件等）
+   内容极长，未 append-to-body 时会被关在 .qm-content-area 局部堆叠上下文内，
+   底部被截断。这里统一兜底：弹窗 body 与 .drawer-content 超高时内部滚动。 */
+.el-drawer__body {
+  overflow-y: auto !important;
+}
+.drawer-content {
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  box-sizing: border-box;
 }

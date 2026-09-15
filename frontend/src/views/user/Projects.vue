@@ -55,7 +55,6 @@ export default {
 		margin-top: 56px;
 		padding: 16px;
 		position: relative;
-		z-index: 1;
 		min-height: calc(100vh - 56px);
 		box-sizing: border-box;
 	}

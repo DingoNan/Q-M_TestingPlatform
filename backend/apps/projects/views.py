@@ -55,6 +55,37 @@ class AiConfigViewSet(BaseModelViewSet):
             config.save(update_fields=['is_default', 'update_time'])
         return Response(self.get_serializer(config).data)
 
+    @action(detail=False, methods=['post'])
+    def test(self, request):
+        """测试 AI 供应商连通性（不落库）：用传入的 api_key/api_url/model_name 发起一次最小 chat 调用。
+        成功返回 200；任何异常（鉴权失败/网络不通/模型名无效/超时）均返回 400 并给出明确原因，避免 500 系统内部异常。"""
+        data = request.data
+        api_key = (data.get('api_key') or '').strip()
+        api_url = (data.get('api_url') or '').strip()
+        model_name = (data.get('model_name') or '').strip()
+        # 允许传入已存在的配置 id，复用其凭据
+        cfg_id = data.get('id') or data.get('config_id')
+        if cfg_id:
+            cfg = AiConfig.objects.filter(id=cfg_id, is_delete=False).first()
+            if cfg:
+                api_key = api_key or (cfg.api_key or '').strip()
+                api_url = api_url or (cfg.api_url or '').strip()
+                model_name = model_name or (cfg.model_name or '').strip()
+        if not (api_key and api_url and model_name):
+            return Response({'detail': 'api_key / api_url / model_name 均不能为空'}, status=400)
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url=api_url, timeout=20)
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=[{'role': 'user', 'content': 'ping'}],
+                max_tokens=5,
+            )
+            reply = (resp.choices[0].message.content or '')[:200]
+            return Response({'reply': reply, 'model': resp.model})
+        except Exception as e:
+            return Response({'detail': '连接测试失败：' + str(e)[:300]}, status=400)
+
 
 class ProjectAppealViewSet(BaseModelViewSet):
     queryset = ProjectAppeal.objects.all()

@@ -488,11 +488,14 @@
 				<el-form-item label="用户" prop="user">
 					<el-select
 						v-model="addMemberForm.user"
-						placeholder="请选择用户"
+						placeholder="请选择用户（可多选，一次性添加多位成员）"
 						class="select"
 						  size='large'
 						  popper-class='select-dropdown-rounded'
 						filterable
+						multiple
+						collapse-tags
+						collapse-tags-tooltip
 						:loading="userListLoading"
 					>
 						<el-option
@@ -886,12 +889,12 @@ export default {
 		// 新增成员对话框
 		addMemberDialogVisible: false,
 		addMemberForm: {
-			user: null,
+			user: [],
 			role: null
 		},
 		addMemberRules: {
 			user: [
-				{ required: true, message: '请选择用户', trigger: ['change', 'blur'] }
+				{ type: 'array', required: true, message: '请至少选择一个用户', trigger: ['change', 'blur'] }
 			],
 			role: [
 				{ required: true, message: '请选择角色', trigger: ['change', 'blur'] }
@@ -1714,7 +1717,7 @@ export default {
 		// 打开新增成员对话框
 		async openAddMember() {
 			this.addMemberForm = {
-				user: null,
+				user: [],
 				role: null
 			}
 			// 加载用户列表和角色列表
@@ -1728,25 +1731,54 @@ export default {
 			})
 		},
 
-		// 保存新成员
+		// 保存新成员（支持一次性添加多位成员）
 		async saveNewMember() {
 			try {
 				// 使用Element Plus的表单验证
 				await this.$refs.addMemberFormRef.validate()
 
-				// 调用API创建新成员
-				const response = await this.$api.createProjectMember({
-					project: this.projectId,
-					user: this.addMemberForm.user,
-					role: this.addMemberForm.role
-				})
-				if (response.status === 201 || response.status === 200) {
-					const newMember = response.data?.result || response.data?.data || {}
-					this.memberList.push(newMember)
+				const userIds = this.addMemberForm.user || []
+				if (userIds.length === 0) {
+					ElMessage.warning('请至少选择一个用户')
+					return
+				}
+
+				// 逐位提交，已存在的成员后端会返回 400，需逐项容错
+				let successCount = 0
+				const failed = []
+				for (const userId of userIds) {
+					try {
+						const response = await this.$api.createProjectMember({
+							project: this.projectId,
+							user: userId,
+							role: this.addMemberForm.role
+						})
+						if (response.status === 201 || response.status === 200) {
+							const newMember = response.data?.result || response.data?.data || {}
+							this.memberList.push(newMember)
+							successCount += 1
+						} else {
+							const msg = (response.data && response.data.result && response.data.result.non_field_errors && response.data.result.non_field_errors[0])
+								|| (response.data && response.data.msg)
+								|| '添加失败'
+							failed.push({ userId, msg })
+						}
+					} catch (e) {
+						failed.push({ userId, msg: '请求异常' })
+					}
+				}
+
+				if (successCount > 0) {
+					ElMessage.success(`成功添加 ${successCount} 位成员`)
+				}
+				if (failed.length > 0) {
+					const detail = failed.map(f => f.msg).join('；')
+					ElMessage.warning(`有 ${failed.length} 位成员未添加成功：${detail}`)
+				}
+
+				if (successCount > 0 || failed.length === 0) {
 					this.addMemberDialogVisible = false
-					ElMessage.success('成员添加成功')
-				} else {
-					ElMessage.error('添加失败')
+					this.addMemberForm.user = []
 				}
 			} catch (error) {
 				// 表单验证失败时，Element Plus会自动显示错误提示
@@ -2605,5 +2637,96 @@ html, body {
 
 .form-row :deep(.el-checkbox.is-checked:hover) {
   background: linear-gradient(135deg, #fef3c7 0%, #ede9fe 100%);
+}
+
+/* ============================================================
+   深色模式适配（html.dark）
+   组件内大量使用硬色（#0f172a 文本 / #fbfdff #f8fbff #fffbeb
+   #f5f3ff 背景 / rgba(255,255,255,.88) 头部 / #c7d2fe #dbe2ea
+   #eef2f7 边框），浅色下正常、深色下不翻转 → 显示异常。
+   此处统一改用 --qm-* 语义变量，跟随主题切换。
+   ============================================================ */
+html.dark .system-setting-page .page-title,
+html.dark .system-setting-page .setting-content-title,
+html.dark .system-setting-page .ai-config-summary span,
+html.dark .system-setting-page .ai-config-provider,
+html.dark .system-setting-page .member-name,
+html.dark .system-setting-page .setting-placeholder-title,
+html.dark .system-setting-page .ai-provider-dialog .el-dialog__title,
+html.dark .system-setting-page .section-title span,
+html.dark .system-setting-page .channel-name,
+html.dark .system-setting-page .provider-name,
+html.dark .system-setting-page .default-light-btn:hover,
+html.dark .system-setting-page .default-light-btn:focus,
+html.dark .system-setting-page .form-row :deep(.el-form-item__label) {
+  color: var(--qm-text-1);
+}
+
+/* 头部/侧栏/内容区：白色渐变 → 深色语义背景 */
+html.dark .system-setting-page .page-header {
+  background: linear-gradient(135deg, var(--qm-bg-2) 0%, var(--qm-bg-3) 100%);
+}
+html.dark .system-setting-page .setting-sidebar {
+  background: linear-gradient(180deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
+}
+html.dark .system-setting-page .setting-content-header {
+  background: var(--qm-bg-2);
+}
+
+/* 卡片：白底渐变 → 深色渐变 */
+html.dark .system-setting-page .ai-config-card,
+html.dark .system-setting-page .member-item {
+  background: linear-gradient(180deg, var(--qm-bg-2) 0%, var(--qm-bg-1) 100%);
+}
+
+/* 当前 tab / 默认标签 / 供应商卡激活态：浅色终点 → 深色语义 */
+html.dark .system-setting-page .setting-tab-item.active {
+  background: linear-gradient(135deg, var(--qm-accent-soft) 0%, var(--qm-bg-3) 100%);
+  border-color: var(--qm-line-strong);
+}
+html.dark .system-setting-page .default-tag {
+  background: linear-gradient(135deg, var(--qm-accent-soft) 0%, var(--qm-bg-3) 100%);
+}
+html.dark .system-setting-page .provider-card.active {
+  background: linear-gradient(135deg, var(--qm-accent-soft) 0%, var(--qm-bg-3) 100%);
+}
+html.dark .system-setting-page .provider-avatar-wrap {
+  background: linear-gradient(135deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+}
+
+/* hover/激活态的浅蓝边框 #c7d2fe → 深色描边 */
+html.dark .system-setting-page .ai-config-card:hover,
+html.dark .system-setting-page .member-item:hover,
+html.dark .system-setting-page .channel-item:hover {
+  border-color: var(--qm-line-strong);
+}
+
+/* 供应商卡普通态浅灰边框 → 深色描边 */
+html.dark .system-setting-page .provider-card {
+  border-color: var(--qm-line-strong);
+}
+
+/* AI 供应商弹窗头部分隔线 #eef2f7 → 深色描边 */
+html.dark .system-setting-page .ai-provider-dialog :deep(.el-dialog__header) {
+  border-bottom-color: var(--qm-line-strong);
+}
+
+/* 输入框/下拉/文本域/取消按钮：浅灰边框 #dbe2ea → 深色描边 */
+html.dark .system-setting-page .setting-input :deep(.el-input__wrapper),
+html.dark .system-setting-page .full-width-select :deep(.el-input__wrapper),
+html.dark .system-setting-page .default-light-btn,
+html.dark .system-setting-page .default-light-btn:focus,
+html.dark .system-setting-page .form-row :deep(.el-input__wrapper),
+html.dark .system-setting-page .form-row :deep(.el-select__wrapper),
+html.dark .system-setting-page .form-row :deep(.el-textarea__inner) {
+  border-color: var(--qm-line-strong);
+}
+
+/* 复选框选中态：浅紫渐变 → 深色语义 */
+html.dark .system-setting-page .form-row :deep(.el-checkbox.is-checked) {
+  background: linear-gradient(135deg, var(--qm-accent-soft) 0%, var(--qm-bg-3) 100%);
+}
+html.dark .system-setting-page .form-row :deep(.el-checkbox.is-checked:hover) {
+  background: linear-gradient(135deg, var(--qm-bg-3) 0%, var(--qm-bg-2) 100%);
 }
 </style>

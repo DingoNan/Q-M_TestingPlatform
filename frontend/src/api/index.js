@@ -701,6 +701,10 @@ export default {
     setDefaultAiConfig(id){
             return http_request.post(`/ai_model_setting/${id}/set_default/`)
     },
+    // 测试 AI 供应商连通性（不落库）：后端 AiConfigViewSet.test 动作
+    testAiConfig(params){
+        return http_request.post('/ai_model_setting/test/', params)
+    },
 	// AI生成功能用例
 	aiGenerateFuncCase(params){
 		return http_request.post('/ai/conversations/generate_func_case/', params)

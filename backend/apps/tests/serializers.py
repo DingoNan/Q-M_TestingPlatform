@@ -100,7 +100,8 @@ class CaseSerializer(BaseSerializer):
     def validate(self, attrs):
         case_type = attrs.get('type')
         case_name = attrs.get('name')
-        case_set = Case.objects.filter(name=case_name)
+        # 查重必须排除软删除记录，否则已删除用例的名称会被永久占用，无法重建同名用例
+        case_set = Case.objects.filter(name=case_name, is_delete=False)
         if not case_type:
             raise ValidationError('用例类型不能为空')
         if self.instance:
@@ -165,6 +166,17 @@ class FuncCaseSerializer(BaseSerializer):
     class Meta:
         model = FuncCase
         fields = '__all__'
+
+    def validate(self, attrs):
+        """名称唯一性只在未软删除的集合内校验，软删除记录不再占用名称"""
+        name = attrs.get('name') or getattr(self.instance, 'name', None)
+        if name:
+            dup = FuncCase.objects.filter(name=name, is_delete=False)
+            if self.instance:
+                dup = dup.exclude(id=self.instance.id)
+            if dup.exists():
+                raise ValidationError('用例名称不能重复')
+        return attrs
 
 
 class CaseDetailSerializer(BaseSerializer):

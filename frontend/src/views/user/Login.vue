@@ -77,9 +77,6 @@
 							<span>记住登录状态</span>
 						</div>
 
-						<div class="forgot-password">
-							<router-link class="forgot-link">忘记密码?</router-link>
-						</div>
 					</div>
 
 					<el-form-item>

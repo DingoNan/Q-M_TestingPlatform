@@ -2133,6 +2133,10 @@ export default{
 	border-radius: 16px;
 	overflow: hidden;
 	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+	/* 修复：弹窗内容超长时整体被裁切且无法滚动（显示不全） */
+	max-height: calc(100vh - 32px);
+	display: flex;
+	flex-direction: column;
 }
 
 .elegant-dialog >>> .el-dialog__header {
@@ -2164,6 +2168,9 @@ export default{
 
 .elegant-dialog >>> .el-dialog__body {
 	padding: 24px;
+	/* 修复：内容超出视口时在弹窗内部滚动，而非整体裁切 */
+	overflow-y: auto;
+	flex: 1 1 auto;
 }
 
 .run-dialog-form {
