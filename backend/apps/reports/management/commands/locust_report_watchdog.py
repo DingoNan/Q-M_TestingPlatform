@@ -20,7 +20,11 @@
 * `test_process` → `3 失败`（**不是**「已完成」：这类报告没有任何统计数据，
   标成已完成会误导用户；前端 `getStatusType` 已有 '失败' → danger 的映射）；
 * `end_time` → 当前时间；
-* 中断原因写入 `exceptions_statistics`，前端「异常统计」表会直接展示给用户。
+* 中断原因写入独立的 `fail_reason` 字段，前端以「失败原因」卡片突出展示。
+
+> 为什么不写 `exceptions_statistics`：该字段语义是「原始异常明细（含 traceback）」，
+> 而这里产出的是**判定结论**、并非异常，塞进去属于语义错配（历史遗留做法）。
+> 自本版起，`fail_reason` 承载结论、`exceptions_statistics` 只承载真实异常，两者不再混用。
 
 ## 用法
 
@@ -126,16 +130,11 @@ def scan_and_close(grace_seconds=300, hard_limit_seconds=1800, now=None):
         if reason is None:
             continue
 
-        exceptions = list(r.exceptions_statistics or [])
-        exceptions.append({
-            'count': 1,
-            'msg': '压测异常中断（守护进程自动判定）：' + reason,
-            'traceback': '',
-        })
+        # 只写 fail_reason：这是「判定结论」而非异常，不应污染 exceptions_statistics。
         LocustReport.objects.filter(id=r.id).update(
             test_process=LocustReport.TestProcess.Failed,
             end_time=now,
-            exceptions_statistics=exceptions,
+            fail_reason='压测异常中断（守护进程自动判定）：' + reason,
         )
         closed.append((r.id, reason))
 

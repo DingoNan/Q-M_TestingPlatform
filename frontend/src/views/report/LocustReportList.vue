@@ -176,14 +176,20 @@
 							>
 								{{ scope.row.test_process_name }}
 							</el-tag>
-							<el-tag 
-								v-else-if='scope.row.test_process === 3' 
-								type='danger' 
-								effect='light'
-								class="status-tag failed-tag"
+							<el-tooltip
+								v-else-if='scope.row.test_process === 3'
+								:content="scope.row.fail_reason || '压测未完成，打开报告详情可查看失败原因'"
+								placement="top"
+								:show-after="200"
 							>
-								{{ scope.row.test_process_name }}
-							</el-tag>
+								<el-tag 
+									type='danger' 
+									effect='light'
+									class="status-tag failed-tag"
+								>
+									{{ scope.row.test_process_name }}
+								</el-tag>
+							</el-tooltip>
 							<el-tag 
 								v-else 
 								type='success' 

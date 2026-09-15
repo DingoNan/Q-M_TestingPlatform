@@ -59,20 +59,24 @@ class Command(BaseCommand):
             )
         except Exception as e:
             import traceback
+            tb = traceback.format_exc()
             traceback.print_exc()
             # 失败收口：标为「失败」而不是「已完成」—— 这类报告没有任何统计数据，
-            # 标成已完成会误导用户；同时把原因写进异常统计，前端「异常统计」表会直接展示。
+            # 标成已完成会误导用户。
+            # 字段分工：fail_reason 放「一句话结论」（前端独立卡片展示），
+            #           exceptions_statistics 放原始异常明细（含 traceback，用于溯源）。
             try:
                 report = LocustReport.objects.filter(id=report_id).first()
                 if report is not None:
                     exceptions = list(report.exceptions_statistics or [])
                     exceptions.append({
                         'count': 1,
-                        'msg': '压测执行失败：%s' % e,
-                        'traceback': traceback.format_exc()[-2000:],
+                        'msg': '压测执行失败：%s: %s' % (type(e).__name__, e),
+                        'traceback': tb[-2000:],
                     })
                     LocustReport.objects.filter(id=report_id).update(
                         test_process=LocustReport.TestProcess.Failed,
+                        fail_reason='压测执行异常退出：%s: %s' % (type(e).__name__, e),
                         exceptions_statistics=exceptions,
                     )
             except Exception as e2:

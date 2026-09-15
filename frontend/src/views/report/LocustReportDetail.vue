@@ -273,6 +273,25 @@
       </el-table>
     </el-card>
 
+    <!-- 失败原因（独立字段 fail_reason：结论式说明，语义上区别于「异常统计」的原始异常明细） -->
+    <el-card v-if="report_detail.fail_reason" class="data-card fail-reason-card elegant-shadow">
+      <div class="card-header">
+        <div class="card-title-section">
+          <i class="icon-exception"></i>
+          <h3 class="card-title">失败原因</h3>
+          <el-tag size="small" type="danger" effect="dark">压测未完成</el-tag>
+        </div>
+        <div class="card-subtitle">Failure Reason</div>
+      </div>
+      <div class="fail-reason-body">
+        <el-icon class="fail-reason-icon"><WarningFilled /></el-icon>
+        <div class="fail-reason-text">{{ report_detail.fail_reason }}</div>
+      </div>
+      <div class="fail-reason-tip">
+        该报告未产生有效压测数据。请按上方原因排查后重新执行；如需原始异常堆栈，请查看下方「异常统计」。
+      </div>
+    </el-card>
+
     <!-- 异常统计 -->
     <el-card v-if="report_detail.exceptions_statistics?.length !== 0" class="data-card elegant-shadow">
       <div class="card-header">
@@ -378,7 +397,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, WarningFilled } from '@element-plus/icons-vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -635,6 +654,8 @@ export default {
         ]
       },
       report_detail: {
+        // fail_reason：独立的「失败原因」字段（结论式说明），与「异常统计」（原始异常明细）分工不同
+        fail_reason: '',
         exceptions_statistics: [],
         failures_statistics: [],
         requests_statistics: [],
@@ -647,7 +668,8 @@ export default {
   },
   setup() {
     return {
-      ArrowLeft
+      ArrowLeft,
+      WarningFilled
     }
   },
   computed: {
@@ -744,7 +766,7 @@ export default {
               this.stopProgressPoll()
               // test_process: 1 已完成 / 2 压测中 / 3 失败
               if (this.report_detail.test_process === 3) {
-                this.$message.error('压测失败！请查看下方「异常统计」了解中断原因。')
+                this.$message.error('压测失败！请查看下方「失败原因」了解中断原因。')
               } else {
                 this.$message.success('压测完成！')
               }
@@ -1333,6 +1355,47 @@ export default {
 
 .info-card {
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+/* ── 失败原因卡片（独立 fail_reason 字段）──────────────────────────
+   只在 report_detail.fail_reason 非空时渲染。
+   与「异常统计」表刻意区分：这里给的是「为什么失败」的结论，用醒目红条 + 浅红底强调；
+   「异常统计」保留原始异常明细（含 traceback）用于溯源。
+   文字色统一走主题变量，保证深/浅色主题下都可读。 */
+.fail-reason-card {
+  border-left: 4px solid #f56c6c;
+}
+
+.fail-reason-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: rgba(245, 108, 108, 0.08);
+  border: 1px solid rgba(245, 108, 108, 0.28);
+}
+
+.fail-reason-icon {
+  color: #f56c6c;
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.fail-reason-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--qm-text-1);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.fail-reason-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--qm-text-2);
 }
 
 .data-card:nth-of-type(1) {

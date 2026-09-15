@@ -51,6 +51,14 @@ class LocustReport(BaseModel):
     exceptions_statistics = models.JSONField(default=list)
     response_time_statistics = models.JSONField(default=list)
     history = models.JSONField(default=list)
+    # 失败原因（面向用户的一句话结论）。
+    # 与 exceptions_statistics 的分工：
+    #   * fail_reason          ——「为什么会失败」的结论式说明，由守护进程、压测执行进程、
+    #                             视图在收口时写入，前端以独立卡片突出展示；
+    #   * exceptions_statistics —— 原始异常明细（含 traceback），用于问题溯源。
+    # 旧实现把「守护进程的中断判定结论」塞进 exceptions_statistics，语义偏了
+    # （那是判定结论、不是异常），故独立成字段，两者不再混用。
+    fail_reason = models.TextField(verbose_name='失败原因', blank=True, default='')
 
     class Meta:
         ordering = ['-create_time']

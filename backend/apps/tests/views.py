@@ -780,7 +780,8 @@ def locust_run(request: Request):
     except Exception as e:
         # 拉起失败也要收口，且标为「失败」而不是「已完成」：这类报告没有任何数据
         LocustReport.objects.filter(id=report.id).update(
-            test_process=LocustReport.TestProcess.Failed)
+            test_process=LocustReport.TestProcess.Failed,
+            fail_reason='压测进程启动失败：%s' % e)
         return Response(data={'error': '压测进程启动失败：%s' % e}, status=500)
     return Response(data={'report_id': report.id}, status=200)
 
@@ -810,12 +811,12 @@ def run_locust_standalone(case_id, env_id, user_id, run_times, rate, user_num, r
     steps = build_tree(steps)
     host_list = list(host_set)
     if not host_list:
-        # 配置错误导致无法压测：同样标「失败」，并在异常统计里写明原因（前端会展示）
+        # 配置错误导致无法压测：同样标「失败」，原因写入独立的 fail_reason（前端独立卡片展示）。
+        # 这里不写 exceptions_statistics —— 这是环境配置问题、并非异常，语义上不该混用。
+        _msg = '压测无法开始：未解析到任何目标主机，请检查环境的「平台/服务」配置'
         LocustReport.objects.filter(id=report_id).update(
             test_process=LocustReport.TestProcess.Failed,
-            exceptions_statistics=[{'count': 1,
-                                    'msg': '压测无法开始：未解析到任何目标主机，请检查环境的「平台/服务」配置',
-                                    'traceback': ''}])
+            fail_reason=_msg)
         raise ValueError('未解析到任何目标主机，请检查环境的「平台/服务」配置')
     test_host = host_list[0]
     env_params = get_env_params_by_env_id(env_id=env_id)
