@@ -629,6 +629,8 @@ export default {
 	        
 	        // 清除Vuex中的用户信息
 	        this.$store.commit('clearUserInfo');
+	        // 同时清掉持久化的项目上下文，避免换账号后仍带着上一个项目
+	        this.$store.commit('clearProjectInfo');
 	        
 	        // 跳转到登录页面
 	        this.$router.push({name: 'login'});
@@ -645,6 +647,7 @@ export default {
 	        window.localStorage.removeItem('token');
 	        window.localStorage.removeItem('userinfo');
 	        this.$store.commit('clearUserInfo');
+	        this.$store.commit('clearProjectInfo');
 	        this.$router.push({name: 'login'});
 	        
 	        ElMessage({

@@ -30,6 +30,7 @@ urlpatterns = [
     path('test/download/windows', views.download_windows),
     path('test/download/linux', views.download_linux),
     path('test/download/macos', views.download_macos),
+    path('test/download/available', views.client_available),
     path('test/copyCase/', views.copy_case),
     path('test/update_is_run/', views.update_step_is_run),
     path('test/change_step_index/', views.change_step_index),

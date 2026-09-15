@@ -73,6 +73,72 @@ class RedisClient(SQLClient):
         pass
 
 
+def _rows_to_dict(cursor, rows):
+    """把 DB-API 的元组结果按列名转成 dict，与 MySQL/PG 的 DictCursor 输出保持一致。
+    供未使用 DictCursor 的驱动（Oracle / 达梦）复用，避免结果结构不一致。"""
+    if not rows:
+        return rows
+    try:
+        columns = [d[0].lower() for d in cursor.description]
+    except Exception:
+        return rows
+    if isinstance(rows, list):
+        return [dict(zip(columns, row)) for row in rows]
+    return dict(zip(columns, rows))
+
+
+class OracleClient(SQLClient):
+    """Oracle 客户端（oracledb 瘦模式，无需本地 Oracle 客户端/Instant Client）。
+
+    约定：EnvDb.name 作为 Oracle 的 service_name；端口默认 1521。
+    兼容把 "host:port/service" 写进 name 的写法（自动截取斜杠后的 service_name）。
+    """
+
+    def __init__(self, host: str, port: int, database: str, user: str, password: str):
+        import oracledb  # 延迟导入：仅使用 Oracle 类型时才要求驱动存在，避免影响其它类型
+        service_name = database or ''
+        if '/' in service_name:
+            service_name = service_name.split('/', 1)[1]
+        self.sql_connect = oracledb.connect(user=user, password=password,
+                                            host=host, port=int(port),
+                                            service_name=service_name)
+        self.sql_cursor = self.sql_connect.cursor()
+
+    def fetchone(self, sql_script: str):
+        self.sql_cursor.execute(sql_script)
+        return _rows_to_dict(self.sql_cursor, self.sql_cursor.fetchone())
+
+    def fetchall(self, sql_script: str):
+        self.sql_cursor.execute(sql_script)
+        return _rows_to_dict(self.sql_cursor, self.sql_cursor.fetchall())
+
+
+class DmClient(SQLClient):
+    """达梦8(DM) 客户端（dmPython 官方驱动）。
+
+    约定：达梦按"用户名即模式名"访问，dmPython.connect 不接收 database 参数，
+    EnvDb.name 仅作展示/记录、不参与连接；端口默认 5236。
+    """
+
+    def __init__(self, host: str, port: int, database: str, user: str, password: str):
+        import dmPython  # 延迟导入
+        self.sql_connect = dmPython.connect(user=user, password=password,
+                                            server=host, port=int(port))
+        try:
+            self.sql_connect.autoCommit = False
+        except Exception:
+            pass
+        self.sql_cursor = self.sql_connect.cursor()
+
+    def fetchone(self, sql_script: str):
+        self.sql_cursor.execute(sql_script)
+        return _rows_to_dict(self.sql_cursor, self.sql_cursor.fetchone())
+
+    def fetchall(self, sql_script: str):
+        self.sql_cursor.execute(sql_script)
+        return _rows_to_dict(self.sql_cursor, self.sql_cursor.fetchall())
+
+
 def run_step_sql(manager_obj, env_id, step, case_params, case_logs_obj, run_times, run_element):
     step_id = step["case_step_id"]
     case_params.stepResponse[f'{step_id}']['runTimes'] = run_times
@@ -89,6 +155,12 @@ def run_step_sql(manager_obj, env_id, step, case_params, case_logs_obj, run_time
     elif env_db_obj.type == EnvDb.SQLType.REDIS:
         sql_client = RedisClient(host=env_db_obj.host, port=env_db_obj.port, database=env_db_obj.name,
                                  user=env_db_obj.username, password=env_db_obj.password)
+    elif env_db_obj.type == EnvDb.SQLType.ORACLE:
+        sql_client = OracleClient(host=env_db_obj.host, port=env_db_obj.port, database=env_db_obj.name,
+                                  user=env_db_obj.username, password=env_db_obj.password)
+    elif env_db_obj.type == EnvDb.SQLType.DM8:
+        sql_client = DmClient(host=env_db_obj.host, port=env_db_obj.port, database=env_db_obj.name,
+                              user=env_db_obj.username, password=env_db_obj.password)
     step_keyword: str = step['keyword']
     step_id: int = step["case_step_id"]
     sql_script: str = step['script']

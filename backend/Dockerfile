@@ -74,6 +74,11 @@ COPY . .
 # 否则内核解析 shebang 时找不到 /bin/sh\r 会报 "no such file or directory"
 RUN sed -i 's/\r$//' ./entrypoint.sh && chmod +x ./entrypoint.sh
 
+# 数据库环境扩展支持：Oracle(oracledb，瘦模式无需本地 Oracle 客户端) / 达梦8(dmPython 官方驱动)。
+# 追加在文件末尾、且不写进 requirements.txt：避免使上面的重量级依赖层（torch/hf 模型/playwright）
+# 缓存失效而触发全量重装与联网下载（161 无外网代理时这些层无法重建）。两包均在清华源，直连即可。
+RUN pip install --no-cache-dir oracledb==26.0.0 dmPython==2.5.38
+
 # 运行时数据持久化挂载点
 VOLUME ["/app/logs", "/app/chroma_db", "/app/upload_files"]
 

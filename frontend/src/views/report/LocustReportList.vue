@@ -177,6 +177,14 @@
 								{{ scope.row.test_process_name }}
 							</el-tag>
 							<el-tag 
+								v-else-if='scope.row.test_process === 3' 
+								type='danger' 
+								effect='light'
+								class="status-tag failed-tag"
+							>
+								{{ scope.row.test_process_name }}
+							</el-tag>
+							<el-tag 
 								v-else 
 								type='success' 
 								effect='light'

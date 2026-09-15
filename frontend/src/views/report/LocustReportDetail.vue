@@ -717,8 +717,24 @@ export default {
       if (this.pollTimer) {
         clearInterval(this.pollTimer)
       }
-      
+      // 轮询上限：压测子进程若异常退出（OOM、被 kill、写回失败），报告会永远停在
+      // test_process=2「压测中」。旧实现每 2s 无限轮询，页面就永远转下去、用户看到
+      // 的是一条"没有结果"的报告。这里设 30 分钟上限，到点停止并明确告知用户去哪儿查。
+      const MAX_POLL_TIMES = 900
+      let pollCount = 0
+
       this.pollTimer = setInterval(async () => {
+        // 若期间已切换报告，本定时器可能已被 stopProgressPoll 清理，双保险
+        if (String(this.$route.query.id) !== String(reportId)) {
+          this.stopProgressPoll()
+          return
+        }
+        pollCount += 1
+        if (pollCount > MAX_POLL_TIMES) {
+          this.stopProgressPoll()
+          this.$message.warning('压测长时间未返回结果，已停止自动刷新。请让管理员检查后端 logs/locust_' + reportId + '.log')
+          return
+        }
         try {
           const response = await this.$api.getLocustReport(reportId)
           if (response.status === 200) {
@@ -726,7 +742,12 @@ export default {
             
             if (this.report_detail.test_process !== 2) {
               this.stopProgressPoll()
-              this.$message.success('压测完成！')
+              // test_process: 1 已完成 / 2 压测中 / 3 失败
+              if (this.report_detail.test_process === 3) {
+                this.$message.error('压测失败！请查看下方「异常统计」了解中断原因。')
+              } else {
+                this.$message.success('压测完成！')
+              }
             }
           }
         } catch (error) {
@@ -746,19 +767,27 @@ export default {
       this.report_detail = { ...response.data.result }
       
       // 更新图表数据
-      if (this.report_detail.history) {
-        this.requestOption.xAxis.data = [...this.report_detail.history.x_time]
-        this.requestOption.series[0].data = [...this.report_detail.history.y_rps]
-        this.requestOption.series[1].data = [...this.report_detail.history.y_f_rps]
-        
-        this.responseOption.xAxis.data = [...this.report_detail.history.x_time]
-        this.responseOption.series[0].data = [...this.report_detail.history.half_res_time]
-        this.responseOption.series[1].data = [...this.report_detail.history.nine_five_res_time]
-        this.responseOption.series[2].data = [...this.report_detail.history.avg_res_time]
-        
-        this.userOption.xAxis.data = [...this.report_detail.history.x_time]
-        this.userOption.series[0].data = [...this.report_detail.history.user_count]
-      }
+      // 注意：后端 LocustReport.history 为 JSONField(default=list)，报告刚创建（压测中）
+      // 时该字段是空数组 []，压测写回后才变成 {x_time:[], y_rps:[], ...} 对象。
+      // 空数组在 JS 中是真值，旧写法 `if (history)` 无法拦住它，会执行
+      // [...undefined] 抛出 "history.x_time is not iterable"，导致报告详情页
+      // 在压测进行中的首屏直接渲染中断。此处统一按字段类型收敛，保证恒不抛错。
+      const history = (this.report_detail.history && !Array.isArray(this.report_detail.history))
+        ? this.report_detail.history
+        : {}
+      const arr = (v) => (Array.isArray(v) ? v : [])
+
+      this.requestOption.xAxis.data = [...arr(history.x_time)]
+      this.requestOption.series[0].data = [...arr(history.y_rps)]
+      this.requestOption.series[1].data = [...arr(history.y_f_rps)]
+
+      this.responseOption.xAxis.data = [...arr(history.x_time)]
+      this.responseOption.series[0].data = [...arr(history.half_res_time)]
+      this.responseOption.series[1].data = [...arr(history.nine_five_res_time)]
+      this.responseOption.series[2].data = [...arr(history.avg_res_time)]
+
+      this.userOption.xAxis.data = [...arr(history.x_time)]
+      this.userOption.series[0].data = [...arr(history.user_count)]
     },
 
     async check_permission(){
@@ -779,6 +808,19 @@ export default {
           this.stopProgressPoll()
         }
       }
+    }
+  },
+  watch: {
+    // 从报告列表点「查看报告」切换另一条报告时，路由 name 不变、只有 query.id 变化，
+    // Vue 会复用组件实例、不会重新执行 created()，旧实现因此一直显示上一条报告的数据
+    // （表现为：点开 id=2，页面显示的却是 id=3 的开始时间/并发数）。这里显式监听 id 变化
+    // 并重新拉取，确保报告数据与 URL 一致。
+    '$route.query.id'(newId, oldId) {
+      if (!newId || String(newId) === String(oldId)) return
+      this.stopProgressPoll()
+      this.report_detail = {}
+      this.check_permission()
+      this.getLocustReport()
     }
   },
   created() {

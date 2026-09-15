@@ -26,15 +26,26 @@ http_request.interceptors.response.use(function(res){
 	if (res.status === 403){
 		router.push({name: 'noPermission'})
 	}
-	if(res.status === 400){
-		for(let error_obj in res.data.result){
-			ElMessage({
-			  type: 'error',
-			  duration: 5000,
-			  showClose: true, 
-			  message: res.data.result[error_obj][0],
-			})
+	if(res.status === 400 && !String(res.config.url||'').includes('locust_run')){
+		// DRF 的默认错误体是 {字段: [消息, ...]}，故历史写法取 [0]。
+		// 但后端自研的 400 可能返回 {error: '纯字符串'}，此时 [0] 只会取到第一个字符，
+		// 用户看到的就是一个孤零零的字母（如 'e'）。这里统一兼容数组/字符串两种形态。
+		const result = (res.data && res.data.result) || {}
+		const messages = []
+		if (typeof result === 'string') {
+			messages.push(result)
+		} else if (result && typeof result === 'object') {
+			for (let key in result){
+				const v = result[key]
+				if (Array.isArray(v)) messages.push(v[0])
+				else if (typeof v === 'string') messages.push(v)
+				else if (v != null) messages.push(JSON.stringify(v))
+			}
 		}
+		if (!messages.length) messages.push('请求参数有误（HTTP 400）')
+		messages.forEach(function(msg){
+			ElMessage({ type: 'error', duration: 5000, showClose: true, message: String(msg) })
+		})
 	}else if(res.status === 500 && res.config.url !='/mock_api_run/'){
 		ElMessage({ message: "系统内部异常", type: 'error' })
 	}

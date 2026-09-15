@@ -2449,29 +2449,56 @@ export default {
         ElMessage({ message: '请选择执行环境', type: 'error' })
         return
       }
-      this.locustRunVisible = false
       this.locustRunForm.case_id = this.$route.query.id
       this.locustRunForm.project_id = this.projectInfo.id
       const response = await this.$api.locustRun(this.locustRunForm)
       if (response.status === 200) {
+        this.locustRunVisible = false
         ElMessage({
           message: '【' + this.case_info.name + '】' + '用例压测中，请在报告管理中查看性能测试报告',
           type: 'success'
         })
         this.$router.push({ path: '/report/locust/detail', query: { id: response.data.result.report_id } })
+      } else {
+        // 失败时保留弹窗，并给出服务端返回的具体原因（不再只弹「系统内部异常」）
+        const res = response.data && response.data.result
+        const msg = (res && (res.error || res.detail)) || ('压测启动失败（HTTP ' + response.status + '）')
+        ElMessage({ message: msg, type: 'error', duration: 6000, showClose: true })
       }
     },
-    downloadWindows() {
-      window.open(this.$api.base_url + '/test/download/windows', '_blank')
+    async clientDownloadable() {
+      try {
+        const res = await fetch(this.$api.base_url + '/test/download/available')
+        if (!res.ok) return false
+        const data = await res.json()
+        return !!(data && data.result && data.result.available)
+      } catch (e) {
+        return false
+      }
+    },
+    async downloadClient(kind) {
+      // 下载前先探测服务端是否真的有客户端产物，避免 window.open 打开一个 404 空白页
+      const ok = await this.clientDownloadable()
+      if (!ok) {
+        ElMessage({
+          message: '压测客户端未随本部署提供。可直接使用「压测配置 → 执行」在线压测；如需分布式压测，请联系管理员在服务端放置客户端安装包。',
+          type: 'warning',
+          duration: 8000,
+          showClose: true
+        })
+        return
+      }
+      window.open(this.$api.base_url + '/test/download/' + kind, '_blank')
       ElMessage({ message: '下载中', type: 'success' })
+    },
+    downloadWindows() {
+      this.downloadClient('windows')
     },
     downloadLinux() {
-      window.open(this.$api.base_url + '/test/download/linux', '_blank')
-      ElMessage({ message: '下载中', type: 'success' })
+      this.downloadClient('linux')
     },
     downloadMacos() {
-      window.open(this.$api.base_url + '/test/download/macos', '_blank')
-      ElMessage({ message: '下载中', type: 'success' })
+      this.downloadClient('macos')
     },
     isRunChange(id, is_run, is_all=false, ids=[]) {
       this.UpdateIsRun({ id: id, is_run: is_run, is_all: is_all, ids:ids })

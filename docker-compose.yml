@@ -97,6 +97,9 @@ services:
       - ./backend/logs:/app/logs
       - backend_chroma:/app/chroma_db
       - backend_uploads:/app/upload_files
+      # 分布式压测客户端（可选，体积大，不进镜像）：把 QMTestPlatform.exe / BlackBagTest.exe
+      # 放到项目根目录的 client/ 下即可被「压测工具下载」提供；缺失时接口会返回明确提示。
+      - ./client:/app/client:ro
     ports:
       - "8000:8000"
     networks:

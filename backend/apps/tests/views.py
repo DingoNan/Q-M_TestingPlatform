@@ -1,13 +1,16 @@
 import copy
 import os
+import sys
+import subprocess
 import time
 from threading import Thread
 from django.http import StreamingHttpResponse
+from django.utils import timezone
 from django.db import models
 from django.db.models import Case as DjCase, When, IntegerField
 from django_q.tasks import async_task
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
 from rest_framework.request import Request
 from utils.base import BasePageNumberPagination
@@ -730,43 +733,96 @@ def step_run(request: Request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def locust_run(request: Request):
-    start_time = time.strftime("%Y-%m-%d %H:%M:%S")
+    """启动一次性能压测。
+
+    ⚠ 关键设计：压测必须跑在**独立子进程**里，不能在 web 进程（uvicorn worker）的线程内执行。
+    原因：`core.locust.locust_model` 会 import locust，而 locust 在 import 时无条件调用
+    `gevent.monkey.patch_all()`。若在 uvicorn worker 的线程里触发，会全局 patch 该 worker 的
+    ssl/threading/socket，破坏 asyncio 事件循环 —— 表现为：该 worker 之后所有请求 500、
+    压测 greenlet 永不调度、报告永久停留在「压测中」。
+    子进程方式让 monkey-patch 只影响压测进程，web 与 qcluster 均不受影响。
+    """
+    start_time = timezone.localtime(timezone.now())
     env_id = request.data.get('env_id')
     case_id = request.data.get('case_id')
     project_id = request.data.get('project_id')
     users_per_second = request.data.get('users_per_second')
     concurrent_users = request.data.get('concurrent_users')
     durations = request.data.get('durations')
+    if not (env_id and case_id):
+        return Response(data={'error': 'env_id / case_id 不能为空'}, status=400)
+
+    # 用例自带项目归属，project_id 允许缺省：缺省时从 case 反查。
+    # 背景：前端 projectInfo 只保存在 Vuex 内存中，用户刷新页面或直接打开用例详情页后会丢失，
+    # 请求体便不再包含 project_id（undefined 被 axios 丢弃）。旧实现直接回 400
+    # 「env_id / case_id / project_id 不能为空」，表现为：点执行就报错、且不产生任何报告，
+    # 用户看到的就是「执行了但没有结果」。这里改成由服务端反查，彻底消除对前端内存态的依赖。
+    case_obj = Case.objects.filter(id=case_id).first()
+    if case_obj is None:
+        return Response(data={'error': '用例不存在（case_id=%s）' % case_id}, status=400)
+    if not project_id:
+        project_id = case_obj.project_id
     report = LocustReport.objects.create(**{'case_id': case_id, 'user_id': request.user.id, 'env_id': env_id,
                                             'cpu': 0, 'memory': 0, 'rate': users_per_second, 'project_id': project_id,
                                             'max_user': concurrent_users, 'duration': durations,
                                             'start_time': start_time, 'end_time': start_time})
-    thread = Thread(
-        target=run_locust_standalone,
-        args=(case_id, env_id, request.user.id, durations, users_per_second, concurrent_users, report.id)
-    )
-    thread.daemon = True  # 设置为守护线程
-    thread.start()
-    # run_locust_standalone(case_id, env_id, request.user.id, durations, users_per_second, concurrent_users, report.id)
-    # run_locust_standalone.delay(case_id, env_id, request.user.id, durations, users_per_second, concurrent_users)
+    # 以子进程方式拉起压测（见上方说明）
+    cmd = [sys.executable, 'manage.py', 'run_locust_case', str(case_id), str(env_id), str(request.user.id),
+           str(durations), str(users_per_second), str(concurrent_users), str(report.id)]
+    log_dir = os.path.join(BASE_DIR, 'logs')
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = open(os.path.join(log_dir, 'locust_%s.log' % report.id), 'ab')
+        subprocess.Popen(cmd, cwd=BASE_DIR, stdout=log_file, stderr=subprocess.STDOUT,
+                         start_new_session=True, env=os.environ.copy())
+    except Exception as e:
+        # 拉起失败也要收口，且标为「失败」而不是「已完成」：这类报告没有任何数据
+        LocustReport.objects.filter(id=report.id).update(
+            test_process=LocustReport.TestProcess.Failed)
+        return Response(data={'error': '压测进程启动失败：%s' % e}, status=500)
     return Response(data={'report_id': report.id}, status=200)
 
 
 def run_locust_standalone(case_id, env_id, user_id, run_times, rate, user_num, report_id):
+    """真正执行压测。**只能在独立进程中调用**（见 locust_run 的说明）。
+
+    入口：`python manage.py run_locust_case <case_id> <env_id> <user_id> <run_times> <rate> <user_num> <report_id>`
+    """
     # 惰性导入：locust 会触发 gevent monkey-patch，必须延后到真正运行压测时才加载，
     # 避免在 Django(ASGI/WSGI) 启动阶段就 patch ssl/threading/socket 破坏服务器
-    from core.locust.locust_model import start_system_standalone_locust_headless_programmatically
+    from datetime import timedelta
+    from rest_framework_simplejwt.tokens import RefreshToken
+    from core.locust import locust_model
+    # 写回报告需要鉴权（LocustReportViewSet 要求 IsAuthenticated），为压测进程签发长效 token。
+    # 压测时长可能远超默认 access token 有效期，故显式延长到 12 小时。
+    try:
+        owner = User.objects.filter(id=user_id).first()
+        if owner is not None:
+            token = RefreshToken.for_user(owner).access_token
+            token.set_exp(lifetime=timedelta(hours=12))
+            locust_model.set_report_auth_token(str(token))
+    except Exception as e:
+        print('[locust] 生成报告写回 token 失败：%s' % e, flush=True)
     case = Case.objects.all().get(id=case_id)
     steps, host_set = get_run_step_data(case, env_id=env_id, user_id=user_id)
     steps = build_tree(steps)
     host_list = list(host_set)
+    if not host_list:
+        # 配置错误导致无法压测：同样标「失败」，并在异常统计里写明原因（前端会展示）
+        LocustReport.objects.filter(id=report_id).update(
+            test_process=LocustReport.TestProcess.Failed,
+            exceptions_statistics=[{'count': 1,
+                                    'msg': '压测无法开始：未解析到任何目标主机，请检查环境的「平台/服务」配置',
+                                    'traceback': ''}])
+        raise ValueError('未解析到任何目标主机，请检查环境的「平台/服务」配置')
     test_host = host_list[0]
     env_params = get_env_params_by_env_id(env_id=env_id)
     global_params = get_global_params_by_project_id(project_id=case.project)
-    start_system_standalone_locust_headless_programmatically(steps, global_params, env_params, host_list,  case_id,
-                                                             env_id, user_id, run_times, rate, user_num, test_host,
-                                                             report_id)
+    locust_model.start_system_standalone_locust_headless_programmatically(
+        steps, global_params, env_params, host_list, case_id,
+        env_id, user_id, run_times, rate, user_num, test_host, report_id)
 
 
 @api_view(['POST'])
@@ -784,12 +840,31 @@ def get_init_data(request: Request):
     return Response(response_data, status=200)
 
 
-@api_view(['GET'])
-def download_windows(request: Request):
-    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
+# 分布式压测客户端产物的候选文件名与查找目录。
+# 说明：打包产物（PyQt5 桌面客户端 exe）体积大、已移出版本控制与 .dockerignore，
+# 需由管理员放到服务端；历史上出现过 QMTestPlatform.exe / BlackBagTest.exe 两种命名，故均兼容。
+CLIENT_FILE_NAMES = ('QMTestPlatform.exe', 'BlackBagTest.exe')
 
-    if not os.path.exists(file_path):
-        return Response({"error": "File not found"}, status=404)
+
+def find_client_file():
+    for d in (os.path.join(BASE_DIR, 'client'), BASE_DIR):
+        for name in CLIENT_FILE_NAMES:
+            p = os.path.join(d, name)
+            if os.path.exists(p):
+                return p
+    return None
+
+
+def serve_client_file(platform):
+    """下载分布式压测客户端。本部署仅提供 Windows 客户端（PyQt5 打包 exe）。"""
+    if platform != 'windows':
+        return Response({"error": "本部署仅提供 Windows 客户端，%s 平台暂无安装包" % platform}, status=404)
+    file_path = find_client_file()
+    if not file_path:
+        return Response({"error": "服务端未提供压测客户端安装包（未找到 %s）。"
+                                  "请管理员将客户端放到容器 /app/client/ 目录后重试；"
+                                  "或直接使用「压测配置 → 执行」在线压测，无需下载客户端。"
+                                  % ' 或 '.join(CLIENT_FILE_NAMES)}, status=404)
 
     # 创建文件流
     def file_generator():
@@ -801,56 +876,37 @@ def download_windows(request: Request):
         file_generator(),
         content_type='application/octet-stream'
     )
-    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
+    response['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file_path)
     response['Content-Length'] = str(os.path.getsize(file_path))
 
     return response
+
+
+@api_view(['GET'])
+def download_windows(request: Request):
+    return serve_client_file('windows')
 
 
 @api_view(['GET'])
 def download_macos(request: Request):
-    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
-
-    if not os.path.exists(file_path):
-        return Response({"error": "File not found"}, status=404)
-
-    # 创建文件流
-    def file_generator():
-        with open(file_path, 'rb') as f:
-            while chunk := f.read(8192 * 8):
-                yield chunk
-
-    response = StreamingHttpResponse(
-        file_generator(),
-        content_type='application/octet-stream'
-    )
-    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
-    response['Content-Length'] = str(os.path.getsize(file_path))
-
-    return response
+    return serve_client_file('macos')
 
 
 @api_view(['GET'])
 def download_linux(request: Request):
-    file_path = os.path.join(BASE_DIR, 'QMTestPlatform.exe')
+    return serve_client_file('linux')
 
-    if not os.path.exists(file_path):
-        return Response({"error": "File not found"}, status=404)
 
-    # 创建文件流
-    def file_generator():
-        with open(file_path, 'rb') as f:
-            while chunk := f.read(8192 * 8):
-                yield chunk
-
-    response = StreamingHttpResponse(
-        file_generator(),
-        content_type='application/octet-stream'
-    )
-    response['Content-Disposition'] = 'attachment; filename="QMTestPlatform.exe"'
-    response['Content-Length'] = str(os.path.getsize(file_path))
-
-    return response
+@api_view(['GET'])
+def client_available(request: Request):
+    """探测压测客户端是否可用，供前端在下载前做前置判断，避免打开空白/404 页面。"""
+    p = find_client_file()
+    return Response({
+        'available': bool(p),
+        'windows': bool(p),
+        'file': os.path.basename(p) if p else None,
+        'size': os.path.getsize(p) if p else 0,
+    }, status=200)
 
 
 @api_view(['POST'])

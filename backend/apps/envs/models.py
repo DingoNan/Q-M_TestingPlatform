@@ -261,6 +261,8 @@ class EnvDb(BaseModel):
         MYSQL = 1, 'MySQL'
         POSTGRESQL = 2, 'PostgreSQL'
         REDIS = 3, 'REDIS'
+        ORACLE = 4, 'Oracle'
+        DM8 = 5, '达梦8'
     env = models.ForeignKey(Env, on_delete=models.CASCADE, verbose_name='所属环境')
     db = models.ForeignKey('Db', on_delete=models.CASCADE, verbose_name='所属数据库')
     host = models.CharField(verbose_name='数据库地址', max_length=100)

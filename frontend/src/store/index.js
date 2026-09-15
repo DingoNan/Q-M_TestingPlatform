@@ -6,7 +6,13 @@ export default createStore({
 	  role_id: '',
 	  pathPermission: {},
 	  cur_path: '',
-	  projectInfo: '',
+	  // 当前项目上下文。**持久化到 localStorage**（键 qm-projectInfo）：
+	  // 它过去只活在内存里，刷新页面/新开标签页就丢，导致所有「把 projectInfo.id 传给后端」
+	  // 的接口会因缺失 project_id 而报 400（典型：性能压测执行直接 400 且不产生任何报告）。
+	  // 与 userInfo 的处理方式保持一致，登出时由 clearProjectInfo 一并清理。
+	  projectInfo: (() => {
+		  try { return JSON.parse(localStorage.getItem('qm-projectInfo')) || '' } catch (e) { return '' }
+	  })(),
 	  // 登录后写入 localStorage（键 qm-userInfo），刷新/新标签页可恢复，
 	  // 否则超管页（/user/list 等）的 userInfo.is_superuser 判空会被误判为无权限
 	  userInfo: (() => {
@@ -28,6 +34,11 @@ export default createStore({
 		  },
 		  saveProjectInfo(state, item){
 			  state.projectInfo = {...item}
+			  try { localStorage.setItem('qm-projectInfo', JSON.stringify(item)) } catch (e) {}
+		  },
+		  clearProjectInfo(state){
+			  state.projectInfo = ''
+			  try { localStorage.removeItem('qm-projectInfo') } catch (e) {}
 		  },
 		  saveUserInfo(state, item){
 			  state.userInfo = {...item}

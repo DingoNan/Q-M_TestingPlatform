@@ -29,6 +29,10 @@ class LocustReport(BaseModel):
     class TestProcess(models.IntegerChoices):
         Done = 1, '已完成'
         Doing = 2, '压测中'
+        # 失败：用于「压测子进程异常退出 / 超时未收口」等被守护进程判定为中断的场景。
+        # 刻意区别于 Done —— 这类报告没有任何统计数据，标成「已完成」会误导用户。
+        # 前端 getStatusType 已内置 '失败' → danger 的映射，无需额外改动即可正确渲染。
+        Failed = 3, '失败'
 
     project = models.ForeignKey('projects.Project', on_delete=models.PROTECT)
     env = models.ForeignKey('envs.Env', on_delete=models.PROTECT)

@@ -785,6 +785,8 @@
               <el-option label='MySQL' :value="1" />
               <el-option label='PostgreSQL' :value="2" />
               <el-option label='Redis' :value="3" />
+              <el-option label='Oracle' :value="4" />
+              <el-option label='达梦8' :value="5" />
             </el-select>
           </el-form-item>
           
@@ -1035,7 +1037,10 @@ export default{
       const typeMap = {
         'MySQL': 'success',
         'PostgreSQL': 'primary',
-        'Redis': 'danger'
+        'Redis': 'danger',
+        'REDIS': 'danger',
+        'Oracle': 'warning',
+        '达梦8': 'info'
       }
       return typeMap[typeName] || 'info'
     },

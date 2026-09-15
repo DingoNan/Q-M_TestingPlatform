@@ -70,6 +70,18 @@ def set_locust_env_params(env, case_id, env_id, user_id, server_host):
 #     if environment.mode != 'Work':
 
 
+# 压测进程写回报告用的鉴权 token。
+# LocustReportViewSet 要求 IsAuthenticated（此前存在未登录可读写压测报告的越权缺陷），
+# 而压测跑在独立进程里、没有用户请求上下文，所以由调用方签发一个长效 access token 注入，
+# 否则写回会拿到 401，报告会永久停留在「压测中」。
+REPORT_AUTH_TOKEN = None
+
+
+def set_report_auth_token(token):
+    global REPORT_AUTH_TOKEN
+    REPORT_AUTH_TOKEN = token
+
+
 def __record_data_to_db(environment, is_done=False):
     mode = environment.mode
     case_id = environment.case_id
@@ -158,11 +170,20 @@ def __record_data_to_db(environment, is_done=False):
         server_host = environment.server_host
         if is_done:
             report_data['test_process'] = 1
-        requests.put(url=server_host + f'/report/locust/{environment.report_id}/', json=report_data)
+        try:
+            headers = {'Authorization': 'Bearer %s' % REPORT_AUTH_TOKEN} if REPORT_AUTH_TOKEN else {}
+            resp = requests.put(url=server_host + f'/report/locust/{environment.report_id}/',
+                                json=report_data, timeout=10, headers=headers)
+            print('[locust-report] PUT report_id=%s is_done=%s status=%s body=%s'
+                  % (environment.report_id, is_done, resp.status_code, resp.text[:200]), flush=True)
+        except Exception as e:
+            print('[locust-report] PUT FAILED report_id=%s is_done=%s err=%s: %s'
+                  % (environment.report_id, is_done, type(e).__name__, e), flush=True)
 
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
+    print('[locust-report] test_stop fired report_id=%s' % environment.report_id, flush=True)
     __record_data_to_db(environment, is_done=True)
 
 
