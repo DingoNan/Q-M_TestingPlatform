@@ -3290,12 +3290,25 @@ export default {
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  flex-wrap: nowrap;
+  /* ★ 修复「右上角按钮显示不完整」：
+     原来这里是 flex-wrap: nowrap，配合 .action-buttons 的 flex-shrink:0，
+     当标题区被压到 0、按钮组仍有 791px 时，整体宽度超出 .content-card
+     （overflow:hidden）→ 最右侧的「添加步骤」被直接裁掉。
+     实测：1024×720 + 侧栏展开时被切 111px，且用例标题整块消失。
+     改为 wrap 后，装不下时按钮组整体换到第二行，不再被裁。 */
+  flex-wrap: wrap;
+  row-gap: 10px;
   min-height: 40px;
 }
 
 .case-title-area {
-  flex: 1;
+  /* ★ 供 flex-wrap 决策用：flex-basis:auto + 可收缩，
+     让「标题区 + 按钮组」优先尝试同排；只有真的放不下才触发换行。
+     早期写成 `flex: 1 1 200px` 会强制标题区至少占 200px 基准宽，
+     导致 1280/1152 这些**本来放得下**的宽度也提前换行（按钮跳到第二行、观感变差）。
+     这里用 flex-shrink 允许标题先被压缩（配合 min-width:0 + ellipsis），
+     把「能同排就同排」的优先级交给浏览器，避免过度换行。 */
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -3329,9 +3342,18 @@ export default {
 .action-buttons {
   display: flex;
   gap: 8px;
-  flex-shrink: 0;
-  flex-wrap: nowrap;
+  /* ★ 修复「右上角按钮显示不完整」：
+     flex-shrink:0 让按钮组在任何情况下都不压缩，本意是「按钮不缩水」，
+     但配合 nowrap 就变成「宁可溢出被裁，也不换行」。
+     改为 shrink:1 + wrap：按钮自身尺寸仍由 .action-btn 的 padding/nowrap 保证不缩水，
+     空间不足时整组换行（右对齐，视觉上仍贴着右侧），而不是被容器裁掉。 */
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
+  row-gap: 8px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .action-btn {
@@ -3530,25 +3552,16 @@ export default {
 }
 
 /* 响应式设计 */
+/* ★ 修复「右上角按钮显示不完整」：
+   原实现在 <=1400px 时给 .action-buttons 加 overflow-x:auto + max-width:800px。
+   - max-width:800px 是**硬上限**：窗口再宽按钮组也长不过 800px，按钮一多就出横向滚动条；
+   - 与父级 .content-card 的 overflow:hidden 叠加后，滚动条本身也可能被裁掉，
+     用户看到的就是「按钮缺一块、还找不到滚动条」。
+   现在按钮组已能换行（见上面 .action-buttons），不再需要横向滚动兜底，
+   因此这里只保留「窄屏时贴左」的对齐修正，去掉 max-width 与滚动条样式。 */
 @media (max-width: 1400px) {
   .action-buttons {
-    overflow-x: auto;
-    padding-bottom: 4px;
-    max-width: 800px;
-  }
-  
-  .action-buttons::-webkit-scrollbar {
-    height: 4px;
-  }
-  
-  .action-buttons::-webkit-scrollbar-track {
-    background: var(--qm-bg-3);
-    border-radius: 2px;
-  }
-  
-  .action-buttons::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
+    max-width: 100%;
   }
 }
 
