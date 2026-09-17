@@ -311,8 +311,17 @@ def run_one_step(manager_obj, env_id, case_params, case_logs_obj, step, run_time
         controller_obj.execute(manager_obj, env_id, case_params, case_logs_obj, step, run_times, run_element, run_one_step)
 
     else:
-        # 获取步骤类型
-        step_run_func: Callable = partial(step_type_function(step['type'], step['com_step_type']), manager_obj, env_id,
+        # 获取步骤类型执行函数
+        # 未注册的步骤类型（空占位步骤 type=0、PlatformSystemFunction=-1、com_step_type 缺失等）
+        # 会让 step_type_function 返回 None，旧实现直接 partial(None, ...) 抛
+        # "TypeError: the first argument must be callable"，把整条用例变成无法诊断的 error。
+        # 这里改成显式抛出可读错误，交由上层统一按「步骤失败」处理并记录真实原因。
+        step_run_func = step_type_function(step['type'], step['com_step_type'])
+        if not callable(step_run_func):
+            raise ValueError(
+                '步骤「%s」的类型未注册执行函数（type=%s, com_step_type=%s），请检查该步骤配置是否完整'
+                % (step.get('desc'), step['type'], step['com_step_type']))
+        step_run_func: Callable = partial(step_run_func, manager_obj, env_id,
                                           step, case_params, case_logs_obj)
         step_run_func(run_times, run_element)
 
@@ -407,7 +416,12 @@ def run_one_case(env_id: int, case_id: int, user_id: int, web_executor_id, app_e
                     case_logs_obj.result = CaseRunLog.CaseResult.FAIL
                 else:
                     case_logs_obj.result = CaseRunLog.CaseResult.ERROR
-                case_logs_obj.logs[-1]['logs'].append({'title': formatter_log('ERROR', e.__doc__), 'value': _e})
+                # 旧实现把 e.__doc__ 当错误标题：KeyError/TypeError 等内置异常的 __doc__ 是通用类文档，
+                # 界面上会显示成「Mapping key not found.」这类无意义文案，用户完全无法定位。
+                # 改为优先输出真实异常信息，并带上异常类名，便于直接定位。
+                _err_msg = str(e).strip() or (e.__doc__ or '').strip()
+                _err_title = '%s: %s' % (e.__class__.__name__, _err_msg) if _err_msg else e.__class__.__name__
+                case_logs_obj.logs[-1]['logs'].append({'title': formatter_log('ERROR', _err_title), 'value': _e})
             finally:
                 # 判断步骤是否继续执行还是停止
                 if case_logs_obj.result != CaseRunLog.CaseResult.SUCCESS:
@@ -651,26 +665,59 @@ def run_suite_async(env_id, user_id, report_id, web_executor_id, app_executor_id
         )
 
 
-def check_suite_completion(report_id, is_auto, run_msg_id=0):
-    print(f'[check_suite_completion] 开始检查报告 {report_id}')
-    
-    report_obj = Report.objects.filter(id=report_id).first()
-    
-    completed_count = report_obj.success_case_number + report_obj.error_case_number + report_obj.fail_case_number
-    
-    print(f'[check_suite_completion] 报告 {report_id}: 已完成={completed_count}, 总数={report_obj.all_case_number}')
+COMPLETION_INTERVAL_SECONDS = 2      # 巡检间隔
+COMPLETION_MAX_STALE_ROUNDS = 150    # 连续无进展轮次上限（≈5 分钟）
 
-    if completed_count >= report_obj.all_case_number:
-        print(f'[check_suite_completion] 所有用例已完成，开始执行 finalize_suite')
+
+def check_suite_completion(report_id, is_auto, run_msg_id=0, stale_rounds=0, last_completed=-1):
+    """
+    检查报告是否已全部执行完毕，完毕则收口（finalize_suite）。
+
+    【健壮性修复】原实现只比较 success+error+fail >= all_case_number，但
+    「阻塞用例」（功能用例未关联任何脚本用例、无法自动执行，见 func_group_run）
+    既不计入成功/失败/错误，又被计入 all_case_number，于是
+      报告永远满足不了完成条件 → django-q 每 2 秒无限重排 →
+      报告永远停在「执行中」、测试计划点「查看报告」看不到结果。
+    现改为：
+      ① 应完成数 = all_case_number - 阻塞数（阻塞用例单独在报告 detail.blocked_cases 中呈现）；
+      ② 增加「连续 N 轮计数无增长」兜底收口，防止任何任务异常中断导致报告永久挂起。
+    """
+    print(f'[check_suite_completion] 开始检查报告 {report_id}')
+
+    report_obj = Report.objects.filter(id=report_id).first()
+    if not report_obj:
+        print(f'[check_suite_completion] 报告 {report_id} 不存在，终止巡检')
+        return
+
+    completed_count = report_obj.success_case_number + report_obj.error_case_number + report_obj.fail_case_number
+    blocked_count = len((report_obj.detail or {}).get('blocked_cases') or [])
+    expected_count = max(report_obj.all_case_number - blocked_count, 0)
+
+    print(f'[check_suite_completion] 报告 {report_id}: 已完成={completed_count}, '
+          f'阻塞={blocked_count}, 应完成={expected_count}, 总数={report_obj.all_case_number}')
+
+    if completed_count >= expected_count:
+        print(f'[check_suite_completion] 所有可执行用例已完成，开始执行 finalize_suite')
         finalize_suite(report_id, is_auto, run_msg_id)
-    else:
-        print(f'[check_suite_completion] 用例未完成，2秒后继续检查')
-        schedule(
-            'core.run_case.check_suite_completion',
-            report_id, is_auto, run_msg_id,
-            schedule_type=Schedule.ONCE,
-            next_run=timezone.now() + timezone.timedelta(seconds=2)
-        )
+        return
+
+    # 计数有增长说明仍在正常推进，重置无进展计数
+    stale_rounds = stale_rounds + 1 if completed_count == last_completed else 0
+
+    if stale_rounds >= COMPLETION_MAX_STALE_ROUNDS:
+        print(f'[check_suite_completion] 连续 {stale_rounds} 轮（约 '
+              f'{stale_rounds * COMPLETION_INTERVAL_SECONDS} 秒）无进展，兜底收口报告 {report_id}')
+        finalize_suite(report_id, is_auto, run_msg_id)
+        return
+
+    print(f'[check_suite_completion] 用例未完成（无进展轮次={stale_rounds}），'
+          f'{COMPLETION_INTERVAL_SECONDS} 秒后继续检查')
+    schedule(
+        'core.run_case.check_suite_completion',
+        report_id, is_auto, run_msg_id, stale_rounds, completed_count,
+        schedule_type=Schedule.ONCE,
+        next_run=timezone.now() + timezone.timedelta(seconds=COMPLETION_INTERVAL_SECONDS)
+    )
 
 
 def finalize_suite(report_id, is_auto=True, run_msg_id=0):
@@ -1055,12 +1102,66 @@ def func_group_run(env_id, user_id, report_id, func_case_id, web_executor_id, ap
                    set_result=False, plan_id=0):
     func_case_obj = FuncCase.objects.all().get(id=func_case_id)
     auto_cases = list(func_case_obj.case.values_list('id', flat=True))
+
+    # 未关联任何脚本用例的功能用例无法自动执行。
+    # 旧逻辑：results 为空列表 → set(results) == {1} 恒为 False → 一律累加 fail_case_number，
+    # 把「用例没配好」误报成「测试失败」，污染报告统计（实测 47 条纯文本功能用例被 100% 判失败）。
+    # 新逻辑：不计入成功/失败，记为「阻塞」写入报告 detail，计划用例状态置为「暂缓」。
+    if not auto_cases:
+        if report_id:
+            with transaction.atomic():
+                report_obj = Report.objects.filter(id=report_id).select_for_update().first()
+                if report_obj:
+                    detail = dict(report_obj.detail or {})
+                    blocked = list(detail.get('blocked_cases') or [])
+                    blocked.append({
+                        'func_case_id': func_case_id,
+                        'func_case_name': func_case_obj.name,
+                        'reason': '该功能用例未关联任何脚本用例，无法自动执行',
+                    })
+                    detail['blocked_cases'] = blocked
+                    report_obj.detail = detail
+                    report_obj.save(update_fields=['detail', 'update_time'])
+        if set_result:
+            TestPlanFuncCase.objects.filter(test_plan_id=plan_id, is_delete=False,
+                                           func_case_id=func_case_id).update(
+                exec_status=TestPlanFuncCase.ExecStatus.POSTPONED,
+                executed_by_id=user_id, executed_time=timezone.now())
+        return
+
     results = []
     for auto_case_id in auto_cases:
         result = run_one_case(env_id=env_id, case_id=auto_case_id, user_id=user_id, web_executor_id=web_executor_id,
                               app_executor_id=app_executor_id, report_id=report_id, rerun_times=rerun_times,
                               func_case_id=func_case_id, fail_is_continue=0, plan_id=plan_id)
-        results = results + result
+        # ★★ run_one_case 的返回类型**取决于 report_id**（见本文件 :469
+        #      `return results if report_id else case_logs_obj.id`）：
+        #        report_id 为真 → 返回 results（list）
+        #        report_id 为假 → 返回 case_logs_obj.id（int）
+        #    而无 report_id 的执行路径是真实存在的：
+        #      · POST /plan_case/run_automation_cases/ 指定 func_case_ids 时
+        #        run_test_plan 传 report_id=0 → 走到这里
+        #      · run_suite_case 的 else 分支也是 report_id=0
+        #    原写法 `results = results + result` 在 report_id 为假时必然抛
+        #    「can only concatenate list (not "int") to list」。实测后果（2026-09-16）：
+        #      ① 该功能用例下**只执行第一个脚本用例**就被中断（func 56 关联 427/428，
+        #         实际只落了 1 条执行记录）；
+        #      ② 其后的 is_success 判定与 `if set_result:` 状态推进全部跳过 →
+        #         plan_case.exec_status 永远停在「暂缓」，计划执行等于白跑；
+        #      ③ django-q 把这 7 个任务里的 5 个记为 Failure。
+        #    这里统一收敛为 **结果码列表**：
+        #      · list → 直接展开（元素本就是 case_logs_obj.result，见本文件 :442）
+        #      · int  → 是 CaseRunLog.id，必须回查它对应的 result 再装进 results。
+        #        不回查的后果（2026-09-16 实测）：`is_success = set(results) == {1}`
+        #        变成拿一堆日志主键去比 {1}，恒为假 → 即使全部脚本用例都成功
+        #        （日志 result=1），也永远走 else 分支落到 TESTING，
+        #        计划用例状态停在「进行中」，拿不到「已通过」。
+        #        注意这个缺陷极具迷惑性：只有 log id 恰好等于 1 时才会判真。
+        if isinstance(result, list):
+            results = results + result
+        else:
+            code = CaseRunLog.objects.filter(id=result).values_list('result', flat=True).first()
+            results.append(code if code is not None else CaseRunLog.CaseResult.ERROR)
 
     # 判断测试结果
 

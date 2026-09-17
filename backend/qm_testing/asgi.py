@@ -11,11 +11,11 @@ from channels.auth import AuthMiddlewareStack
 # 与 manage.py 保持一致：根据 RUN_ENV 选择 settings 模块(daphne 不经过 manage.py)
 ENV = os.environ.get('RUN_ENV', 'dev')
 SETTINGS_BY_ENV = {
-    'dev': 'black_bag.settings_dev',
-    'pro': 'black_bag.settings_pro',
-    'docker': 'black_bag.settings_docker',
+    'dev': 'qm_testing.settings_dev',
+    'pro': 'qm_testing.settings_pro',
+    'docker': 'qm_testing.settings_docker',
 }
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', SETTINGS_BY_ENV.get(ENV, 'black_bag.settings_dev'))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', SETTINGS_BY_ENV.get(ENV, 'qm_testing.settings_dev'))
 
 # 先初始化 Django 以注册所有 app
 django_asgi_app = get_asgi_application()

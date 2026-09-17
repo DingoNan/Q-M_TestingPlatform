@@ -82,10 +82,10 @@ MIDDLEWARE = [
     'apps.audit.middleware.AuditLogMiddleware',
 ]
 
-ROOT_URLCONF = 'black_bag.urls'
+ROOT_URLCONF = 'qm_testing.urls'
 
 # Channels 配置
-ASGI_APPLICATION = 'black_bag.asgi.application'
+ASGI_APPLICATION = 'qm_testing.asgi.application'
 
 # Redis 地址(本地开发默认 127.0.0.1，Docker 内用服务名 redis)
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
@@ -123,7 +123,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'black_bag.wsgi.application'
+WSGI_APPLICATION = 'qm_testing.wsgi.application'
 
 
 # Database
@@ -376,7 +376,9 @@ MEDIA_URL = '/upload_files/'  # 图片的访问 URL 前缀
 
 # Django Q2 配置
 Q_CLUSTER = {
-    'name': 'black_bag',
+    # 队列名（Redis key 前缀）。重命名后，旧队列中尚未消费的任务不会被新队列消费，
+    # 升级前请先确认无待处理任务。
+    'name': 'qm_testing',
     'workers': 2,
     'recycle': 500,
     'timeout': 3600,

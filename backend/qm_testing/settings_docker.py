@@ -30,8 +30,8 @@ DATABASES = {
         'HOST': os.environ.get('MYSQL_HOST', 'mysql'),
         'PORT': os.environ.get('MYSQL_PORT', '3306'),
         'USER': os.environ.get('MYSQL_USER', 'root'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'blackbag'),
-        'NAME': os.environ.get('MYSQL_DATABASE', 'blackbag'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'qm_testing'),
+        'NAME': os.environ.get('MYSQL_DATABASE', 'qm_testing'),
         'OPTIONS': {
             'charset': 'utf8mb4',
             # 会话级提升排序/读取缓冲，防止大 JSON 字段排序时触发
@@ -49,7 +49,9 @@ DATABASES = {
 
 # ===== Django Q2：Redis 配置（从环境变量读取）=====
 Q_CLUSTER = {
-    'name': 'black_bag',
+    # 队列名（Redis key 前缀）。重命名后，旧队列中尚未消费的任务不会被新队列消费，
+    # 升级前请先确认无待处理任务。
+    'name': 'qm_testing',
     'workers': 2,
     'recycle': 500,
     'timeout': 3600,

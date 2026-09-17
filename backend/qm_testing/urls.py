@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from black_bag.settings import MEDIA_URL, MEDIA_ROOT
+from qm_testing.settings import MEDIA_URL, MEDIA_ROOT
 from django.conf.urls.static import static
 from apps.interfaces import views
 from django.urls import path, include, re_path

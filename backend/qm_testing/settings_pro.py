@@ -21,6 +21,6 @@ DATABASES = {
         'PORT': 33306,
         'USER': 'root',
         'PASSWORD': 'Test#Platform',
-        'NAME': 'blackbag',
+        'NAME': 'qm_testing',
     }
 }

@@ -1,5 +1,5 @@
 """
-WSGI config for black_bag project.
+WSGI config for qm_testing project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

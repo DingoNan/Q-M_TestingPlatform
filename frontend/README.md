@@ -1,4 +1,4 @@
-# black_bag_web
+# qm_testing_web
 
 ## Project setup
 ```

@@ -115,7 +115,10 @@ class CaseSteps(BaseModel):
     class Meta:
         db_table = 'tb_case_steps'
         verbose_name = '用例步骤表'
-        ordering = ['step_index']
+        # ★ 排序键必须是「全序」：只用 step_index 时，不同用例之间的 step_index 大量重复
+        #   （每个用例都是 0/1/2…），相同键的记录顺序由数据库决定，LIMIT/OFFSET 分页会
+        #   跨页重复与漏行（实测总 565 条、page_size=500 时复现）。补 case_id、id 兜底。
+        ordering = ['case_id', 'step_index', 'id']
         verbose_name_plural = verbose_name
 
 

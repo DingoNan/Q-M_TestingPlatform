@@ -38,6 +38,13 @@ def get_enum_map(env_id):
 def get_function_params(function_name):
     """
     获取函数名,函数参数类型,函数参数默认值
+
+    【健壮性修复】原实现有三处会直接把异常抛到接口层（前端只看到「系统内部异常」）：
+      1) func_desc[index + 1] —— 参数说明行少于参数个数时 IndexError；
+      2) ParamsTypeMap[param.annotation] —— 入参未标注类型或标注了 map 之外的类型时 KeyError；
+      3) func_desc[index + 1][len(name) + 1:] —— 说明行比参数名短时切片结果为空但不报错（保留）。
+    现统一改为：说明缺失给空串，类型无法识别给可读的 ValueError
+    （由 apps/scripts/serializers.py 统一转成 400 + 可读原因）。
     """
     a = inspect.signature(function_name).parameters
     func_desc = [new_str.strip() for new_str in function_name.__doc__.strip().split('\n')] if function_name.__doc__ else None
@@ -49,8 +56,19 @@ def get_function_params(function_name):
             continue
         params_info = dict()
         params_info['function_name'] = function_name.__name__
-        params_info['explain'] = func_desc[index + 1][len(name) + 1:] if func_desc else ''
+        # 参数说明：docstring 第 index+1 行，约定格式为「参数名 : 说明」
+        if func_desc and len(func_desc) > index + 1 and func_desc[index + 1].startswith(name):
+            params_info['explain'] = func_desc[index + 1][len(name) + 1:]
+        else:
+            params_info['explain'] = ''
         params_info['name'] = name
+        if param.annotation not in ParamsTypeMap:
+            raise ValueError(
+                '函数「%s」的入参「%s」缺少类型标注或类型不受支持（当前标注：%s）。'
+                '请在函数体中把入参写成「%s: str」这类带类型注解的形式，'
+                '支持类型：%s' % (function_name.__name__, name,
+                                  param.annotation if param.annotation is not inspect.Parameter.empty else '无',
+                                  name, '、'.join(t.__name__ for t in ParamsTypeMap.keys())))
         params_info['type'] = ParamsTypeMap[param.annotation]
         # 判断参数是否有默认值
         if param.default != param.empty:
@@ -421,6 +439,28 @@ def get_attr(case_params: CaseParams, case_logs_obj, attr_name):
         raise e
 
 
+def to_bracket_jsonpath(json_path):
+    """
+    把 $.a.b.136.c 这种点号写法转成 $['a']['b']['136']['c'] 方括号写法。
+
+    背景：本平台把每一步的响应按 case_step_id 存成字典，形如
+    {'stepResponse': {'136': {'apiResponseBody': {...}}}}。
+    用点号写法 $.stepResponse.136.apiResponseBody.xxx 时，jsonpath 会把 "136" 当成
+    列表下标去取，字典键取不到 → 引用解析失败。
+    返回 None 表示该路径不适合转换（非 $. 开头或存在空段）。
+    """
+    if not isinstance(json_path, str) or not json_path.startswith('$.'):
+        return None
+    segments = json_path[2:].split('.')
+    if not segments or any(seg == '' for seg in segments):
+        return None
+    bracket_path = '$'
+    for seg in segments:
+        escaped = seg.replace('\\', '\\\\').replace("'", "\\'")
+        bracket_path += "['%s']" % escaped
+    return bracket_path
+
+
 def replace_params_class_data(case_params: CaseParams, case_logs_obj, original_data, pattern=r'\${.*?}'):
     """
     替换用例中URL， Method， Headers， Data， Params，Json， 断言中的数据，通过正则， 默认的替换规规是${}
@@ -434,17 +474,27 @@ def replace_params_class_data(case_params: CaseParams, case_logs_obj, original_d
         extra_result, extra_data = extract_by_jsonpath(case_params.__dict__, extra_json_path, case_logs_obj, is_contains=True)
         if extra_result:
             return str(extra_data)
+        # 兼容「字典键是数字形态」的引用：
+        # ${stepResponse.136.apiResponseBody.token} 里 136 是字典键而非列表下标，
+        # 点号写法解析不到会错误地落到下面的枚举分支，最终抛
+        # DoesNotExist → ParseParamsException，把整步判成 error。
+        # 这里退化为方括号写法再试一次，命中即返回；仍失败才走枚举/报错。
+        bracket_path = to_bracket_jsonpath(extra_json_path)
+        if bracket_path:
+            bracket_result, bracket_data = extract_by_jsonpath(case_params.__dict__, bracket_path,
+                                                              case_logs_obj, is_contains=True)
+            if bracket_result:
+                return str(bracket_data)
         # 匹配枚举值
-        else:
-            try:
-                extra_json_list = extra_json_path.split('.')
-                enum_obj = EnumScript.objects.get(is_delete=False, name=extra_json_list[1])
-                for params in enum_obj.value:
-                    if params.get('name') == extra_json_list[2]:
-                        return params.get('value')
-                raise  ParseParamsException(extra_json_path)
-            except Exception:
-                raise  ParseParamsException(extra_json_path)
+        try:
+            extra_json_list = extra_json_path.split('.')
+            enum_obj = EnumScript.objects.get(is_delete=False, name=extra_json_list[1])
+            for params in enum_obj.value:
+                if params.get('name') == extra_json_list[2]:
+                    return params.get('value')
+            raise  ParseParamsException(extra_json_path)
+        except Exception:
+            raise  ParseParamsException(extra_json_path)
 
     return re.sub(r'\S1{.*?}', inner_replace, re.sub(pattern, inner_replace, original_data))
 

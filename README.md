@@ -10,7 +10,7 @@
 Q·M 测试平台/
 ├── backend/                # 后端：Django + DRF + Django-Q + LangGraph(AI)
 │   ├── apps/               # 业务应用（users/projects/interfaces/tests/ai_service ...）
-│   ├── black_bag/          # Django 项目配置（settings_dev / settings_pro / settings_docker）
+│   ├── qm_testing/         # Django 项目配置（settings_dev / settings_pro / settings_docker）
 │   ├── core/               # 自动化引擎（接口/UI/性能/数据驱动）
 │   ├── utils/             # 公共工具
 │   ├── requirements.txt
@@ -238,9 +238,9 @@ docker compose down -v                # 停止并清空数据（慎用，会删�
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `MYSQL_ROOT_PASSWORD` | `blackbag_root` | MySQL root 密码 |
-| `MYSQL_DATABASE` | `blackbag` | 业务库名 |
-| `MYSQL_USER` / `MYSQL_PASSWORD` | `blackbag` / `blackbag` | 业务库账号 |
+| `MYSQL_ROOT_PASSWORD` | `qm_root` | MySQL root 密码 |
+| `MYSQL_DATABASE` | `qm_testing` | 业务库名 |
+| `MYSQL_USER` / `MYSQL_PASSWORD` | `qm_testing` / `qm_testing` | 业务库账号 |
 | `REDIS_PASSWORD` | （空） | Redis 密码，留空则内网无密码 |
 | `DJANGO_DEBUG` | `false` | 生产环境保持 `false` |
 

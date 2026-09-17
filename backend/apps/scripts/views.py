@@ -8,7 +8,7 @@ from apps.scripts.filters import PythonScriptFilter, EnumScriptFilter, FileFilte
 from apps.scripts.models import PythonScript, EnumScript, File
 from apps.scripts.serializers import PythonScriptSerializers, EnumScriptSerializers, FileSerializers
 from utils.base_view import BaseModelViewSet
-from black_bag.settings import BASE_DIR
+from qm_testing.settings import BASE_DIR
 
 
 class PythonScriptViewSet(BaseModelViewSet):

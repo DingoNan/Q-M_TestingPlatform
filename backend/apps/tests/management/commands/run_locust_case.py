@@ -21,7 +21,7 @@ from apps.reports.models import LocustReport
 
 
 def pid_file_path(report_id):
-    from black_bag.settings import BASE_DIR
+    from qm_testing.settings import BASE_DIR
     return os.path.join(BASE_DIR, 'logs', 'locust_%s.pid' % report_id)
 
 

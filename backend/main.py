@@ -719,7 +719,7 @@ class TestConfigApp(QWidget):
 
 if __name__ == '__main__':
     # 先注释掉 core/system_function/faker.py 中的inspect.getsource
-    # 打包命令：pyinstaller -F --icon=./core/locust/locust.ico --name QMTestPlatform  main.py
+    # 打包命令：pyinstaller -F --icon=./core/locust/locust.ico --name QM_Test  main.py
     app = QApplication(sys.argv)
     window = TestConfigApp()
     window.show()

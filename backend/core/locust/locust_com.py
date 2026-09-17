@@ -355,6 +355,32 @@ def get_attr(case_params: CaseParams, attr_name):
         raise e
 
 
+def to_bracket_jsonpath(json_path):
+    """
+    把 $.a.b.136.c 这种点号写法转成 $['a']['b']['136']['c'] 方括号写法。
+
+    ★ 与同步链路 core/com/common.py::to_bracket_jsonpath 保持同一实现：
+      平台把每一步的响应按 case_step_id 存成**字典**，形如
+      {'stepResponse': {'136': {'apiResponseBody': {...}}}}。
+      用点号写法 $.stepResponse.136.apiResponseBody.xxx 时，jsonpath 会把 "136"
+      当成列表下标，字典键取不到 → 跨步骤引用解析失败。
+      同步链路已修此问题，但压测链路（本文件）漏了，
+      表现为压测时 `${stepResponse.<id>.apiResponseBody.data.token}` 解析失败，
+      请求头拿不到 Token → 目标接口全部 **401**（同步执行同一用例却正常）。
+    返回 None 表示该路径不适合转换（非 $. 开头或存在空段）。
+    """
+    if not isinstance(json_path, str) or not json_path.startswith('$.'):
+        return None
+    segments = json_path[2:].split('.')
+    if not segments or any(seg == '' for seg in segments):
+        return None
+    bracket_path = '$'
+    for seg in segments:
+        escaped = seg.replace('\\', '\\\\').replace("'", "\\'")
+        bracket_path += "['%s']" % escaped
+    return bracket_path
+
+
 def replace_params_class_data(case_params: CaseParams, original_data, pattern=r'\${.*?}'):
     """
     替换用例中URL， Method， Headers， Data， Params，Json， 断言中的数据，通过正则， 默认的替换规规是${}
@@ -369,9 +395,17 @@ def replace_params_class_data(case_params: CaseParams, original_data, pattern=r'
         extra_result, extra_data = extract_by_jsonpath(case_params.__dict__, extra_json_path, is_contains=True)
         if extra_result:
             return str(extra_data)
+        # ★ 兼容「字典键是数字形态」的引用（与同步链路 core/com/common.py 对齐）：
+        #   见 to_bracket_jsonpath 的说明。缺这段兼容时压测链路的跨步骤引用会直接抛
+        #   ParseParamsException，请求头里的 Token 无法注入 → 目标接口 401。
+        bracket_path = to_bracket_jsonpath(extra_json_path)
+        if bracket_path:
+            bracket_result, bracket_data = extract_by_jsonpath(case_params.__dict__, bracket_path,
+                                                               is_contains=True)
+            if bracket_result:
+                return str(bracket_data)
         # 匹配枚举值
-        else:
-            raise ParseParamsException(extra_json_path)
+        raise ParseParamsException(extra_json_path)
 
     return re.sub(r'\S1{.*?}', inner_replace, re.sub(pattern, inner_replace, original_data))
 

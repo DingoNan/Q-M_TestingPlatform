@@ -72,7 +72,45 @@ class StepSerializer(BaseSerializer):
         is_request_step = (step_type == 5) or (step_type == 3 and com_step_type == 5)
         if is_request_step:
             assert_api_reference_allowed(attrs.get('keyword'))
+        # 注意：方法名不能叫 validate_check_params —— DRF 会把它当成 check_params 字段的
+        # 字段级校验器，传入的是字段值(list)而非 attrs，导致 "'list' object has no attribute 'get'"。
+        self.check_check_params_structure(attrs)
         return attrs
+
+    def check_check_params_structure(self, attrs):
+        """
+        保存期校验断言参数结构。
+
+        断言项必须是 {exp_value, act_value, method} 三元组，method 取自执行引擎支持的方法表。
+        旧实现保存期完全不做校验：结构写错（例如用 {key, value, type}）能保存成功，
+        直到运行期才抛 KeyError，而且错误标题显示的是 KeyError 的 __doc__
+        （界面上就一句「Mapping key not found.」），用户根本无法定位。
+        这里在保存期就把问题拦下来，并给出正确结构示例。
+        """
+        check_params = attrs.get('check_params', getattr(self.instance, 'check_params', None))
+        if not check_params:
+            return
+        if not isinstance(check_params, list):
+            raise ValidationError('断言参数(check_params)必须是列表，当前为 %s' % type(check_params).__name__)
+        # 延迟导入，避免模块级循环依赖
+        from core.com.check import CHECK_TEXT
+        for index, item in enumerate(check_params):
+            position = index + 1
+            if not isinstance(item, dict):
+                raise ValidationError('断言参数第 %d 项必须是对象，当前为 %s' % (position, type(item).__name__))
+            missing = [key for key in ('exp_value', 'act_value', 'method') if key not in item]
+            if missing:
+                raise ValidationError(
+                    '断言参数第 %d 项缺少必需字段：%s。正确结构为 '
+                    '{"exp_value": "预期值", "act_value": "实际值", "method": "check_equal"}，'
+                    '当前字段为：%s' % (position, '、'.join(missing),
+                                       '、'.join(sorted(item.keys())) or '空对象'))
+            method = item.get('method')
+            if method not in CHECK_TEXT:
+                raise ValidationError(
+                    '断言参数第 %d 项的 method「%s」不是支持的校验方法，可选值：%s'
+                    % (position, method, '、'.join(sorted(CHECK_TEXT.keys()))))
+        return
 
 
 class CaseSerializer(BaseSerializer):

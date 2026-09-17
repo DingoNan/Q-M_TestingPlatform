@@ -79,7 +79,7 @@ REM ===== Start services =====
 set VENV_PY=%BACKEND_DIR%\.venv\Scripts\python.exe
 
 echo [1/3] Starting Backend Uvicorn (port 8000)...
-start "Q·M 测试平台 - Backend (8000)" cmd /k "cd /d "%BACKEND_DIR%" && set RUN_ENV=dev && "%VENV_PY%" -m uvicorn black_bag.asgi:application --host 0.0.0.0 --port 8000"
+start "Q·M 测试平台 - Backend (8000)" cmd /k "cd /d "%BACKEND_DIR%" && set RUN_ENV=dev && "%VENV_PY%" -m uvicorn qm_testing.asgi:application --host 0.0.0.0 --port 8000"
 
 echo [2/3] Starting Q Worker (async tasks)...
 start "Q·M 测试平台 - Q Worker" cmd /k "cd /d "%BACKEND_DIR%" && "%VENV_PY%" manage.py qcluster"

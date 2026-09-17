@@ -6,10 +6,10 @@ services:
     container_name: qm-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-blackbag_root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-blackbag}
-      MYSQL_USER: ${MYSQL_USER:-blackbag}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-blackbag}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-qm_root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qm_testing}
+      MYSQL_USER: ${MYSQL_USER:-qm_testing}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qm_testing}
       TZ: Asia/Shanghai
     command:
       - --character-set-server=utf8mb4
@@ -20,7 +20,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-blackbag_root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-qm_root}"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -85,9 +85,9 @@ services:
       DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-blackbag}
-      MYSQL_USER: ${MYSQL_USER:-blackbag}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-blackbag}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qm_testing}
+      MYSQL_USER: ${MYSQL_USER:-qm_testing}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qm_testing}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -97,7 +97,7 @@ services:
       - ./backend/logs:/app/logs
       - backend_chroma:/app/chroma_db
       - backend_uploads:/app/upload_files
-      # 分布式压测客户端（可选，体积大，不进镜像）：把 QMTestPlatform.exe / BlackBagTest.exe
+      # 分布式压测客户端（可选，体积大，不进镜像）：把 QM_Test.exe（或 QMTestPlatform.exe）
       # 放到项目根目录的 client/ 下即可被「压测工具下载」提供；缺失时接口会返回明确提示。
       - ./client:/app/client:ro
     ports:

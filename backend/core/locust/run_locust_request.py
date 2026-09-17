@@ -9,6 +9,9 @@ from core.locust.locust_com import (
     CaseParams
 )
 from core.locust.check import loop_assert_by_check_list
+# ★ 原文件遗漏该导入：exec_and_return 里用到 parse_user_function 却从未导入，
+#   导致压测链路上带脚本的步骤直接 NameError。
+from core.step.run_python_script import parse_user_function
 
 
 def exec_and_return(manager_obj, script_code, case_params, sys_function):
@@ -16,11 +19,18 @@ def exec_and_return(manager_obj, script_code, case_params, sys_function):
         python_func_objs, script_code = parse_user_function(script_code)
         session = manager_obj.session_manager
         selenium = manager_obj.driver_manager
-        if parse_user_function(script_code):
+        # ★ 修复两处缺陷（与 core/step/run_python_script.py 同源）：
+        #   ① `parse_user_function` 在本文件中**既没定义也没导入** → 压测链路上任何带脚本的
+        #      步骤都会直接 NameError。此处补导入（见文件头部）。
+        #   ② `if parse_user_function(script_code):` 是对已剥离前缀的脚本二次解析，永远为假
+        #      → 用户函数注入块是死代码；且 `exec(..., locals())` 的临时命名空间互相不可见。
+        #      改为用首次解析结果判断，并让用户函数与步骤脚本共用同一个命名空间。
+        ns = dict(locals())
+        if python_func_objs:
             for python_func_obj in python_func_objs:
-                exec(python_func_obj.package)
-                exec(python_func_obj.script, locals())
-        exec(script_code, locals())
+                exec(python_func_obj.package or '', ns)
+                exec(python_func_obj.script or '', ns)
+        exec(script_code, ns)
 
 
 def run_python_script(manager_obj, env_id, step, case_params, run_times):

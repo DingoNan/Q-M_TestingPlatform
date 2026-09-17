@@ -33,7 +33,7 @@ echo "from create_super_user import create_super_user; create_super_user();" | p
 echo "[entrypoint] closing database connections ..."
 python - <<'PY'
 import django, os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'black_bag.settings_docker'))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.environ.get('DJANGO_SETTINGS_MODULE', 'qm_testing.settings_docker'))
 django.setup()
 from django.db import connections
 connections.close_all()

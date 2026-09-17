@@ -6,9 +6,9 @@ import sys
 ENV = os.environ.get('RUN_ENV', 'dev')
 
 ENVIRONMENT = {
-    'dev': 'black_bag.settings_dev',
-    'pro': 'black_bag.settings_pro',
-    'docker': 'black_bag.settings_docker',
+    'dev': 'qm_testing.settings_dev',
+    'pro': 'qm_testing.settings_pro',
+    'docker': 'qm_testing.settings_docker',
 }
 
 

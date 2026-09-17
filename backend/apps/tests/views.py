@@ -22,7 +22,7 @@ from apps.users.models import User
 from apps.reports.models import LocustReport
 from apps.messages.models import Message
 from apps.interfaces.models import Api
-from black_bag.settings import BASE_DIR
+from qm_testing.settings import BASE_DIR
 from apps.tests.serializers import CaseSerializer, StepSerializer, CaseRunLogsSerializers, TagSerializer,\
     CaseStepsSerializer, CaseDetailSerializer, CaseStepSerializer, RunCaseSerializer, FuncCaseSerializer
 from utils.base_view import BaseModelViewSet
@@ -260,6 +260,31 @@ class CaseStepsViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
 
+    def get_queryset(self):
+        """
+        ★ 两个修复点：
+
+        1) 支持 `?case=<id>` 过滤。本 ViewSet 此前没有 filterset，查询参数被**静默忽略**，
+           调用方（用例详情页、脚本化重建步骤）只能拉全量再在客户端过滤 —— 数据量一大
+           既慢又容易出错。
+
+        2) 显式稳定排序。模型 `Meta.ordering = ['step_index']` 只有单键，而 step_index
+           在不同用例之间大量重复（每个用例都有 0/1/2…），仅按它排序时相同键的物理顺序
+           由数据库决定。在 LIMIT/OFFSET 分页下表现为**跨页重复与漏行**：
+           实测总数 565、page_size=500 时，同一条记录在第 1、2 页各出现一次，
+           另有记录完全读不到。调用方据此删除步骤会「删不干净」，残留的旧步骤与新步骤
+           混在一起执行 —— 现象就是同一用例里「输入用户名」出现两次、step_index 从 1 开始。
+           这里补上 (case_id, step_index, id) 构成全序键。
+        """
+        queryset = super().get_queryset()
+        case_id = self.request.query_params.get('case')
+        if case_id:
+            queryset = queryset.filter(case_id=case_id)
+        step_index = self.request.query_params.get('step_index')
+        if step_index:
+            queryset = queryset.filter(step_index=step_index)
+        return queryset.order_by('case_id', 'step_index', 'id')
+
 
 class StepViewSet(BaseModelViewSet):
     serializer_class = StepSerializer
@@ -294,9 +319,19 @@ class StepViewSet(BaseModelViewSet):
         fail_is_continue = request.data.pop('fail_is_continue', None)
         user = self.request.user
         case_step_ids = self.kwargs.get('pk')
-        case_id = case_step_ids.split('_')[0]
-        step_id = case_step_ids.split('_')[1]
-        case_step_id = int(case_step_ids.split('_')[2])
+        # 步骤主键是「组合主键」而不是单列 id：格式必须是 case_id_step_id_case_step_id。
+        # 旧实现直接 case_step_ids.split('_')[1]，调用方按 REST 习惯传单个数字 id 时
+        # 抛 IndexError → 500「系统内部异常」，看不出到底是哪儿错了。
+        # 这里改为显式 400 + 可读原因（前端传的是 `${case_id}_${step_id}_${case_step_id}`）。
+        key_parts = str(case_step_ids).split('_')
+        if len(key_parts) != 3 or not all(p.strip().isdigit() for p in key_parts):
+            return Response({
+                'code': 400, 'msg': 'error',
+                'result': {'pk': ['步骤主键格式不正确，应为「用例ID_步骤ID_用例步骤ID」三段数字，'
+                                  '当前值：%s' % case_step_ids]}}, status=400)
+        case_id = key_parts[0]
+        step_id = key_parts[1]
+        case_step_id = int(key_parts[2])
         self.kwargs['pk'] = step_id
         # 走非公共步骤逻辑
         if step_type != StepType.ComStep:
@@ -843,8 +878,8 @@ def get_init_data(request: Request):
 
 # 分布式压测客户端产物的候选文件名与查找目录。
 # 说明：打包产物（PyQt5 桌面客户端 exe）体积大、已移出版本控制与 .dockerignore，
-# 需由管理员放到服务端；历史上出现过 QMTestPlatform.exe / BlackBagTest.exe 两种命名，故均兼容。
-CLIENT_FILE_NAMES = ('QMTestPlatform.exe', 'BlackBagTest.exe')
+# 需由管理员放到服务端；约定名为 QM_Test.exe，兼容过渡期的 QMTestPlatform.exe。
+CLIENT_FILE_NAMES = ('QM_Test.exe', 'QMTestPlatform.exe')
 
 
 def find_client_file():
