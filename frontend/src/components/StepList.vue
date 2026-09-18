@@ -851,6 +851,9 @@ export default{
 		},
 		
 		async getCases(){
+		  // project 缺失时后端会按 project=None 过滤，命中 0 条但不报错 ——
+		  // 与其查空误导用户，不如不查（页面会由 resolveProjectOrWarn 给出明确提示）。
+		  if (!(this.projectInfo && this.projectInfo.id)) return
 		  this.caseSearch.project = this.projectInfo.id
 		  this.caseSearch.module = (this.stepSearch.module_list || []).join(',')
 		  const response = await this.$api.getCases(this.caseSearch)
@@ -927,10 +930,46 @@ export default{
 		},
 		
 		async getPlantModule(){
-		  const response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
-		  if (response.status === 200){
-		    this.plant_module_list = response.data.results
+		  // 模块树接口在后端是按 project 硬过滤的（Plant.objects.filter(project=...))，
+		  // project 缺失时会命中 0 条、返回空数组，接口本身仍是 200 —— 表现为「模块管理下没有内容」。
+		  // 因此这里先确保项目上下文可用（三层兜底），再发请求。
+		  let response = await this.$api.getAllPlantModule({project: this.projectInfo && this.projectInfo.id})
+		  // 空结果且确实没有项目上下文 → 先尝试自动恢复一次，再重查
+		  if (response.status === 200 && !(response.data.results || []).length
+		      && !(this.projectInfo && this.projectInfo.id)) {
+		    const r = await this.resolveProjectOrWarn({ silent: true })
+		    if (r.ok) {
+		      response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+		    }
 		  }
+		  if (response.status === 200){
+		    this.plant_module_list = response.data.results || []
+		    // 仍为空且无项目上下文 —— 不再静默空白，明确告知原因
+		    if (!this.plant_module_list.length && !(this.projectInfo && this.projectInfo.id)) {
+		      this.resolveProjectOrWarn()
+		    }
+		  }
+		},
+
+		// 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
+		// silent=true 时不弹提示（用于「先静默尝试自动恢复」的场景）。
+		async resolveProjectOrWarn({ silent = false } = {}) {
+		  const r = await this.$store.dispatch('resolveProject')
+		  if (!r.ok && !silent) {
+		    const msgMap = {
+		      'multi-project': '检测到多个项目，请先进入「我的项目」选择要操作的项目',
+		      'empty': '当前账号没有可访问的项目，请先在「我的项目」中创建或申请项目',
+		      'no-token': '登录状态已失效，请重新登录',
+		      'error': '获取项目信息失败，请先进入「我的项目」选择项目'
+		    }
+		    ElMessage({
+		      type: 'warning',
+		      duration: 5000,
+		      showClose: true,
+		      message: msgMap[r.reason] || '请先进入「我的项目」选择项目'
+		    })
+		  }
+		  return r
 		},
 		
 		handleSortChange(column) {
@@ -1068,7 +1107,10 @@ export default{
 			}
 		},
 	},
-	created() {
+	async created() {
+		// 先恢复项目上下文，再加载依赖 project 的数据 ——
+		// 否则模块树/用例列表会因 project 缺失而查空（且不报错）。
+		await this.resolveProjectOrWarn({ silent: true })
 		this.check_permission()
 		const node = JSON.parse(localStorage.getItem('case_node'))
 		if (node) {

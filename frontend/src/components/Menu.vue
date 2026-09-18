@@ -1055,6 +1055,14 @@ export default {
 	  },
 	  
 	  async getRole(){
+		  // 项目上下文缺失时直接返回：
+		  // 原实现要读 this.projectInfo.create_by 与 .id，projectInfo 为 '' 时会抛
+		  // TypeError（Cannot read properties of undefined），整块菜单渲染中断。
+		  // 这里改为先兜底恢复一次；仍拿不到则跳过菜单加载，等上下文就绪后由 watch 触发。
+		  if (!(this.projectInfo && this.projectInfo.id)) {
+			  const r = await this.$store.dispatch('resolveProject')
+			  if (!r.ok) return
+		  }
 		  let requeset_role_id = this.role_id
 		  if (requeset_role_id === null){
 		  	 return
@@ -1104,6 +1112,11 @@ export default {
           if (!this.showUser && newVal?.id) {
             this.fetchUnreadCount()
             this.fetchMessages()
+            // 上下文可能是异步兜底恢复出来的：此前 created 里若有项目为空会跳过菜单加载，
+            // 这里补一次，保证侧边栏菜单最终一定渲染出来。
+            if (!this.menus || !(this.menus instanceof Array) || !this.menus.length) {
+              this.getRole()
+            }
           }
         },
         deep: true,

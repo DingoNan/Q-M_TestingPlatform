@@ -272,8 +272,15 @@ async function hasPermission(path){
 	}
 	let permission_map = store.state.pathPermission
 	const user_id = store.state.user_id
-	const project_id = store.state.projectInfo.id
-	if (!permission_map[path]) {
+	const project_id = store.state.projectInfo && store.state.projectInfo.id
+	// 项目上下文缺失时不具备校验前提：
+	// 原实现会带着 project_id=undefined 请求后端并大概率拿到 has_permission=false，
+	// 把用户误导航到「无权限」页 —— 但那其实只是上下文没恢复，不是真的没权限。
+	// 这里放行，交由页面兜底逻辑提示「请先选择项目」。
+	if (!project_id) {
+		return true
+	}
+	if (!permission_map || !permission_map[path]) {
 		return false
 	}
 	const response =  await check_permission({user_id: user_id, project_id: project_id, permission_id: permission_map[path]})
@@ -284,18 +291,49 @@ async function hasPermission(path){
 }
 
 
-// 设置路由导航守卫ie，控制前端路由访问的权限
-router.beforeEach((to, from, next) =>{
+// 设置路由导航守卫，控制前端路由访问的权限
+// 改造点：原实现直接在守卫里读 store.state.projectInfo.id，
+// 该值一旦为空（刷新内页/新开标签页/换账号），权限校验会带着 project_id=undefined
+// 去请求后端，且依赖 project 的页面会静默查空。
+// 现改为：进入「项目内页面」时先走一次 resolveProject 三层兜底，
+// 恢复出项目上下文后再校验权限，避免「能进页面但内容全空」。
+router.beforeEach(async (to, from, next) => {
 	const token = window.localStorage.getItem('token')
-	if(token){
-		next()
-	}else{
-		if (to.name === 'login' || to.name ==='navigation' || to.name ==='help' || to.name === 'noPermission' || to.name === 'register'){
+	if (!token) {
+		if (to.name === 'login' || to.name === 'navigation' || to.name === 'help' || to.name === 'noPermission' || to.name === 'register') {
 			next()
-		}else{
-			next({name: 'login'})
+		} else {
+			next({ name: 'login' })
 		}
-		
+		return
+	}
+
+	// 系统层页面与免校验页面：直接放行，不触发项目上下文恢复
+	const loginFreeList = ['/user/login', '/user/help', '/user/navigation', '/projectManager', '/project/index', '/myProjects', '/project/list', '/project/appeal', '/project/myAppeal', '/project/systemSetting', '/project/tools', '/user/auditLog']
+	if (loginFreeList.includes(to.path)) {
+		next()
+		return
+	}
+
+	// 项目内页面：确保项目上下文可用（三层兜底），再做权限校验
+	if (!store.state.projectInfo || !store.state.projectInfo.id) {
+		try {
+			await store.dispatch('resolveProject')
+		} catch (e) {
+			// 兜底失败不阻断导航，交由页面自身给出提示
+		}
+	}
+
+	try {
+		const allowed = await hasPermission(to.path)
+		if (allowed) {
+			next()
+		} else {
+			next({ name: 'noPermission', query: { from: to.fullPath } })
+		}
+	} catch (e) {
+		// 权限接口异常时放行，避免因校验失败导致整站不可用
+		next()
 	}
 })
 export default router
