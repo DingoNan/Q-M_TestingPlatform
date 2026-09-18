@@ -1,0 +1,15 @@
+.git/
+.gitignore
+node_modules/
+dist/
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+
+# 构建产物与编排文件，不需要进入镜像（dist 由构建阶段重新生成）
+Dockerfile
+.dockerignore
+docker-compose*.yml

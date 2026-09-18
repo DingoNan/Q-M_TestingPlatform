@@ -1,0 +1,206 @@
+/* ============================================================
+   Q·M 测试平台 · 设计系统
+   深色科技风 · 强调色 #F59E0B (Locust 橙)
+   通过 html.dark 切换深浅主题
+   ============================================================ */
+
+/* ===== Element Plus 主色覆盖（Locust 橙） ===== */
+:root {
+  --el-color-primary: #f59e0b;
+  --el-color-primary-light-3: #f7b84c;
+  --el-color-primary-light-5: #f9c970;
+  --el-color-primary-light-7: #fcdda4;
+  --el-color-primary-light-8: #fde8c4;
+  --el-color-primary-light-9: #fef3df;
+  --el-color-primary-dark-2: #d97706;
+
+  --el-color-success: #34d399;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: #f87171;
+  --el-color-info: #a7aebd;
+}
+
+/* ===== Q·M 语义变量（浅色为默认） ===== */
+:root {
+  --qm-bg-0: #ffffff;
+  --qm-bg-1: #f5f7fa;
+  --qm-bg-2: #ffffff;
+  --qm-bg-3: #f1f5f9;
+  --qm-bg-4: #e2e8f0;
+  --qm-line: rgba(15, 23, 42, 0.08);
+  --qm-line-strong: rgba(15, 23, 42, 0.14);
+  --qm-text-1: #1f2937;
+  --qm-text-2: #4b5563;
+  --qm-text-3: #9ca3af;
+  --qm-accent: #f59e0b;
+  --qm-accent-2: #f97316;
+  --qm-accent-soft: rgba(245, 158, 11, 0.12);
+  --qm-accent-line: rgba(245, 158, 11, 0.35);
+  /* 浅底上的强调文字专用色：亮橙 #f59e0b 在白底仅 2.15:1（不达 WCAG AA 4.5:1），
+     文字/图标场景改用深琥珀 #b45309（白底 5.05:1） */
+  --qm-accent-strong: #b45309;
+  --qm-green: #10b981;
+  --qm-red: #ef4444;
+  --qm-red-soft: #fef2f2;
+  --qm-red-soft-2: #fee2e2;
+  --qm-blue: #3b82f6;
+  --qm-info-soft: #f0f7ff;
+  --qm-warning-soft: #fffbeb;
+  --qm-warning-soft-2: #fef3c7;
+  --qm-warning-line: #fde68a;
+  --qm-radius: 12px;
+  --qm-radius-sm: 8px;
+  --qm-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* ===== 深色主题 ===== */
+html.dark {
+  --qm-bg-0: #06080c;
+  --qm-bg-1: #0a0e14;
+  --qm-bg-2: #0f141d;
+  --qm-bg-3: #151c28;
+  --qm-bg-4: #1b2432;
+  --qm-line: rgba(255, 255, 255, 0.08);
+  --qm-line-strong: rgba(255, 255, 255, 0.14);
+  /* 深色文字：按 WCAG AA 4.5:1 校准
+     text-1 纯白（原 #eef1f6 偏灰）→ 18.45:1
+     text-3 由 #697180(3.76:1 不达标) 提亮 → 5.41:1 */
+  --qm-text-1: #ffffff;
+  --qm-text-2: #c3cad6;
+  --qm-text-3: #838b9e;
+  --qm-accent: #f59e0b;
+  --qm-accent-2: #f97316;
+  --qm-accent-soft: rgba(245, 158, 11, 0.12);
+  --qm-accent-line: rgba(245, 158, 11, 0.35);
+  /* 深色底上亮橙对比度充足（约 9.8:1），文字场景沿用亮橙即可 */
+  --qm-accent-strong: #fbbf24;
+  --qm-green: #34d399;
+  --qm-red: #f87171;
+  --qm-red-soft: rgba(248, 113, 113, 0.10);
+  --qm-red-soft-2: rgba(248, 113, 113, 0.16);
+  --qm-blue: #60a5fa;
+  --qm-info-soft: rgba(96, 165, 250, 0.10);
+  --qm-warning-soft: rgba(245, 158, 11, 0.10);
+  --qm-warning-soft-2: rgba(245, 158, 11, 0.16);
+  --qm-warning-line: rgba(245, 158, 11, 0.28);
+  --qm-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== 全局基础 ===== */
+html,
+body {
+  background-color: var(--qm-bg-1);
+  color: var(--qm-text-1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+/* ===== 滚动条（全局，深色友好） ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--qm-line-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--qm-accent);
+}
+
+/* ===== 卡片/面板统一圆角阴影 ===== */
+.qm-card {
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line);
+  border-radius: var(--qm-radius);
+  box-shadow: var(--qm-shadow);
+}
+
+/* ===== Element 组件在深色下的微调（配合官方 dark css-vars） ===== */
+html.dark .el-card,
+html.dark .el-dialog,
+html.dark .el-message-box {
+  background-color: var(--qm-bg-2);
+  border-color: var(--qm-line);
+}
+
+html.dark .el-table {
+  --el-table-bg-color: var(--qm-bg-2);
+  --el-table-tr-bg-color: var(--qm-bg-2);
+  --el-table-header-bg-color: var(--qm-bg-3);
+  --el-table-border-color: var(--qm-line);
+  --el-table-row-hover-bg-color: var(--qm-bg-3);
+}
+
+/* 主色渐变按钮 */
+.el-button--primary {
+  background: linear-gradient(135deg, #f59e0b, #f97316) !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25) !important;
+}
+.el-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35) !important;
+}
+
+/* ===== 深色科技风背景氛围（主布局） ===== */
+.qm-bg-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(900px 520px at 78% -8%, rgba(245, 158, 11, 0.1), transparent 60%),
+    radial-gradient(760px 460px at 8% 12%, rgba(52, 211, 153, 0.05), transparent 60%),
+    radial-gradient(1000px 600px at 50% 108%, rgba(96, 165, 250, 0.05), transparent 60%);
+}
+.qm-bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: linear-gradient(var(--qm-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--qm-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 62% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 90% 62% at 50% 0%, #000 30%, transparent 75%);
+}
+/* 浅色主题下淡化氛围 */
+html:not(.dark) .qm-bg-glow {
+  opacity: 0.4;
+}
+html:not(.dark) .qm-bg-grid {
+  opacity: 0.15;
+}
+
+/* ============================================================
+   Q·M 重构布局 · 侧栏折叠联动
+   侧栏折叠时内容区左偏移从 220px 收窄到 64px
+   ============================================================ */
+html[data-sidebar="collapsed"] .qm-content-area {
+  margin-left: 64px !important;
+}
+
+/* ============================================================
+   主按钮可读性修正（WCAG AA）
+   原：白字 + 橙渐变 #f59e0b→#f97316 → 对比度仅 2.15:1（不达 4.5:1）
+   改：保留品牌橙渐变，文字改为近黑 #1f2937 → 6.83:1
+   选择器需压过 .confirm-dialog .el-button--primary{color:white!important} 等规则，
+   故用 html .el-button.el-button--primary（0,2,1 > 0,2,0）
+   ============================================================ */
+html .el-button.el-button--primary,
+html .el-button.el-button--primary:hover,
+html .el-button.el-button--primary:focus,
+html .el-button.el-button--primary:active,
+html .el-button.el-button--primary.is-disabled,
+html .el-button.el-button--primary.is-disabled:hover {
+  color: #1f2937 !important;
+}

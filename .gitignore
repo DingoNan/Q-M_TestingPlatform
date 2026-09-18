@@ -1,0 +1,59 @@
+# ===== Q·M 测试平台 根仓库 =====
+
+# ---------- 敏感 / 本地配置（.env.example 才入库） ----------
+.env
+.env.*
+!.env.example
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.swp
+
+# ---------- 编辑器/脚本产生的备份文件（勿入库） ----------
+*.bak
+*.bak.*
+*.orig
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- 日志 ----------
+*.log
+
+# ---------- 前端 ----------
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/coverage/
+frontend/tests/e2e/videos/
+
+# ---------- 后端 Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+backend/media/
+backend/staticfiles/
+
+# 构建缓存（Docker 基础镜像构建用，几百MB不宜入库）
+backend/.buildcache/
+
+# ---------- 测试产物（注意：不能用 report/，会误伤 frontend/src/views/report 源码目录） ----------
+*.jtl
+/allure-results/
+/.jmeter/
+
+# ---------- 打包 / 发布产物（体积大，禁止入库） ----------
+# 压测客户端产物（QM_Test.exe，约 59MB）与 packages.zip(27MB) 曾误入库，已从 git 历史中剔除，
+# 此处补规则防止再次被 add 进来（磁盘上的本地文件不受影响）。
+*.exe
+backend/packages.zip

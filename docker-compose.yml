@@ -1,0 +1,130 @@
+name: qm-test-platform
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: qm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-qm_root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qm_testing}
+      MYSQL_USER: ${MYSQL_USER:-qm_testing}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qm_testing}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --sort-buffer-size=8388608
+      - --join-buffer-size=8388608
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-qm_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - qm-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: qm-redis
+    restart: unless-stopped
+    command: >
+      sh -c 'if [ -n "$$REDIS_PASSWORD" ]; then redis-server --requirepass "$$REDIS_PASSWORD"; else redis-server; fi'
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - qm-net
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: qm-qdrant
+    # 向量库需为每个 collection/segment 的 RocksDB 打开大量文件描述符。
+    # 默认 soft nofile=1024 在 collection 数超过 ~6 个时即耗尽，
+    # 触发 "IO error: Too many open files" / "Out of sort memory"，
+    # 新建向量分块报 500，且启动时大量 collection 被跳过加载。
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - qm-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qm-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    environment:
+      RUN_ENV: docker
+      QDRANT_HOST: qdrant
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-qm_testing}
+      MYSQL_USER: ${MYSQL_USER:-qm_testing}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-qm_testing}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: "0"
+      TZ: Asia/Shanghai
+    volumes:
+      - ./backend/logs:/app/logs
+      - backend_chroma:/app/chroma_db
+      - backend_uploads:/app/upload_files
+      # 分布式压测客户端（可选，体积大，不进镜像）：把 QM_Test.exe（或 QMTestPlatform.exe）
+      # 放到项目根目录的 client/ 下即可被「压测工具下载」提供；缺失时接口会返回明确提示。
+      - ./client:/app/client:ro
+    ports:
+      - "8000:8000"
+    networks:
+      - qm-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: qm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - qm-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  qdrant_storage:
+  backend_chroma:
+  backend_uploads:
+
+networks:
+  qm-net:
+    driver: bridge

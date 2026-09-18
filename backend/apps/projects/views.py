@@ -1,0 +1,262 @@
+from django.db import transaction
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.response import Response
+from apps.projects.models import Project, ProjectAppeal, AiConfig, ProjectMsgPush, ProjectMember, ProjectGeneralSetting
+from apps.projects.serializers import ProjectSerializer, ProjectAppealSerializer, AiConfigSerializer, ProjectMsgPushSerializer, ProjectMemberSerializer, ProjectGeneralSettingSerializer
+from apps.projects.filters import ProjectFilter, ProjectAppealFilter, ProjectMsgPushFilter
+from apps.users.models import Role, RolePermission
+from utils.base import BasePageNumberPagination
+from utils.base_view import BaseModelViewSet
+from utils.cascade import cascade_soft_delete_atomic
+
+
+class ProjectViewSet(BaseModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+    filterset_class = ProjectFilter
+
+    def destroy(self, request, *args, **kwargs):
+        """删除项目：级联软删除项目下全部数据（产品/模块/环境/用例/套件/计划/缺陷等）
+
+        之前 delete 只把项目自身置为 is_delete，下游数据全部变成孤儿，列表页还能查到
+        却无从管理。这里改为递归级联软删除，并把删除明细回传给前端做二次确认后的提示。
+        """
+        instance = self.get_object()
+        # 只有项目创建者或超级管理员可以删除项目（无归属人时放行给超管之外的管理员会造成越权，故要求超管）
+        if not (request.user.is_superuser or instance.create_by_id == request.user.id):
+            return Response({'error': '只有项目创建者或超级管理员可以删除项目'}, status=403)
+
+        project_name = instance.name
+        stats = cascade_soft_delete_atomic(instance)
+        total = sum(stats.values())
+        return Response({
+            'msg': f'项目「{project_name}」及其关联数据已删除，共 {total} 条',
+            'detail': stats,
+            'total': total,
+        }, status=200)
+
+
+class AiConfigViewSet(BaseModelViewSet):
+    queryset = AiConfig.objects.all()
+    serializer_class = AiConfigSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+
+    @action(detail=True, methods=['post'])
+    def set_default(self, request, pk=None):
+        """设为默认AI供应商（同项目下其他配置自动取消默认）"""
+        config = self.get_object()
+        with transaction.atomic():
+            AiConfig.objects.filter(project=config.project, is_default=True).exclude(pk=config.pk).update(is_default=False)
+            config.is_default = True
+            config.save(update_fields=['is_default', 'update_time'])
+        return Response(self.get_serializer(config).data)
+
+    @action(detail=False, methods=['post'])
+    def test(self, request):
+        """测试 AI 供应商连通性（不落库）：用传入的 api_key/api_url/model_name 发起一次最小 chat 调用。
+        成功返回 200；任何异常（鉴权失败/网络不通/模型名无效/超时）均返回 400 并给出明确原因，避免 500 系统内部异常。"""
+        data = request.data
+        api_key = (data.get('api_key') or '').strip()
+        api_url = (data.get('api_url') or '').strip()
+        model_name = (data.get('model_name') or '').strip()
+        # 允许传入已存在的配置 id，复用其凭据
+        cfg_id = data.get('id') or data.get('config_id')
+        if cfg_id:
+            cfg = AiConfig.objects.filter(id=cfg_id, is_delete=False).first()
+            if cfg:
+                api_key = api_key or (cfg.api_key or '').strip()
+                api_url = api_url or (cfg.api_url or '').strip()
+                model_name = model_name or (cfg.model_name or '').strip()
+        if not (api_key and api_url and model_name):
+            return Response({'detail': 'api_key / api_url / model_name 均不能为空'}, status=400)
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url=api_url, timeout=20)
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=[{'role': 'user', 'content': 'ping'}],
+                max_tokens=5,
+            )
+            reply = (resp.choices[0].message.content or '')[:200]
+            return Response({'reply': reply, 'model': resp.model})
+        except Exception as e:
+            return Response({'detail': '连接测试失败：' + str(e)[:300]}, status=400)
+
+
+class ProjectAppealViewSet(BaseModelViewSet):
+    queryset = ProjectAppeal.objects.all()
+    serializer_class = ProjectAppealSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+    filterset_class = ProjectAppealFilter
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        # 之前用 request.data['x'] 硬取值，缺字段直接 KeyError -> 500
+        project_id = request.data.get('project')
+        role_id = request.data.get('role_id')
+        user_id = request.data.get('user')
+        appeal = ProjectAppeal.objects.filter(id=kwargs.get('pk')).first()
+        # 当申请通过时，创建项目成员记录
+        if appeal and appeal.status and project_id and role_id and user_id:
+            ProjectMember.objects.get_or_create(
+                project_id=project_id,
+                user_id=user_id,
+                role_id=role_id
+            )
+        return response
+
+
+class ProjectMsgPushViewSet(BaseModelViewSet):
+    queryset = ProjectMsgPush.objects.all()
+    serializer_class = ProjectMsgPushSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+    filterset_class = ProjectMsgPushFilter
+
+
+class ProjectGeneralSettingViewSet(BaseModelViewSet):
+    """项目通用设置视图集"""
+    queryset = ProjectGeneralSetting.objects.all()
+    serializer_class = ProjectGeneralSettingSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def check_project_permission(request):
+    """
+    检查用户在项目中的权限
+    
+    Args:
+        user_id: 用户ID
+        project_id: 项目ID
+        permission_id: 权限ID
+    
+    Returns:
+        完整的权限信息
+    """
+    user_id = request.user.id
+    project_id = request.data.get('project_id')
+    permission_id = request.data.get('permission_id')
+
+    if request.user.is_superuser:
+        return Response({'has_permission': True, 'id': 0, 'has_read_permission': True, 'has_edit_permission': True,
+                         'has_add_permission': True, 'has_delete_permission': True, 'permission_id': 0,
+                         'permission_name': '所有权限', 'permission_path': '/'})
+    
+    if not project_id:
+        return Response({'error': '缺少必要参数'}, status=400)
+    
+    if not all([user_id, project_id, permission_id]):
+        return Response({'error': '缺少必要参数'}, status=400)
+
+    project_obj = Project.objects.all().get(id=project_id)
+
+    if project_obj.create_by_id == user_id:
+        return Response({'has_permission': True, 'id': 0, 'has_read_permission': True, 'has_edit_permission': True,
+                         'has_add_permission': True, 'has_delete_permission': True, 'permission_id': 0,
+                         'permission_name': '所有权限', 'permission_path': '/'})
+
+    
+    try:
+        # 检查用户是否是项目成员
+        member = ProjectMember.objects.select_related('user', 'project', 'role').get(
+            user_id=user_id, 
+            project_id=project_id, 
+            is_delete=False
+        )
+        
+        # 检查用户角色是否有对应权限
+        role_permission = RolePermission.objects.select_related('permission').get(
+            role_id=member.role_id,
+            permission_id=permission_id,
+            has_permission=True
+        )
+        
+        # 返回角色权限和权限相关的数据
+        return Response({
+            'has_permission': True,
+            'id': role_permission.id,
+            'has_read_permission': role_permission.has_read_permission,
+            'has_edit_permission': role_permission.has_edit_permission,
+            'has_add_permission': role_permission.has_add_permission,
+            'has_delete_permission': role_permission.has_delete_permission,
+            'permission_id': role_permission.permission.id,
+            'permission_name': role_permission.permission.name,
+            'permission_path': role_permission.permission.path
+        })
+    except ProjectMember.DoesNotExist:
+        return Response({'has_permission': False, 'message': '用户不是项目成员'}, status=403)
+    except RolePermission.DoesNotExist:
+        return Response({'has_permission': False, 'message': '用户角色没有该权限'}, status=403)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+class ProjectMemberViewSet(BaseModelViewSet):
+    """项目成员视图集"""
+    queryset = ProjectMember.objects.all()
+    serializer_class = ProjectMemberSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePageNumberPagination
+
+    def get_queryset(self):
+        """
+        根据项目ID过滤成员列表
+        """
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        """
+        创建项目成员
+        """
+        # 检查当前用户是否有权限添加成员
+        project_id = request.data.get('project')
+        if project_id:
+            project = Project.objects.get(id=project_id)
+            # 只有项目创建者或超级管理员可以添加成员
+            if not (request.user.is_superuser or project.create_by_id == request.user.id):
+                return Response({'error': '您没有权限添加项目成员'}, status=403)
+        
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        """
+        更新项目成员
+        """
+        # 检查当前用户是否有权限修改成员
+        instance = self.get_object()
+        # 只有项目创建者或超级管理员可以修改成员
+        if not (request.user.is_superuser or instance.project.create_by_id == request.user.id):
+            return Response({'error': '您没有权限修改项目成员'}, status=403)
+        
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        删除项目成员（软删除）
+        """
+        # 检查当前用户是否有权限删除成员
+        instance = self.get_object()
+        # 只有项目创建者或超级管理员可以删除成员
+        if not (request.user.is_superuser or instance.project.create_by_id == request.user.id):
+            return Response({'error': '您没有权限删除项目成员'}, status=403)
+        
+        return super().destroy(request, *args, **kwargs)
