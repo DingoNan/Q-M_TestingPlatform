@@ -25,8 +25,9 @@ Thumbs.db
 # ---------- 前端 ----------
 frontend/node_modules/
 frontend/dist/
-# 构建时把旧 dist 原子改名留作回滚点（如 dist.bak_before_build），属产物不入库
+# 构建时把旧 dist 原子改名留作回滚点（如 dist.bak_before_build / dist_keep_<时间>），属产物不入库
 frontend/dist.*/
+frontend/dist_*/
 frontend/.env.local
 # 隔离出来的历史遗留资源（旧 logo auto.png、废弃页 cart.html 等），仅供排查追溯，不入库
 frontend/_legacy_residual/
