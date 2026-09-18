@@ -25,6 +25,8 @@ Thumbs.db
 # ---------- 前端 ----------
 frontend/node_modules/
 frontend/dist/
+# 构建时把旧 dist 原子改名留作回滚点（如 dist.bak_before_build），属产物不入库
+frontend/dist.*/
 frontend/.env.local
 frontend/coverage/
 frontend/tests/e2e/videos/
