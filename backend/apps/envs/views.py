@@ -229,22 +229,25 @@ class ServiceModuleViewSet(BaseModelViewSet):
     filterset_class = ServiceModuleFilter
 
     def destroy(self, request, *args, **kwargs):
-        """
-        重写删除方法，添加权限检查
+        """删除服务模块：级联软删除其下的子模块、接口。
+        与 ServiceViewSet.destroy 保持一致，复用 utils.cascade 的通用级联软删除。
         """
         instance = self.get_object()
-        if ServiceModule.objects.filter(is_delete=False, parent=instance.id).exists():
-            return Response(
-                {"msg": ['该模块下存在子模块不能删除']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if Api.objects.filter(is_delete=False, module=instance.id).exists():
-            return Response(
-                {"msg": ['该模块下存在接口不能删除']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        return super().destroy(self, request, *args, **kwargs)
+        module_name = instance.name
+        # 级联前先统计影响范围，回传给前端做删除结果提示
+        stats = cascade_soft_delete_atomic(instance)
+        total = sum(stats.values())
+        self_label = f'{instance._meta.app_label}.{instance._meta.object_name}'
+        # stats 中同类模型归一个键，父模块自身也计入其中；对外只报「随它一起被删的子孙」
+        module_count = max(0, stats.get(self_label, 0) - 1)
+        api_count = sum(v for k, v in stats.items() if k.endswith('.Api'))
+        return Response({
+            'msg': f'模块「{module_name}」及其关联数据已删除，共 {total} 条',
+            'detail': stats,
+            'total': total,
+            'module_count': module_count,
+            'api_count': api_count,
+        }, status=200)
 
 
 class PageViewSet(BaseModelViewSet):

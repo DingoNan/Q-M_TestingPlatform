@@ -394,6 +394,34 @@
                   </div>
                 </div>
                 <div class="content-actions">
+                  <div class="selected-count-badge" v-if="multipleSelection.length > 0">
+                    <el-icon><SuccessFilled /></el-icon>
+                    <span>已选 {{ multipleSelection.length }}</span>
+                  </div>
+                  <el-dropdown
+                    v-if='permission.has_edit_permission'
+                    @command="handleBatchCommand"
+                    :disabled="multipleSelection.length === 0"
+                    class="batch-dropdown"
+                    popper-class="batch-dropdown-popper"
+                  >
+                    <el-button class="toolbar-btn" :disabled="multipleSelection.length === 0">
+                      <el-icon><Setting /></el-icon>批量操作
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="module" class="batch-dropdown-item">
+                          <span class="item-text">修改模块</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item command="status" class="batch-dropdown-item">
+                          <span class="item-text">修改接口状态</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item command="delete" class="batch-dropdown-item">
+                          <span class="item-text">批量删除</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
                   <el-button 
                     v-if='permission.has_add_permission' 
                     @click="addApi" 
@@ -422,7 +450,14 @@
                 class="elegant-table"
                 :header-row-style="headerRowStyle"
 				@sort-change='handleSortChange'
+                @selection-change="handleSelectionChange"
               >
+                <el-table-column 
+                  type="selection" 
+                  width="55" 
+                  align="center"
+                  class-name="selection-column"
+                />
                 <el-table-column 
                   label="序号" 
                   width="70" 
@@ -1131,6 +1166,53 @@
       <div v-else class="har-preview-empty">暂无预览数据</div>
     </el-drawer>
 
+    <!-- 批量删除确认弹窗 -->
+    <el-dialog v-model="batchDeleteDialogVisible" title="批量删除接口" width="500px" class="elegant-dialog" append-to-body>
+      <div class="batch-delete-content">
+        <el-icon class="batch-delete-icon"><Delete /></el-icon>
+        <div class="batch-delete-text">
+          <p>确定删除选中的 <span class="batch-delete-count">{{ multipleSelection.length }}</span> 条接口？</p>
+          <p class="batch-delete-tip">删除后数据将无法恢复，引用这些接口的用例将无法执行</p>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="batchDeleteDialogVisible = false">取消</el-button>
+        <el-button type="danger" @click="confirmBatchDelete" :loading="batchDeleting">确认删除</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 批量修改弹窗 -->
+    <el-dialog v-model="batchDialogVisible" :title="batchDialogTitle" width="500px" class="elegant-dialog" append-to-body>
+      <el-form :model="batchForm" label-position="top" class="batch-form">
+        <el-form-item v-if="batchDialogType === 'module'">
+          <el-cascader
+            v-model="batchForm.module"
+            :options="plant_module_list"
+            :props="moduleProps"
+            placeholder="请选择模块"
+            style="width: 100%"
+            size="large"
+            clearable
+            filterable
+            class="cascader"
+          />
+        </el-form-item>
+        <el-form-item v-if="batchDialogType === 'status'">
+          <el-select v-model="batchForm.status" class='select' placeholder="请选择接口状态" style="width: 100%" size="large" popper-class="select-dropdown-rounded" clearable>
+            <el-option v-for="(value, label) in api_status" :key="value" :label="label" :value="value" />
+          </el-select>
+          <div v-if="batchForm.status === 10" class="batch-warning-tip">
+            <el-icon><WarningFilled /></el-icon>
+            <span>置为「废弃」后，引用这些接口的用例执行时将被直接拦截</span>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmBatchUpdate">确定修改</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -1168,6 +1250,7 @@ import {
   WarningFilled,
   Link,
   Key,
+  SuccessFilled,
   Document
 } from '@element-plus/icons-vue'
 import Params from './Params.vue'
@@ -1410,6 +1493,14 @@ export default{
         label: 'name',
         checkStrictly: true,
       },
+      // ===== 批量操作 =====
+      multipleSelection: [],
+      batchDialogVisible: false,
+      batchDialogType: '',
+      batchDialogTitle: '',
+      batchForm: { module: null, status: null },
+      batchDeleteDialogVisible: false,
+      batchDeleting: false,
       apiExportVisible: false,
       // 新版导入（V2 - Apifox 风格）
       apiImportVisible: false,
@@ -1818,11 +1909,37 @@ export default{
       })
     },
     
+    // 统计某模块（含子孙）下的子模块数量
+    countSubModules(node){
+      const children = (node && node.children) || []
+      let count = 0
+      children.forEach(child => {
+        count += 1 + this.countSubModules(child)
+      })
+      return count
+    },
+
     async deleteModule(id){
+      // 优先用树上的节点统计影响范围，给用户更明确的二次确认提示
+      const currentNode = this.$refs.treeRef && this.$refs.treeRef.getCurrentNode()
+      let subCount = 0
+      if (currentNode && currentNode.id === id){
+        subCount = this.countSubModules(currentNode)
+      }
+      let html = '确定删除此模块？删除后数据将无法恢复。'
+      if (subCount > 0){
+        html = `<div style="line-height:1.7">确定删除此模块？</div>
+          <div style="margin-top:8px;line-height:1.7">
+            该模块下还有 <b style="color:#f56c6c">${subCount}</b> 个子模块，
+            以及这些模块中的全部接口，将<b style="color:#f56c6c">一并删除</b>。
+          </div>
+          <div style="margin-top:8px;color:#909399;font-size:12px;line-height:1.6">删除后数据将无法恢复，请谨慎操作。</div>`
+      }
       ElMessageBox.confirm(
-        '确定删除此模块？删除后数据将无法恢复。',
+        html,
         '确认删除',
         {
+          dangerouslyUseHTMLString: true,
           confirmButtonText: '确认删除',
           cancelButtonText: '取消',
           type: 'warning',
@@ -1831,11 +1948,13 @@ export default{
         }
       ).then(async() => {
         const response = await this.$api.deleteServiceModule(id)
-        if (response.status === 204){
+        if (response.status === 204 || response.status === 200){
           this.getAllServiceModule()
+          this.getApis()
+          const body = response.data || {}
           ElMessage({
             type: 'success',
-            message: '删除成功',
+            message: body.msg || '删除成功',
           })
         }
       }).catch(() => {})
@@ -2267,6 +2386,93 @@ export default{
         }
       }
       this.$router.push({path:'/resource/apiEdit', query:query})
+    },
+
+    // ===== 批量操作 =====
+    handleSelectionChange(val) {
+      this.multipleSelection = val
+    },
+
+    handleBatchCommand(command) {
+      if (command === 'delete') {
+        this.batchDeleteDialogVisible = true
+        return
+      }
+      this.batchDialogType = command
+      const titleMap = {
+        module: '批量修改模块',
+        status: '批量修改接口状态',
+      }
+      this.batchDialogTitle = titleMap[command] || '批量操作'
+      this.batchForm = { module: null, status: null }
+      this.batchDialogVisible = true
+    },
+
+    async confirmBatchDelete() {
+      this.batchDeleting = true
+      const ids = this.multipleSelection.map(item => item.id)
+      let successCount = 0
+      let failCount = 0
+      for (const id of ids) {
+        try {
+          const response = await this.$api.deleteApi(id)
+          if (response.status === 204) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch (err) {
+          failCount++
+        }
+      }
+      this.batchDeleteDialogVisible = false
+      this.batchDeleting = false
+      this.multipleSelection = []
+      this.getApis()
+      if (failCount === 0) {
+        ElMessage({ type: 'success', message: `成功删除 ${successCount} 条接口` })
+      } else {
+        ElMessage({ type: 'warning', message: `删除完成：成功 ${successCount} 条，失败 ${failCount} 条` })
+      }
+    },
+
+    async confirmBatchUpdate() {
+      const ids = this.multipleSelection.map(item => item.id)
+      const params = { ids }
+      let fieldLabel = ''
+      if (this.batchDialogType === 'module') {
+        if (this.batchForm.module === null || this.batchForm.module === '') {
+          ElMessage.warning('请选择模块')
+          return
+        }
+        if (this.batchForm.module < 0) {
+          ElMessage.error('所属模块不能选择根节点')
+          return
+        }
+        params.module = this.batchForm.module
+        fieldLabel = '模块'
+      } else if (this.batchDialogType === 'status') {
+        if (this.batchForm.status === null || this.batchForm.status === '') {
+          ElMessage.warning('请选择接口状态')
+          return
+        }
+        params.status = this.batchForm.status
+        fieldLabel = '接口状态'
+      }
+      const response = await this.$api.batchUpdateApis(params)
+      if (response.status === 200) {
+        const body = response.data || {}
+        ElMessage.success(`成功修改 ${ids.length} 条接口的${fieldLabel}`)
+        if (body.deprecated_warning) {
+          ElMessage({ type: 'warning', message: body.deprecated_warning, duration: 6000 })
+        }
+        this.batchDialogVisible = false
+        this.multipleSelection = []
+        this.getApis()
+        if (this.batchDialogType === 'module') {
+          this.getAllServiceModule()
+        }
+      }
     },
 	
 	handleSortChange(column) {
@@ -3157,6 +3363,88 @@ export default{
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* ===== 批量操作 ===== */
+.selected-count-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--qm-accent-1, #22D3EE);
+  background: color-mix(in srgb, var(--qm-accent-1, #22D3EE) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--qm-accent-1, #22D3EE) 34%, transparent);
+  white-space: nowrap;
+}
+
+.batch-dropdown {
+  flex: 0 0 auto;
+}
+
+.toolbar-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.batch-delete-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 6px 2px;
+}
+
+.batch-delete-icon {
+  font-size: 30px;
+  color: #f56c6c;
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.batch-delete-text p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--qm-text-1);
+  line-height: 1.6;
+}
+
+.batch-delete-count {
+  font-weight: 700;
+  color: #f56c6c;
+  font-size: 17px;
+  padding: 0 3px;
+}
+
+.batch-delete-text .batch-delete-tip {
+  font-size: 13px;
+  color: var(--qm-text-3, #909399);
+  margin-bottom: 0;
+}
+
+.batch-warning-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e6a23c;
+  background: rgba(230, 162, 60, 0.12);
+  border: 1px solid rgba(230, 162, 60, 0.3);
+}
+
+.batch-form .el-form-item {
+  margin-bottom: 8px;
 }
 
 .add-btn,

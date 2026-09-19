@@ -165,7 +165,7 @@ class CaseViewSet(BaseModelViewSet):
     def batch_update(self, request, *args, **kwargs):
         """
         批量更新脚本用例字段
-        支持批量修改: tag(添加标签)
+        支持批量修改: module(所属模块)、tag(添加标签)
         单个修改也走此接口(ids长度为1)
         """
         user = request.user
@@ -178,6 +178,13 @@ class CaseViewSet(BaseModelViewSet):
             return Response(data={'error': '未找到对应用例'}, status=404)
 
         update_fields = []
+        # 所属模块
+        module_id = request.data.get('module')
+        if module_id:
+            if not Module.objects.filter(id=module_id, is_delete=False).exists():
+                return Response(data={'error': '目标模块不存在'}, status=400)
+            cases.update(module_id=module_id, update_by_id=user.id)
+            update_fields.append('module')
         # 标签: tag_mode='replace'为替换模式(编辑面板用), 默认为追加模式(批量添加用)
         tag_ids = request.data.get('tag')
         if tag_ids is not None:
@@ -190,6 +197,9 @@ class CaseViewSet(BaseModelViewSet):
                 case_obj.update_by_id = user.id
                 case_obj.save()
             update_fields.append('tag')
+
+        if not update_fields:
+            return Response(data={'error': '未提供任何可更新字段'}, status=400)
 
         return Response(data={'msg': '成功', 'count': cases.count(), 'fields': update_fields}, status=200)
 

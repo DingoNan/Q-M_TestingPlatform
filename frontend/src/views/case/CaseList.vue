@@ -92,6 +92,19 @@
   <!-- 批量修改弹窗 -->
   <el-dialog v-model="batchDialogVisible" :title="batchDialogTitle" width="500px" class="elegant-dialog" append-to-body>
     <el-form :model="batchForm" label-position="top" class="batch-form">
+      <el-form-item v-if="batchDialogType === 'module'">
+        <el-cascader
+          v-model="batchForm.module"
+          :options="plant_module_list"
+          :props="moduleEditProps"
+          placeholder="请选择模块"
+          style="width: 100%"
+          size="large"
+          clearable
+          filterable
+          class="cascader"
+        />
+      </el-form-item>
       <el-form-item v-if="batchDialogType === 'tag'">
         <el-select v-model="batchForm.tag" class='select' placeholder="请选择标签" style="width: 100%" size="large" popper-class="select-dropdown-rounded" multiple clearable>
           <el-option v-for="tag in tag_list" :key="tag.id" :label="tag.name" :value="tag.id" />
@@ -379,6 +392,9 @@
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <el-dropdown-item command="module" class="batch-dropdown-item">
+                      <span class="item-text">修改模块</span>
+                    </el-dropdown-item>
                     <el-dropdown-item command="tag" class="batch-dropdown-item">
                       <span class="item-text">添加标签</span>
                     </el-dropdown-item>
@@ -841,6 +857,7 @@ export default{
 	  batchDialogType: '',
 	  batchDialogTitle: '',
 	  batchForm: {
+	    module: null,
 	    tag: [],
 	  },
       permission: {},
@@ -921,10 +938,16 @@ export default{
 			case 'delete':
 				this.batchDeleteCases()
 				break
+			case 'module':
+				this.batchDialogType = command
+				this.batchDialogTitle = '批量修改模块'
+				this.batchForm = { module: null, tag: [] }
+				this.batchDialogVisible = true
+				break
 			case 'tag':
 				this.batchDialogType = command
 				this.batchDialogTitle = '批量添加标签'
-				this.batchForm = { tag: [] }
+				this.batchForm = { module: null, tag: [] }
 				this.batchDialogVisible = true
 				break
 		}
@@ -937,15 +960,26 @@ export default{
 	async confirmBatchUpdate() {
 	  const ids = this.multipleSelection.map(item => item.id)
 	  const params = { ids }
-	  let fieldLabel = ''
-	  if (this.batchDialogType === 'tag') {
-	    if (!this.batchForm.tag || this.batchForm.tag.length === 0) {
-	      ElMessage.warning('请选择标签')
-	      return
-	    }
-	    params.tag = this.batchForm.tag
-	    fieldLabel = '标签'
-	  }
+  let fieldLabel = ''
+  if (this.batchDialogType === 'module') {
+    if (this.batchForm.module === null || this.batchForm.module === '') {
+      ElMessage.warning('请选择模块')
+      return
+    }
+    if (this.batchForm.module < 0) {
+      ElMessage.error('所属模块不能选择根节点')
+      return
+    }
+    params.module = this.batchForm.module
+    fieldLabel = '模块'
+  } else if (this.batchDialogType === 'tag') {
+    if (!this.batchForm.tag || this.batchForm.tag.length === 0) {
+      ElMessage.warning('请选择标签')
+      return
+    }
+    params.tag = this.batchForm.tag
+    fieldLabel = '标签'
+  }
 	  const response = await this.$api.batchUpdateCases(params)
 	  if (response.status === 200) {
 	    ElMessage.success(`成功修改 ${ids.length} 个用例的${fieldLabel}`)

@@ -453,6 +453,9 @@ export default {
 	deleteApi(id){
 		return http_request.delete(`/interface/api/${id}/`)
 	},
+	batchUpdateApis(params){
+		return http_request.post('/interface/api/batch_update/', params)
+	},
 	// Mock接口
 	getMocks(params){
 		return http_request.get('/interface/mock/', {params: params})

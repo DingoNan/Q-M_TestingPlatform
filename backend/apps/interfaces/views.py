@@ -8,7 +8,7 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from requests.sessions import Session
 from django.db.models import Q
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django_q.tasks import async_task
@@ -117,6 +117,64 @@ class ApiViewSet(BaseModelViewSet):
                     f'请通知用例负责人及时更换接口'
                 )
         return Response(payload)
+
+    @action(methods=['post'], detail=False)
+    def batch_update(self, request, *args, **kwargs):
+        """批量更新接口字段
+
+        支持批量修改: module(所属模块)、status(接口状态)
+        单个修改也走此接口(ids 长度为 1)
+        入参: {ids: [...], module: <id> | status: <int>}
+        返回: {msg, count, fields, deprecated_reference_count?}
+        """
+        user = request.user
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response(data={'error': 'ids不能为空'}, status=400)
+
+        apis = Api.objects.filter(id__in=ids, is_delete=False)
+        if not apis.exists():
+            return Response(data={'error': '未找到对应接口'}, status=404)
+
+        update_fields = []
+        payload = {}
+
+        # 所属模块：接口的 service 由模块决定，需与 serializers.validate 保持一致同步更新
+        module_id = request.data.get('module')
+        if module_id:
+            module_obj = ServiceModule.objects.filter(id=module_id, is_delete=False).first()
+            if module_obj is None:
+                return Response(data={'error': '目标模块不存在'}, status=400)
+            apis.update(module_id=module_obj.id, service_id=module_obj.service_id, update_by_id=user.id)
+            update_fields.append('module')
+
+        # 接口状态
+        status_val = request.data.get('status')
+        if status_val is not None:
+            try:
+                status_val = int(status_val)
+            except (TypeError, ValueError):
+                return Response(data={'error': 'status 必须为整数'}, status=400)
+            if status_val not in [choice[0] for choice in Api.ApiStatus.choices]:
+                return Response(data={'error': '无效的接口状态值'}, status=400)
+            apis.update(status=status_val, update_by_id=user.id)
+            update_fields.append('status')
+
+            # 置为「废弃」时，回传这些接口上仍被引用的用例总数，供前端提示
+            if status_val == Api.ApiStatus.StatusTen:
+                ref_total = sum(count_api_reference(api_id) for api_id in apis.values_list('id', flat=True))
+                payload['deprecated_reference_count'] = ref_total
+                if ref_total:
+                    payload['deprecated_warning'] = (
+                        f'所选接口仍被 {ref_total} 个用例引用，置为「废弃」后这些用例执行时将被直接拦截，'
+                        f'请通知用例负责人及时更换接口'
+                    )
+
+        if not update_fields:
+            return Response(data={'error': '未提供任何可更新字段'}, status=400)
+
+        payload.update({'msg': '成功', 'count': apis.count(), 'fields': update_fields})
+        return Response(data=payload, status=200)
 
 
 class ApiMockViewSet(BaseModelViewSet):
