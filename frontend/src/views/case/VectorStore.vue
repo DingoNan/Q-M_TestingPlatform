@@ -780,6 +780,23 @@ export default {
     UploadFilled,
   },
   methods: {
+    // ★ 直取 store 现值的路径权限表。
+    // mapState 派生的 computed 在 created() 同步阶段尚未就绪，
+    // 用组件属性索引取值会抛 TypeError（Cannot read properties of undefined）
+    // 导致权限请求永不发出 ⇒ permission 恒为 {} ⇒ 按钮不渲染。
+    // 返回 {} 而非 undefined，保证 `m[path]` 安全得到 undefined 而不抛错。
+    livePathPermission() {
+      const s = this.$store && this.$store.state
+      if (s && s.pathPermission && typeof s.pathPermission === 'object') {
+        return s.pathPermission
+      }
+      try {
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        if (lp && typeof lp === 'object') return lp
+      } catch (e) { /* ignore */ }
+      return {}
+    },
+
     formatTime(time) {
       if (!time) return '-'
       // 处理 Django 返回的带时区时间格式
@@ -796,7 +813,7 @@ export default {
     },
 
     async check_permission() {
-      const params = { user_id: this.userInfo.user_id, project_id: this.projectInfo.id, permission_id: this.pathPermission[this.$route.path] }
+      const params = { user_id: this.userInfo.user_id, project_id: this.projectInfo.id, permission_id: this.livePathPermission()[this.$route.path] }
       try {
         const response = await this.$api.check_permission(params)
         if (response.status === 200) {

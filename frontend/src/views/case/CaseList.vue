@@ -1488,15 +1488,102 @@ export default{
       }
     },
 
+    // ★ 直取 store 现值的当前用户 id。
+    // 与 liveProjectId() 同理：userInfo 也由 mapState 派生，在 check_permission()
+    // 于 created() 中同步调用时会读到旧值 ⇒ params.user_id 为 undefined
+    // ⇒ 请求发出但后端拿不到 user_id ⇒ 权限查不出来 ⇒ permission 始终是 {}
+    // ⇒ 模板里所有 `permission.has_xxx_permission` 为 undefined ⇒ 「新增用例」「批量操作」
+    //   等按钮全部不渲染（表现为「功能没了」，且不报错）。
+    liveUserId() {
+      const u = this.$store && this.$store.state && this.$store.state.userInfo
+      if (u && u.user_id) return u.user_id
+      // 兜底：store 快照可能过期，回落到 localStorage 的登录信息
+      try {
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        if (qi.user_id) return qi.user_id
+      } catch (e) { /* ignore */ }
+      try {
+        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
+      } catch (e) { /* ignore */ }
+      return ''
+    },
+
+    // ★ 直取 store 现值的路径权限表。
+    // ★★ 这是「新增用例 / 批量操作」按钮消失的**最终根因**（2026-09-20 真机取证确认）：
+    //   本组件通过 mapState(['pathPermission', ...]) 派生该属性，但 check_permission()
+    //   是在 created() 里**同步**调用的，此刻 computed 首次求值取到的是 undefined；
+    //   紧接着执行 `this.pathPermission[this.$route.path]` 即
+    //        undefined['/resource/scriptCase']
+    //   ⇒ 抛 TypeError（控制台：Cannot read properties of undefined (reading '/resource/scriptCase')）
+    //   ⇒ 异常发生在 `await this.$api.check_permission(...)` 之前 ⇒ **请求根本没发出**
+    //   ⇒ this.permission 恒为 {} ⇒ 模板里 permission.has_add_permission 等全为 undefined
+    //   ⇒ 「新增用例」(模板 L408) / 「批量操作」(L384) / 模块节点下拉按钮 全部不渲染。
+    //   注意 store.state.pathPermission 本身是**有值**的（实测 27 个键，
+    //   '/resource/scriptCase' → 17），只是不经过 computed 拿不到。故这里直取 store 现值，
+    //   并回落到 localStorage，绝不返回 undefined（返回 {} 可让取值安全地得到 undefined 而不抛错）。
+    livePathPermission() {
+      const s = this.$store && this.$store.state
+      if (s && s.pathPermission && typeof s.pathPermission === 'object') {
+        return s.pathPermission
+      }
+      // 兜底 1：localStorage 里可能存过一份
+      try {
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        if (lp && typeof lp === 'object') return lp
+      } catch (e) { /* ignore */ }
+      // 兜底 2：返回空对象而不是 undefined —— 关键！
+      // 这样 `livePathPermission()[path]` 得到 undefined 而不是抛 TypeError，
+      // 请求仍能发出（permission_id 为 undefined 时后端按无权限处理），
+      // 而非整个权限链路因一个取值异常而彻底中断。
+      return {}
+    },
+
     async check_permission(){
       if (this.parentPermission){
       	  this.permission = this.parentPermission
-      }else{
-          const params = {user_id: this.userInfo.user_id, project_id: this.liveProjectId(), permission_id: this.pathPermission[this.$route.path]}
-          const response = await this.$api.check_permission(params)
-          if (response.status === 200){
-              this.permission = { ...response.data.result }
-          }
+      	  return
+      }
+      // ★ 整个流程包 try/catch：权限查询失败只应导致按钮不显示，
+      //   绝不能让异常冒泡打断 created() 后续的列表/模块树加载。
+      try {
+        // ★ 三层兜底取 user_id：store 现值 → nextTick 后再取 → localStorage 回落。
+        //   根因同 projectInfo：userInfo 也由 mapState 派生，created() 中同步调用时
+        //   读到的可能是 undefined ⇒ `this.userInfo.user_id` 抛
+        //   "Cannot read properties of undefined (reading 'user_id')"
+        //   ⇒ 异常在首个 await 之前抛出 ⇒ **请求根本没发出** ⇒ permission 永远是 {}
+        //   ⇒ 模板里所有 permission.has_xxx_permission 为 undefined
+        //   ⇒ 「新增用例」「批量操作」等按钮全部不渲染（表现为「功能没了」，且不报错）。
+        let uid = this.liveUserId()
+        if (!uid) {
+          await this.$nextTick()
+          uid = this.liveUserId()
+        }
+        if (!uid) {
+          console.warn('[check_permission] 缺少 user_id，权限查询已跳过')
+          return
+        }
+        // ★ 同上：pathPermission 也直取 store 现值，避免 undefined[path] 抛错。
+        //   取不到 permission_id 时明确跳过（而不是抛异常被 catch 吞掉），
+        //   并打印一条可诊断的告警，避免以后再次出现「静默无权限」。
+        const permMap = this.livePathPermission()
+        const permissionId = permMap[this.$route.path]
+        if (permissionId === undefined) {
+          console.warn('[check_permission] 路径权限表中没有 %s（可用键：%s），权限查询已跳过',
+            this.$route.path, Object.keys(permMap).join(','))
+          return
+        }
+        const params = {
+          user_id: uid,
+          project_id: this.liveProjectId(),
+          permission_id: permissionId
+        }
+        const response = await this.$api.check_permission(params)
+        if (response.status === 200 && response.data && response.data.result){
+            this.permission = { ...response.data.result }
+        }
+      } catch (e) {
+        console.warn('[check_permission] 权限查询失败：', e && e.message)
       }
     },
 
@@ -1525,7 +1612,12 @@ export default{
       this.$store.commit('clearProjectInfo')
       await this.$store.dispatch('resolveProject')
     }
-    this.check_permission()
+    // ★ check_permission() 不 await（权限只影响按钮显隐，不该阻塞列表渲染），
+    //   但必须等一轮 nextTick 再调用 —— 原因见 livePathPermission() 的注释：
+    //   created() 同步阶段 mapState 派生的 computed 尚未就绪，
+    //   直接调用会让 `this.pathPermission[this.$route.path]` 抛 TypeError，
+    //   致使权限请求从未发出 ⇒ permission 恒为 {} ⇒ 按钮全不渲染。
+    this.$nextTick(() => { this.check_permission() })
     this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
     const node = JSON.parse(localStorage.getItem('case_node'))
 	  this.caseSearch.type = JSON.parse(localStorage.getItem('case_type')) || 1

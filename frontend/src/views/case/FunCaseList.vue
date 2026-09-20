@@ -2261,6 +2261,24 @@ export default{
       return (p && p.id) ? p.id : ''
     },
 
+    // ★ 直取 store 现值的当前用户 id（原因同 liveProjectId）：
+    // userInfo 由 mapState 派生，mounted() 中同步调用 check_permission 时可能读到
+    // undefined ⇒ `this.userInfo.user_id` 抛异常 ⇒ 请求根本没发出 ⇒ permission 恒为 {}
+    // ⇒ 所有 permission.has_xxx_permission 按钮不渲染。
+    liveUserId() {
+      const u = this.$store && this.$store.state && this.$store.state.userInfo
+      if (u && u.user_id) return u.user_id
+      try {
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        if (qi.user_id) return qi.user_id
+      } catch (e) { /* ignore */ }
+      try {
+        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
+      } catch (e) { /* ignore */ }
+      return ''
+    },
+
     // 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
     // silent=true 时不弹提示（用于「先静默尝试自动恢复」的场景）。
     async resolveProjectOrWarn({ silent = false } = {}) {
@@ -2315,15 +2333,71 @@ export default{
       this.editCase(row)
     },
 
+    // ★ 直取 store 现值的当前用户 id（原因同 liveProjectId）：
+    // userInfo 由 mapState 派生，created()/mounted() 中同步调用 check_permission 时
+    // 可能读到 undefined ⇒ `this.userInfo.user_id` 抛异常 ⇒ 请求根本没发出
+    // ⇒ permission 恒为 {} ⇒ 所有 permission.has_xxx_permission 按钮不渲染。
+    liveUserId() {
+      const u = this.$store && this.$store.state && this.$store.state.userInfo
+      if (u && u.user_id) return u.user_id
+      try {
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        if (qi.user_id) return qi.user_id
+      } catch (e) { /* ignore */ }
+      try {
+        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
+      } catch (e) { /* ignore */ }
+      return ''
+    },
+
+    // ★ 直取 store 现值的路径权限表（同 CaseList.vue）。
+    // mapState 派生的 computed 在 created() 同步阶段尚未就绪，
+    // `this.pathPermission[path]` 会抛 TypeError 导致权限请求永不发出。
+    // 返回 {} 而非 undefined，保证取值安全。
+    livePathPermission() {
+      const s = this.$store && this.$store.state
+      if (s && s.pathPermission && typeof s.pathPermission === 'object') {
+        return s.pathPermission
+      }
+      try {
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        if (lp && typeof lp === 'object') return lp
+      } catch (e) { /* ignore */ }
+      return {}
+    },
+
     async check_permission(path){
       if (this.parentPermission){
       	  this.permission = this.parentPermission
-      }else{
-      	const params = {user_id: this.userInfo.user_id, project_id: this.liveProjectId(), permission_id: this.pathPermission[this.$route.path]}
+      	  return
+      }
+      try {
+        let uid = this.liveUserId()
+        if (!uid) {
+          await this.$nextTick()
+          uid = this.liveUserId()
+        }
+        if (!uid) {
+          console.warn('[check_permission] 缺少 user_id，权限查询已跳过')
+          return
+        }
+        // ★ 直取 store 现值，避免 undefined[path] 抛错（这是按钮不渲染的最终根因）
+        const permMap = this.livePathPermission()
+        const key = path || this.$route.path
+        const permissionId = permMap[key]
+        if (permissionId === undefined) {
+          console.warn('[check_permission] 路径权限表中没有 %s（可用键：%s），权限查询已跳过',
+            key, Object.keys(permMap).join(','))
+          return
+        }
+        const params = {user_id: uid, project_id: this.liveProjectId(), permission_id: permissionId}
         const response = await this.$api.check_permission(params)
-        if (response.status === 200){
+        if (response.status === 200 && response.data && response.data.result){
             this.permission = { ...response.data.result }
         }
+      } catch (e) {
+        console.warn('[check_permission] 权限查询失败：', e && e.message)
       }
     },
 	

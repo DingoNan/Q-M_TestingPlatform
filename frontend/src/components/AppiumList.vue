@@ -229,6 +229,23 @@ export default {
     }
   },
   methods: {
+    // ★ 直取 store 现值的路径权限表。
+    // mapState 派生的 computed 在 created() 同步阶段尚未就绪，
+    // 用组件属性索引取值会抛 TypeError（Cannot read properties of undefined）
+    // 导致权限请求永不发出 ⇒ permission 恒为 {} ⇒ 按钮不渲染。
+    // 返回 {} 而非 undefined，保证 `m[path]` 安全得到 undefined 而不抛错。
+    livePathPermission() {
+      const s = this.$store && this.$store.state
+      if (s && s.pathPermission && typeof s.pathPermission === 'object') {
+        return s.pathPermission
+      }
+      try {
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        if (lp && typeof lp === 'object') return lp
+      } catch (e) { /* ignore */ }
+      return {}
+    },
+
     ...mapActions(['getRolePermission']),
     
     chooseAppium(appiumData) {
@@ -270,7 +287,7 @@ export default {
   },
   created() {
     if (!this.isCanChoose) {
-      this.getRolePermission(this.pathPermission[this.$route.path]).then(res => {
+      this.getRolePermission(this.livePathPermission()[this.$route.path]).then(res => {
         this.permission = { ...res.result }
       })
     }
