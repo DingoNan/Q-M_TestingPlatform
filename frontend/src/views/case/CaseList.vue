@@ -1145,7 +1145,7 @@ export default{
             this.moduleSave.plant = this.module_node.node.data.plant_id
             this.moduleSave.parent = this.module_node.node.data.id
           }
-          this.moduleSave.project = this.projectInfo.id
+          this.moduleSave.project = this.liveProjectId()
           const response = await this.$api.createModule(this.moduleSave)
           if(response.status === 201){
             this.editModuleVisible = false
@@ -1269,7 +1269,7 @@ export default{
     async copy(row_data){
       this.caseForm = {...row_data}
       this.caseForm.name = this.caseForm.name + '副本'
-      this.caseForm.project = this.projectInfo.id
+      this.caseForm.project = this.liveProjectId()
       const response = await this.$api.createCase(this.caseForm)
       if (response.status === 201){
         this.getCases()
@@ -1335,7 +1335,7 @@ export default{
       }
       this.$refs['caseRef'].validate(async (valid, fields)=>{
         if(valid){
-          this.caseForm.project = this.projectInfo.id
+          this.caseForm.project = this.liveProjectId()
           const response = await this.$api.createCase(this.caseForm)
           if (response.status === 201){
             this.editCaseVisible = false
@@ -1395,24 +1395,51 @@ export default{
       // project 缺失时命中 0 条、接口仍返回 200 且**连 results 键都没有**
       // ⇒ response.data.results === undefined ⇒ el-tree :data=undefined ⇒ 树完全空白。
       // 因此这里先确保项目上下文可用（三层兜底），再发请求。
-      let response = await this.$api.getAllPlantModule({project: this.projectInfo && this.projectInfo.id})
+      // ★ 取参一律用 liveProjectId()（store 现值），不要用 this.projectInfo——
+      //   后者受 mapState 响应式同步时机影响，在 resolveProject「秒回」时会读到旧值 ''
+      //   而空串会被 axios 丢弃 ⇒ 请求不带 project ⇒ 树空白。详见 liveProjectId() 注释。
+      let pid = this.liveProjectId()
+      let response = await this.$api.getAllPlantModule({project: pid})
       // 空结果且确实没有项目上下文 → 先静默尝试自动恢复一次，再重查
       const first = (response.status === 200 && response.data) ? response.data.results : null
-      if (response.status === 200 && !(first || []).length
-          && !(this.projectInfo && this.projectInfo.id)) {
+      if (response.status === 200 && !(first || []).length && !this.liveProjectId()) {
         const r = await this.resolveProjectOrWarn({ silent: true })
-        if (r.ok) {
-          response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+        pid = this.liveProjectId()
+        if (r.ok && pid) {
+          response = await this.$api.getAllPlantModule({project: pid})
         }
       }
       if (response.status === 200){
         // ★ 必须回落成 []：后端空上下文时不返回 results，直接赋值会让 el-tree 拿到 undefined
         this.plant_module_list = (response.data && response.data.results) || []
+        // ★ 有项目上下文却仍拿到空树 ⇒ 多为后端/上下文刚就绪的时序问题，重试一次。
+        //   没有这一步时，一次「恰好赶在上下文就绪前」的请求会让页面永久停在空态。
+        if (!this.plant_module_list.length && pid) {
+          const retry = await this.$api.getAllPlantModule({project: pid})
+          if (retry.status === 200) {
+            this.plant_module_list = (retry.data && retry.data.results) || []
+          }
+        }
         // 仍为空且无项目上下文 —— 不再静默空白，明确告知原因
-        if (!this.plant_module_list.length && !(this.projectInfo && this.projectInfo.id)) {
+        if (!this.plant_module_list.length && !this.liveProjectId()) {
           this.resolveProjectOrWarn()
         }
       }
+    },
+
+    // ★ 直取 store 现值的项目 id。
+    // 为什么不能直接用 this.projectInfo：本组件通过 mapState(['projectInfo']) 派生该属性，
+    // 而 mapState 的值要等一次响应式刷新才会同步到实例上。当 resolveProject 因
+    // store 的 projectResolved 闩锁而「秒回」（实测 dispatch 到发请求仅隔 4ms，
+    // 不可能完成一次 /projects/ 网络往返）时，紧接着同步执行的 getCases()/getPlantModule()
+    // 读到的 this.projectInfo 仍是旧值 ''，
+    //   '' && this.projectInfo.id  →  ''（空串）
+    // 而 axios 会丢弃值为空串的 params ⇒ 请求退化成裸 URL /env/allPlantModule/
+    // ⇒ 后端 project=None ⇒ Plant.objects.filter(project=None) 命中 0 条 ⇒ results: []
+    // ⇒ 模块树「暂无产品数据」、用例列表查空。store 是唯一事实来源，故这里直接现取。
+    liveProjectId() {
+      const p = this.$store && this.$store.state && this.$store.state.projectInfo
+      return (p && p.id) ? p.id : ''
     },
 
     // 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
@@ -1439,10 +1466,13 @@ export default{
     async getCases(){
       // 与其他列表页保持一致：先保证有项目上下文，避免把 undefined 传给后端
       // （/test/case/ 不过滤 project，但 module 过滤依赖它，且空上下文下取到的是全量数据，易误导）
-      if (!(this.projectInfo && this.projectInfo.id)) {
+      // ★ 同上：取参用 liveProjectId()，避免 mapState 同步时机差导致 '' 被 axios 丢弃
+      let pid = this.liveProjectId()
+      if (!pid) {
         await this.resolveProjectOrWarn({ silent: true })
+        pid = this.liveProjectId()
       }
-      this.caseSearch.project = this.projectInfo.id
+      this.caseSearch.project = pid
       const data = Object.assign(this.caseSearch, this.page_size_params, this.sort_params)
       this.caseSearch.module = (this.caseSearch.module_list || []).join(',')
       const response = await this.$api.getCases(data)
@@ -1452,7 +1482,7 @@ export default{
     },
     
     async getTags(){
-      const response = await this.$api.getTags({project: this.projectInfo.id})
+      const response = await this.$api.getTags({project: this.liveProjectId()})
       if (response.status === 200){
         this.tag_list = response.data.results
       }
@@ -1462,7 +1492,7 @@ export default{
       if (this.parentPermission){
       	  this.permission = this.parentPermission
       }else{
-          const params = {user_id: this.userInfo.user_id, project_id: this.projectInfo.id, permission_id: this.pathPermission[this.$route.path]}
+          const params = {user_id: this.userInfo.user_id, project_id: this.liveProjectId(), permission_id: this.pathPermission[this.$route.path]}
           const response = await this.$api.check_permission(params)
           if (response.status === 200){
               this.permission = { ...response.data.result }
@@ -1485,7 +1515,16 @@ export default{
     // ★ 必须先恢复项目上下文，再加载依赖 project 的数据 ——
     // 否则模块树会拿到「没有 results 键」的 200 响应 ⇒ el-tree 数据为 undefined ⇒ 完全空白，
     // 且用例列表还会被历史 case_node 的 module 过滤条件静默查空（两者都不报错）。
+    // ★ 注意：这里不能只看 await 的返回值 —— store 的 projectResolved 闩锁会让
+    //   resolveProject 在「之前已尝试过」时立即返回 { ok:false }，而此刻 store 里
+    //   可能已经有 projectInfo（由守卫或 App.vue 快照写入）。
+    //   因此以「store 现值」为准做裁决，并用 liveProjectId() 读参。
     await this.resolveProjectOrWarn({ silent: true })
+    if (!this.liveProjectId()) {
+      // 兜底：闩锁已置位但 store 仍无上下文 ⇒ 清闩锁后重试一次
+      this.$store.commit('clearProjectInfo')
+      await this.$store.dispatch('resolveProject')
+    }
     this.check_permission()
     this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
     const node = JSON.parse(localStorage.getItem('case_node'))

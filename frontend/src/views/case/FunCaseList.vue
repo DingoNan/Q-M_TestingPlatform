@@ -2220,24 +2220,45 @@ export default{
       // project 缺失时命中 0 条、接口仍返回 200 且**连 results 键都没有**
       // ⇒ response.data.results === undefined ⇒ el-tree :data=undefined ⇒ 树完全空白。
       // 因此这里先确保项目上下文可用（三层兜底），再发请求。
-      let response = await this.$api.getAllPlantModule({project: this.projectInfo && this.projectInfo.id})
+      // ★ 取参一律用 liveProjectId()（store 现值），不要用 this.projectInfo——
+      //   后者受 mapState 响应式同步时机影响，在 resolveProject「秒回」时会读到旧值 ''
+      //   而空串会被 axios 丢弃 ⇒ 请求不带 project ⇒ 树空白。详见 liveProjectId() 注释。
+      let pid = this.liveProjectId()
+      let response = await this.$api.getAllPlantModule({project: pid})
       // 空结果且确实没有项目上下文 → 先静默尝试自动恢复一次，再重查
       const first = (response.status === 200 && response.data) ? response.data.results : null
-      if (response.status === 200 && !(first || []).length
-          && !(this.projectInfo && this.projectInfo.id)) {
+      if (response.status === 200 && !(first || []).length && !this.liveProjectId()) {
         const r = await this.resolveProjectOrWarn({ silent: true })
-        if (r.ok) {
-          response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+        pid = this.liveProjectId()
+        if (r.ok && pid) {
+          response = await this.$api.getAllPlantModule({project: pid})
         }
       }
       if (response.status === 200){
         // ★ 必须回落成 []：后端空上下文时不返回 results，直接赋值会让 el-tree 拿到 undefined
         this.plant_module_list = (response.data && response.data.results) || []
+        // ★ 有项目上下文却仍拿到空树 ⇒ 多为后端/上下文刚就绪的时序问题，重试一次。
+        //   没有这一步时，一次「恰好赶在上下文就绪前」的请求会让页面永久停在空态。
+        if (!this.plant_module_list.length && pid) {
+          const retry = await this.$api.getAllPlantModule({project: pid})
+          if (retry.status === 200) {
+            this.plant_module_list = (retry.data && retry.data.results) || []
+          }
+        }
         // 仍为空且无项目上下文 —— 不再静默空白，明确告知原因
-        if (!this.plant_module_list.length && !(this.projectInfo && this.projectInfo.id)) {
+        if (!this.plant_module_list.length && !this.liveProjectId()) {
           this.resolveProjectOrWarn()
         }
       }
+    },
+
+    // ★ 直取 store 现值的项目 id（原因见 CaseList.vue 同名方法注释）：
+    // mapState 派生的 this.projectInfo 需要一次响应式刷新才同步到实例，
+    // 而 resolveProject 因 projectResolved 闩锁「秒回」时该属性仍是旧值 ''，
+    // 空串会被 axios 丢弃 ⇒ 请求退化为裸 URL ⇒ 后端按 project=None 过滤 ⇒ 空数据。
+    liveProjectId() {
+      const p = this.$store && this.$store.state && this.$store.state.projectInfo
+      return (p && p.id) ? p.id : ''
     },
 
     // 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
@@ -2263,10 +2284,13 @@ export default{
 
     async getFCases(){
       // 与脚本用例页保持一致：先保证有项目上下文，避免把 undefined 传给后端
-      if (!(this.projectInfo && this.projectInfo.id)) {
+      // ★ 取参用 liveProjectId()，避免 mapState 同步时机差导致 '' 被 axios 丢弃
+      let pid = this.liveProjectId()
+      if (!pid) {
         await this.resolveProjectOrWarn({ silent: true })
+        pid = this.liveProjectId()
       }
-      this.caseSearch.project = this.projectInfo.id
+      this.caseSearch.project = pid
       const data = Object.assign(this.caseSearch, this.page_size_params, this.sort_params)
       this.caseSearch.module = (this.caseSearch.module_list || []).join(',')
       const response = await this.$api.getFCases(data)
@@ -2276,7 +2300,7 @@ export default{
     },
     
     async getTags(){
-      const response = await this.$api.getTags({project: this.projectInfo.id})
+      const response = await this.$api.getTags({project: this.liveProjectId()})
       if (response.status === 200){
         this.tag_list = response.data.results
       }
@@ -2295,7 +2319,7 @@ export default{
       if (this.parentPermission){
       	  this.permission = this.parentPermission
       }else{
-      	const params = {user_id: this.userInfo.user_id, project_id: this.projectInfo.id, permission_id: this.pathPermission[this.$route.path]}
+      	const params = {user_id: this.userInfo.user_id, project_id: this.liveProjectId(), permission_id: this.pathPermission[this.$route.path]}
         const response = await this.$api.check_permission(params)
         if (response.status === 200){
             this.permission = { ...response.data.result }
@@ -2382,10 +2406,17 @@ export default{
     }
     window.addEventListener('hashchange', this._onHashChange, true)
 
-    this.check_permission()
     // ★ 先恢复项目上下文，再拉模块树 —— 否则模块树接口返回 200 但无 results 键，
     // el-tree 数据为 undefined ⇒ 模块管理完全空白（且不报错）。
+    // 注意：不能只看 await 返回值 —— store 的 projectResolved 闩锁会让 resolveProject
+    // 在「之前已尝试过」时立即返回 { ok:false }，而此刻 store 里可能已有 projectInfo
+    // （由路由守卫或 App.vue 快照写入）。故以 store 现值裁决，取参统一用 liveProjectId()。
     await this.resolveProjectOrWarn({ silent: true })
+    if (!this.liveProjectId()) {
+      this.$store.commit('clearProjectInfo')
+      await this.$store.dispatch('resolveProject')
+    }
+    this.check_permission()
     this.getPlantModule()
     this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
     // 【AI 用例可见性修复】支持通过 URL 参数强制清空模块/状态筛选。

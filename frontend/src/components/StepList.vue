@@ -853,13 +853,24 @@ export default{
 		async getCases(){
 		  // project 缺失时后端会按 project=None 过滤，命中 0 条但不报错 ——
 		  // 与其查空误导用户，不如不查（页面会由 resolveProjectOrWarn 给出明确提示）。
-		  if (!(this.projectInfo && this.projectInfo.id)) return
-		  this.caseSearch.project = this.projectInfo.id
+		  // ★ 取参用 liveProjectId()（store 现值），避免 mapState 同步时机差导致 '' 被 axios 丢弃。
+		  const pid = this.liveProjectId()
+		  if (!pid) return
+		  this.caseSearch.project = pid
 		  this.caseSearch.module = (this.stepSearch.module_list || []).join(',')
 		  const response = await this.$api.getCases(this.caseSearch)
 		  if (response.status === 200){
 		    this.case_list = {...response.data.results}
 		  }
+		},
+		
+		// ★ 直取 store 现值的项目 id（原因见 CaseList.vue 同名方法注释）：
+		// mapState 派生的 this.projectInfo 需要一次响应式刷新才同步到实例，
+		// 而 resolveProject 因 projectResolved 闩锁「秒回」时该属性仍是旧值 ''，
+		// 空串会被 axios 丢弃 ⇒ 请求退化为裸 URL ⇒ 后端按 project=None 过滤 ⇒ 空数据。
+		liveProjectId() {
+		  const p = this.$store && this.$store.state && this.$store.state.projectInfo
+		  return (p && p.id) ? p.id : ''
 		},
 		
 		save(){
@@ -933,19 +944,27 @@ export default{
 		  // 模块树接口在后端是按 project 硬过滤的（Plant.objects.filter(project=...))，
 		  // project 缺失时会命中 0 条、返回空数组，接口本身仍是 200 —— 表现为「模块管理下没有内容」。
 		  // 因此这里先确保项目上下文可用（三层兜底），再发请求。
-		  let response = await this.$api.getAllPlantModule({project: this.projectInfo && this.projectInfo.id})
+		  // ★ 取参一律用 liveProjectId()，不要用 this.projectInfo（时序原因见上方注释）。
+		  let pid = this.liveProjectId()
+		  let response = await this.$api.getAllPlantModule({project: pid})
 		  // 空结果且确实没有项目上下文 → 先尝试自动恢复一次，再重查
 		  if (response.status === 200 && !(response.data.results || []).length
-		      && !(this.projectInfo && this.projectInfo.id)) {
+		      && !this.liveProjectId()) {
 		    const r = await this.resolveProjectOrWarn({ silent: true })
-		    if (r.ok) {
-		      response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+		    pid = this.liveProjectId()
+		    if (r.ok && pid) {
+		      response = await this.$api.getAllPlantModule({project: pid})
 		    }
 		  }
 		  if (response.status === 200){
 		    this.plant_module_list = response.data.results || []
+		    // ★ 有项目上下文却仍拿到空树 ⇒ 多为后端/上下文刚就绪的时序问题，重试一次
+		    if (!this.plant_module_list.length && pid) {
+		      const retry = await this.$api.getAllPlantModule({project: pid})
+		      if (retry.status === 200) this.plant_module_list = retry.data.results || []
+		    }
 		    // 仍为空且无项目上下文 —— 不再静默空白，明确告知原因
-		    if (!this.plant_module_list.length && !(this.projectInfo && this.projectInfo.id)) {
+		    if (!this.plant_module_list.length && !this.liveProjectId()) {
 		      this.resolveProjectOrWarn()
 		    }
 		  }
@@ -1110,7 +1129,14 @@ export default{
 	async created() {
 		// 先恢复项目上下文，再加载依赖 project 的数据 ——
 		// 否则模块树/用例列表会因 project 缺失而查空（且不报错）。
+		// 注意：不能只看 await 返回值 —— projectResolved 闩锁会让 resolveProject 秒回
+		// { ok:false }，而此刻 store 里可能已有 projectInfo（守卫或 App.vue 快照写入）。
+		// 故以 store 现值裁决，取参统一用 liveProjectId()。
 		await this.resolveProjectOrWarn({ silent: true })
+		if (!this.liveProjectId()) {
+		  this.$store.commit('clearProjectInfo')
+		  await this.$store.dispatch('resolveProject')
+		}
 		this.check_permission()
 		const node = JSON.parse(localStorage.getItem('case_node'))
 		if (node) {

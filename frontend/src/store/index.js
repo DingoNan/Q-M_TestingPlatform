@@ -2,6 +2,9 @@ import api from '@/api'
 import { createStore } from 'vuex'
 
 const PROJECT_KEY = 'qm-projectInfo'
+// resolveProject 的并发去重句柄：同 tick 内多个调用共用同一个 in-flight Promise，
+// 避免重复请求 /projects/ 以及「后返回覆盖先返回」的竞态。
+let _inflightResolve = null
 
 // 读取项目上下文：容错版。
 // 历史实现直接 JSON.parse 后取值，遇到「存进去的是字符串 null/"undefined"」或
@@ -144,11 +147,16 @@ export default createStore({
 			  commit('setProjectResolved', true)
 			  return { ok: false, reason: 'no-token', project: null }
 		  }
-		  if (state.projectResolved) {
-			  // 本轮已尝试过且失败，不重复打扰后端
-			  return { ok: false, reason: state.projectInfo ? 'cached' : 'empty', project: null }
-		  }
-		  try {
+	  if (state.projectResolved) {
+		  // 本轮已尝试过且失败，不重复打扰后端
+		  return { ok: false, reason: state.projectInfo ? 'cached' : 'empty', project: null }
+	  }
+	  // ★ 并发去重：同一 tick 内多个页面/守卫/组件同时调用 resolveProject 时，
+	  //   只让第一个真正发起 /projects/ 请求，其余共用同一个 Promise。
+	  //   否则多个调用会各发一次请求，且后返回的可能覆盖先返回的结果。
+	  if (_inflightResolve) return _inflightResolve
+	  try {
+		  _inflightResolve = (async () => {
 			  const res = await api.getProjects({ page: 1, size: 100 })
 			  const list = (res && res.data && res.data.results) || []
 			  if (list.length === 1) {
@@ -162,11 +170,17 @@ export default createStore({
 			  if (list.length === 0) return { ok: false, reason: 'empty', project: null }
 			  // ③ 多项目 —— 不自作主张，交由调用方提示用户选择
 			  return { ok: false, reason: 'multi-project', project: null }
-		  } catch (e) {
-			  commit('setProjectResolved', true)
-			  return { ok: false, reason: 'error', project: null }
-		  }
-	  },
+		  })()
+		  return await _inflightResolve
+	  } catch (e) {
+		  // ★ 失败不置位 projectResolved：网络抖动/后端重启等偶发失败若被永久闩锁，
+		  //   后续所有页面都会直接早返回，表现为「刷新也没用、必须重新登录」。
+		  //   保持未闩锁状态，下次调用仍可重试。
+		  return { ok: false, reason: 'error', project: null }
+	  } finally {
+		  _inflightResolve = null
+	  }
+  },
   },
   modules: {
   }
