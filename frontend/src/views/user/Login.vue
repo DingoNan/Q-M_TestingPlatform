@@ -207,16 +207,19 @@ export default {
 							this.$router.push({name: 'myProject'})
 						}else{
 							// 登录失败 - 显示页面内错误提示
-							this.showErrorMessage(
-								'登录失败', 
-								response.data?.message || '账号或密码错误，请重试'
-							);
+							// ★★ 后端真实响应体形如：
+							//    {"code":401,"msg":"error","result":{"detail":"No active account found with the given credentials"}}
+							//    {"code":400,"msg":"error","result":{"password":["该字段是必填项。"]}}
+							//    可见真正可读的文案在 `result` 里（detail 或字段名->数组），
+							//    而 `msg` 永远是 'error'、`message` 根本不存在。
+							//    历史代码只读 response.data?.message ⇒ 永远是 undefined ⇒ 只能显示兜底文案。
+							this.showErrorMessage('登录失败', this.pickErrText(response.data));
 						}
 					} catch (error) {
 						// 网络错误或其他异常
 						this.showErrorMessage(
 							'登录失败', 
-							error.response?.data?.message || '网络连接异常，请检查网络后重试'
+							this.pickErrText(error.response && error.response.data) || '网络连接异常，请检查网络后重试'
 						);
 					} finally {
 						this.loading = false
@@ -236,6 +239,30 @@ export default {
 					this.loading = false;
 				}
 			})
+		},
+		// ★ 从后端响应体里挑出「给人看」的错误文案。
+		// 后端统一响应体为 {code, msg, result}，其中：
+		//   msg    —— 恒为 'error' / 'ok'，无信息量，不可直接展示；
+		//   result —— 真正有用，可能是 {detail:'...'}（认证失败）
+		//             或 {字段名:['中文提示',...]}（序列化校验失败）。
+		// 兼容性：同时兜住 message/detail/error 这些 DRF 或第三方可能返回的字段。
+		pickErrText(data) {
+			if (!data) return '';
+			if (typeof data === 'string') return data;
+			const r = data.result;
+			if (typeof r === 'string' && r) return r;
+			if (r && typeof r === 'object') {
+				if (typeof r.detail === 'string' && r.detail) return r.detail;
+				// 形如 {password: ['该字段是必填项。']} —— 取第一个非空项
+				for (const k of Object.keys(r)) {
+					const v = r[k];
+					if (typeof v === 'string' && v) return v;
+					if (Array.isArray(v) && v.length && v[0]) return String(v[0]);
+				}
+			}
+			// 兜底：msg 仅在不是 'error' 这种无信息量的占位时才用
+			if (typeof data.msg === 'string' && data.msg && data.msg !== 'error') return data.msg;
+			return data.message || data.detail || data.error || '';
 		},
 		// 显示错误消息
 		showErrorMessage(title, message) {

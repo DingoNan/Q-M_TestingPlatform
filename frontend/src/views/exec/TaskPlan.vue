@@ -634,7 +634,7 @@ export default{
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -819,7 +819,7 @@ export default{
 	},
 	created() {
     this.check_permission()
-		this.user_list =  JSON.parse(localStorage.getItem('user_list'))
+		this.user_list =  JSON.parse(localStorage.getItem('user_list') || 'null')
 		this.getTasks()
 		this.getEnvs()
 		this.getSuites()

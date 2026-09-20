@@ -405,7 +405,7 @@ export default{
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -659,7 +659,7 @@ export default{
 		
 		    // 执行树操作
 		    await this.$refs.treeRef.setAllExpandNode(true);
-		    const node =  JSON.parse(localStorage.getItem('factory_node'));
+		    const node =  JSON.parse(localStorage.getItem('factory_node') || 'null');
 		    if (node) {
 		      this.$refs.treeRef.setCurrentNodeId(node.id);
 			  this.caseSearch.module_list = this.getAllIds(node)
@@ -672,7 +672,7 @@ export default{
 	},
 	created() {
 		this.case_model =  localStorage.getItem('case_model') || 'tree'
-		this.user_list =  JSON.parse(localStorage.getItem('user_list'))
+		this.user_list =  JSON.parse(localStorage.getItem('user_list') || 'null')
 		this.getRolePermission(this.livePathPermission()[this.$route.path]).then(res =>{
 			this.permission = {...res.result}
 			localStorage.setItem('caseListPermission', JSON.stringify(this.permission))

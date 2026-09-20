@@ -1499,11 +1499,11 @@ export default{
       if (u && u.user_id) return u.user_id
       // 兜底：store 快照可能过期，回落到 localStorage 的登录信息
       try {
-        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || {}
         if (qi.user_id) return qi.user_id
       } catch (e) { /* ignore */ }
       try {
-        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        const ul = JSON.parse(localStorage.getItem('user_list') || 'null') || []
         if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
       } catch (e) { /* ignore */ }
       return ''
@@ -1529,7 +1529,7 @@ export default{
       }
       // 兜底 1：localStorage 里可能存过一份
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       // 兜底 2：返回空对象而不是 undefined —— 关键！
@@ -1618,9 +1618,9 @@ export default{
     //   直接调用会让 `this.pathPermission[this.$route.path]` 抛 TypeError，
     //   致使权限请求从未发出 ⇒ permission 恒为 {} ⇒ 按钮全不渲染。
     this.$nextTick(() => { this.check_permission() })
-    this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
-    const node = JSON.parse(localStorage.getItem('case_node'))
-	  this.caseSearch.type = JSON.parse(localStorage.getItem('case_type')) || 1
+    this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
+    const node = JSON.parse(localStorage.getItem('case_node') || 'null')
+	  this.caseSearch.type = JSON.parse(localStorage.getItem('case_type') || 'null') || 1
     // ★ 只有在确实存在项目上下文时才复用上次选中的模块节点；
     // 否则（换账号 / 换项目 / 数据被清）该节点可能指向已不存在的模块，
     // 会把用例列表过滤成空列表，表现为「看不到之前的测试脚本」。

@@ -39,7 +39,7 @@ export default createStore({
 	  // 登录后写入 localStorage（键 qm-userInfo），刷新/新标签页可恢复，
 	  // 否则超管页（/user/list 等）的 userInfo.is_superuser 判空会被误判为无权限
 	  userInfo: (() => {
-		  try { return JSON.parse(localStorage.getItem('qm-userInfo')) || '' } catch (e) { return '' }
+		  try { return JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || '' } catch (e) { return '' }
 	  })(),
 	  interfaces: [],
 	  tags: [],
@@ -142,7 +142,7 @@ export default createStore({
 		  }
 		  // 本项目只支持已登录场景，无 token 时不发请求（避免必定的 401）
 		  let token = null
-		  try { token = JSON.parse(localStorage.getItem('token')) } catch (e) { token = null }
+		  try { token = JSON.parse(localStorage.getItem('token') || 'null') } catch (e) { token = null }
 		  if (!token) {
 			  commit('setProjectResolved', true)
 			  return { ok: false, reason: 'no-token', project: null }

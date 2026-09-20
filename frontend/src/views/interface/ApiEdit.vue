@@ -1585,7 +1585,7 @@ export default{
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -2789,7 +2789,7 @@ export default{
   },
   async created() {
     this.check_permission()
-	this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
+	this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
     this.tmpApiForm = {...this.apiForm}
     this.tmpApiMockForm = {...this.apiMockForm}
     this.getCheck()

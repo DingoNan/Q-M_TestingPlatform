@@ -2,6 +2,48 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '../router/index.js'
 
+// ★★★ 安全读取 localStorage 的工具（切勿绕过它直接 JSON.parse）。
+// 背景：本项目历史上大量写作 `JSON.parse(localStorage.getItem('x'))`，
+//      当取值为 null / '' / 'undefined' / 非 JSON 字符串时一律抛 SyntaxError。
+//      若该语句位于**请求拦截器**内，异常会让请求永不发出 ⇒ 全站接口静默失败。
+// 语义：
+//   1) 优先按 JSON 解析（兼容既有的 JSON.stringify 写入）；
+//   2) 解析失败则把原始字符串当纯文本返回（兼容"裸存"的历史脏数据）；
+//   3) 键不存在 / 空串 / 解析异常 ⇒ 返回 fallback，永不抛错。
+export function readLS(key, fallback = null) {
+	try {
+		var raw = window.localStorage.getItem(key)
+		if (raw === null || raw === undefined) return fallback
+		var s = String(raw).trim()
+		if (s === '' || s === 'undefined' || s === 'null') return fallback
+		try {
+			var parsed = JSON.parse(s)
+			return (parsed === null || parsed === undefined) ? fallback : parsed
+		} catch (e) {
+			// 不是合法 JSON —— 当作纯文本（例如历史遗留的未加引号 token）
+			return s
+		}
+	} catch (e) {
+		return fallback
+	}
+}
+
+// ★ 判断一个值是否"像"一个可用的 token。
+// 背景：用户浏览器里的 localStorage 可能残留各种脏数据（换账号、清缓存不彻底、
+//      旧版本写入、手改、被其他站点/插件污染），它们经 readLS() 后可能变成半截引号
+//      `"`、HTML 片段 `<!DOCTYPE html>` 之类的字符串。
+//      若原样拼成 `Bearer "` 发出去，只是白白多一次 401 往返，且日志里很难看。
+// 判据（宽松，只排除明显不可能的值）：
+//   非空字符串 && 不含空白/换行 && 不含引号/<>& && 长度 8~2048
+// 注意：不做 base64/JWT 严格校验 —— 平台的历史 token 形态不止一种，过严会误伤。
+export function looksLikeToken(v) {
+	if (typeof v !== 'string') return false
+	if (v.length < 8 || v.length > 2048) return false
+	if (/\s/.test(v)) return false
+	if (/["'<>&\\]/.test(v)) return false
+	return true
+}
+
 // API 地址：优先使用构建期注入的 VUE_APP_API_BASE；否则按当前访问的 hostname 自动拼接后端 8000 端口，
 // 这样本地开发 (127.0.0.1:8080 -> 127.0.0.1:8000) 与 Docker 部署 (任意 host:8080 -> host:8000) 都能直接工作。
 export const base_url = process.env.VUE_APP_API_BASE || `${window.location.protocol}//${window.location.hostname}:8000`
@@ -14,7 +56,18 @@ const http_request = axios.create({
 
 http_request.interceptors.request.use(function(config){
 	if (config.url != '/user/login/' && config.url != '/user/navigation'){
-		config.headers['Authorization'] = 'Bearer ' + JSON.parse(window.localStorage.getItem('token'))
+		// ★★ 绝不可写裸的 JSON.parse(localStorage.getItem('token'))：
+		//    该值可能为 null / 空串 / 非法 JSON（换账号、清缓存、手改、旧版本残留），
+		//    JSON.parse('') 与 JSON.parse(undefined-string) 都会抛 SyntaxError。
+		//    而这里位于**请求拦截器**内 —— 一旦抛异常，该请求永不发出，
+		//    表现为「所有非白名单接口全挂」，最终整站白屏或空白。
+		//    统一走 readLS()：任何异常都退化为「无 token」，由后端返回 401 后跳登录页。
+		var tk = readLS('token', null)
+		// 再经 looksLikeToken() 过滤掉明显不是 token 的脏数据（半截引号、HTML 片段等）：
+		// 不满足则视为「无 token」直接不发头，省掉一次注定 401 的往返。
+		if (looksLikeToken(tk)) {
+			config.headers['Authorization'] = 'Bearer ' + tk
+		}
 	}
 	return config
 })

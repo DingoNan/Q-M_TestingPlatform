@@ -240,7 +240,7 @@ export default {
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}

@@ -679,7 +679,7 @@ export default{
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -1053,9 +1053,9 @@ export default{
     this.check_permission()
     this.PythonSaveTmp = JSON.parse(JSON.stringify(this.PythonSave))
     this.pythonSearchTmp = {...this.pythonSearch}
-    this.user_list = JSON.parse(localStorage.getItem('user_list'))
+    this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null')
     
-    const node = JSON.parse(localStorage.getItem('python_node'))
+    const node = JSON.parse(localStorage.getItem('python_node') || 'null')
     if (node) {
       this.$nextTick(() => {
         if (this.$refs.treeRef) {

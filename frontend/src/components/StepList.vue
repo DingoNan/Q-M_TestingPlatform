@@ -1113,11 +1113,11 @@ export default{
 		  const u = this.$store && this.$store.state && this.$store.state.userInfo
 		  if (u && u.user_id) return u.user_id
 		  try {
-		    const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+		    const qi = JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || {}
 		    if (qi.user_id) return qi.user_id
 		  } catch (e) { /* ignore */ }
 		  try {
-		    const ul = JSON.parse(localStorage.getItem('user_list')) || []
+		    const ul = JSON.parse(localStorage.getItem('user_list') || 'null') || []
 		    if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
 		  } catch (e) { /* ignore */ }
 		  return ''
@@ -1133,7 +1133,7 @@ export default{
 				return s.pathPermission
 			}
 			try {
-				const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+				const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
 				if (lp && typeof lp === 'object') return lp
 			} catch (e) { /* ignore */ }
 			return {}
@@ -1193,7 +1193,10 @@ export default{
 		  await this.$store.dispatch('resolveProject')
 		}
 		this.check_permission()
-		const node = JSON.parse(localStorage.getItem('case_node'))
+		// ★ 用 || 'null' 兜底：本地键可能为 null / 空串 / 非法 JSON，
+		//   裸 JSON.parse 会抛 SyntaxError 直接中断 created()，
+		//   导致后面的 getCases/getSteps/getPlantModule 全都不执行（页面空白）。
+		const node = JSON.parse(localStorage.getItem('case_node') || 'null')
 		if (node) {
 		  this.$nextTick(() => {
 		    if (this.$refs.treeRef) {
@@ -1202,7 +1205,7 @@ export default{
 		  })
 		  this.stepSearch.module_list = this.getAllIds(node)
 		}
-		this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
+		this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
 		this.getCases()
 		this.getSteps()
 		this.getPlantModule()

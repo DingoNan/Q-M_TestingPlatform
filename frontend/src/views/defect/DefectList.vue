@@ -1255,7 +1255,7 @@ export default {
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -1928,7 +1928,7 @@ mounted() {
 	this.getPlantModule()
 	this.loadPlanList()
 	// 恢复上次选中的模块节点（参考 FunCaseList）
-	const node = JSON.parse(localStorage.getItem('defect_node'))
+	const node = JSON.parse(localStorage.getItem('defect_node') || 'null')
 	if (node) {
 		this.selectNode = node.id
 		this.$nextTick(() => {

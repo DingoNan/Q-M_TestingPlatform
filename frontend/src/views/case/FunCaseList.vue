@@ -2269,11 +2269,11 @@ export default{
       const u = this.$store && this.$store.state && this.$store.state.userInfo
       if (u && u.user_id) return u.user_id
       try {
-        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || {}
         if (qi.user_id) return qi.user_id
       } catch (e) { /* ignore */ }
       try {
-        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        const ul = JSON.parse(localStorage.getItem('user_list') || 'null') || []
         if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
       } catch (e) { /* ignore */ }
       return ''
@@ -2341,11 +2341,11 @@ export default{
       const u = this.$store && this.$store.state && this.$store.state.userInfo
       if (u && u.user_id) return u.user_id
       try {
-        const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+        const qi = JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || {}
         if (qi.user_id) return qi.user_id
       } catch (e) { /* ignore */ }
       try {
-        const ul = JSON.parse(localStorage.getItem('user_list')) || []
+        const ul = JSON.parse(localStorage.getItem('user_list') || 'null') || []
         if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
       } catch (e) { /* ignore */ }
       return ''
@@ -2361,7 +2361,7 @@ export default{
         return s.pathPermission
       }
       try {
-        const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+        const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
         if (lp && typeof lp === 'object') return lp
       } catch (e) { /* ignore */ }
       return {}
@@ -2426,7 +2426,7 @@ export default{
 
   // 应用模块树记忆：非 AI 场景下的默认行为（保持原有语义）
   applyRememberedModule() {
-    const node = JSON.parse(localStorage.getItem('case_node'))
+    const node = JSON.parse(localStorage.getItem('case_node') || 'null')
     // ★ 仅在节点有效时复用；否则（换账号/换项目/数据被清）该节点可能指向
     // 已不存在的模块，会把用例列表静默过滤成空 ⇒ 表现为"看不到之前的用例"。
     if (node && node.id) {
@@ -2492,7 +2492,7 @@ export default{
     }
     this.check_permission()
     this.getPlantModule()
-    this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
+    this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
     // 【AI 用例可见性修复】支持通过 URL 参数强制清空模块/状态筛选。
     // 场景：AI 助手生成用例后跳转过来，用 case_mark='AI生成' 或 case_status=1 筛选，
     // 若沿用 localStorage 记忆的模块节点，新用例会因模块不同而"看不见"。

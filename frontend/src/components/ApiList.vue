@@ -2971,11 +2971,11 @@ export default{
 		const u = this.$store && this.$store.state && this.$store.state.userInfo
 		if (u && u.user_id) return u.user_id
 		try {
-			const qi = JSON.parse(localStorage.getItem('qm-userInfo')) || {}
+			const qi = JSON.parse(localStorage.getItem('qm-userInfo') || 'null') || {}
 			if (qi.user_id) return qi.user_id
 		} catch (e) { /* ignore */ }
 		try {
-			const ul = JSON.parse(localStorage.getItem('user_list')) || []
+			const ul = JSON.parse(localStorage.getItem('user_list') || 'null') || []
 			if (ul[0] && (ul[0].user_id || ul[0].id)) return (ul[0].user_id || ul[0].id)
 		} catch (e) { /* ignore */ }
 		return ''
@@ -2991,7 +2991,7 @@ export default{
 			return s.pathPermission
 		}
 		try {
-			const lp = JSON.parse(localStorage.getItem('qm-pathPermission'))
+			const lp = JSON.parse(localStorage.getItem('qm-pathPermission') || 'null')
 			if (lp && typeof lp === 'object') return lp
 		} catch (e) { /* ignore */ }
 		return {}
@@ -3072,8 +3072,8 @@ export default{
     }
     this.check_permission()
     this.getAllServiceModule()
-	this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
-	const node = JSON.parse(localStorage.getItem('api_node'))
+	this.user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
+	const node = JSON.parse(localStorage.getItem('api_node') || 'null')
 	// ★ 仅在节点有效时复用历史选中模块；否则可能指向已不存在的模块，把接口列表静默过滤成空。
 	if (node && node.id) {
 	  this.$nextTick(() => {
@@ -3086,7 +3086,7 @@ export default{
 	  this.apiSearch.module_list = []
 	}
     this.getApis()
-    this.user_list =  JSON.parse(localStorage.getItem('user_list'))
+    this.user_list =  JSON.parse(localStorage.getItem('user_list') || 'null')
     this.tmpApiForm = {...this.apiForm}
     this.tmpApiMockForm = {...this.apiMockForm}
     this.getCheck()

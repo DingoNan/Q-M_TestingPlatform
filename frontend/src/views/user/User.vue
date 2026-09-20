@@ -679,7 +679,7 @@ export default {
         // 重定向到权限页面，并传递from参数
         this.$router.push({name: 'noPermission', query: {from: this.$route.fullPath}})
     } else {
-        this.search_user_list = JSON.parse(localStorage.getItem('user_list')) || []
+        this.search_user_list = JSON.parse(localStorage.getItem('user_list') || 'null') || []
         this.getUsers()
     }
   },

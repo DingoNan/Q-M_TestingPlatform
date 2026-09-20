@@ -796,7 +796,7 @@ export default {
 	  		return
 	  	}
 	  	try {
-	  		const token = JSON.parse(window.localStorage.getItem('token'))
+	  		const token = JSON.parse(window.localStorage.getItem('token') || 'null')
 	  		if (!token) {
 	  			return
 	  		}
