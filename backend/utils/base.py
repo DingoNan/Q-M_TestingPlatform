@@ -98,16 +98,27 @@ class CustomRender(JSONRenderer):
             "code": status_code,
             "msg": "ok" if status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED] else "error",
         }
-        if data:
-            uri = renderer_context['request'].path
+        # ★ 注意：空列表 [] 是 falsy，若沿用 `if data:` 守卫，视图返回 [] 时
+        # 响应体里**连 results 键都不会出现**（只剩 {code, msg}），前端
+        # `response.data.results` 得到 undefined —— el-tree 拿到 undefined 会渲染 0 个
+        # 节点（连 #empty 插槽都不走），表现为「模块管理下没有内容」且全程不报错。
+        # 因此这里把「空容器」也纳入序列化：list/dict 一律保留结构。
+        uri = renderer_context['request'].path
+        if isinstance(data, list):
+            if uri.startswith('/api_mock/'):
+                response = data
+            else:
+                response['results'] = data
+        elif data:
             if uri.startswith('/api_mock/'):
                 response = data
             elif 'results' in data:
                 response.update(data)
-            elif isinstance(data, list):
-                response['results'] = data
             else:
                 response['result'] = data
+        elif isinstance(data, dict):
+            # 空 dict 同样保留 result 键，避免调用方取不到而误判
+            response['result'] = data
 
         return super().render(response, accepted_media_type=accepted_media_type, renderer_context=renderer_context)
 

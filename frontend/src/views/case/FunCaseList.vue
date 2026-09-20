@@ -2216,13 +2216,56 @@ export default{
     },
     
     async getPlantModule(){
-      const response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+      // 模块树接口在后端按 project 硬过滤（Plant.objects.filter(project=...)），
+      // project 缺失时命中 0 条、接口仍返回 200 且**连 results 键都没有**
+      // ⇒ response.data.results === undefined ⇒ el-tree :data=undefined ⇒ 树完全空白。
+      // 因此这里先确保项目上下文可用（三层兜底），再发请求。
+      let response = await this.$api.getAllPlantModule({project: this.projectInfo && this.projectInfo.id})
+      // 空结果且确实没有项目上下文 → 先静默尝试自动恢复一次，再重查
+      const first = (response.status === 200 && response.data) ? response.data.results : null
+      if (response.status === 200 && !(first || []).length
+          && !(this.projectInfo && this.projectInfo.id)) {
+        const r = await this.resolveProjectOrWarn({ silent: true })
+        if (r.ok) {
+          response = await this.$api.getAllPlantModule({project: this.projectInfo.id})
+        }
+      }
       if (response.status === 200){
-        this.plant_module_list = response.data.results
+        // ★ 必须回落成 []：后端空上下文时不返回 results，直接赋值会让 el-tree 拿到 undefined
+        this.plant_module_list = (response.data && response.data.results) || []
+        // 仍为空且无项目上下文 —— 不再静默空白，明确告知原因
+        if (!this.plant_module_list.length && !(this.projectInfo && this.projectInfo.id)) {
+          this.resolveProjectOrWarn()
+        }
       }
     },
-    
+
+    // 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
+    // silent=true 时不弹提示（用于「先静默尝试自动恢复」的场景）。
+    async resolveProjectOrWarn({ silent = false } = {}) {
+      const r = await this.$store.dispatch('resolveProject')
+      if (!r.ok && !silent) {
+        const msgMap = {
+          'multi-project': '检测到多个项目，请先进入「我的项目」选择要操作的项目',
+          'empty': '当前账号没有可访问的项目，请先在「我的项目」中创建或申请项目',
+          'no-token': '登录状态已失效，请重新登录',
+          'error': '获取项目信息失败，请先进入「我的项目」选择项目'
+        }
+        ElMessage({
+          type: 'warning',
+          duration: 5000,
+          showClose: true,
+          message: msgMap[r.reason] || '请先进入「我的项目」选择项目'
+        })
+      }
+      return r
+    },
+
     async getFCases(){
+      // 与脚本用例页保持一致：先保证有项目上下文，避免把 undefined 传给后端
+      if (!(this.projectInfo && this.projectInfo.id)) {
+        await this.resolveProjectOrWarn({ silent: true })
+      }
       this.caseSearch.project = this.projectInfo.id
       const data = Object.assign(this.caseSearch, this.page_size_params, this.sort_params)
       this.caseSearch.module = (this.caseSearch.module_list || []).join(',')
@@ -2286,7 +2329,9 @@ export default{
   // 应用模块树记忆：非 AI 场景下的默认行为（保持原有语义）
   applyRememberedModule() {
     const node = JSON.parse(localStorage.getItem('case_node'))
-    if (node) {
+    // ★ 仅在节点有效时复用；否则（换账号/换项目/数据被清）该节点可能指向
+    // 已不存在的模块，会把用例列表静默过滤成空 ⇒ 表现为"看不到之前的用例"。
+    if (node && node.id) {
       this.selectNode = node.id
       this.$nextTick(() => {
         if (this.$refs.treeRef) {
@@ -2294,6 +2339,9 @@ export default{
         }
       })
       this.caseSearch.module_list = this.getAllIds(node)
+    } else {
+      this.selectNode = null
+      this.caseSearch.module_list = []
     }
   },
 
@@ -2335,6 +2383,9 @@ export default{
     window.addEventListener('hashchange', this._onHashChange, true)
 
     this.check_permission()
+    // ★ 先恢复项目上下文，再拉模块树 —— 否则模块树接口返回 200 但无 results 键，
+    // el-tree 数据为 undefined ⇒ 模块管理完全空白（且不报错）。
+    await this.resolveProjectOrWarn({ silent: true })
     this.getPlantModule()
     this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
     // 【AI 用例可见性修复】支持通过 URL 参数强制清空模块/状态筛选。

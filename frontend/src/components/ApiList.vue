@@ -1962,13 +1962,47 @@ export default{
     
 	async getAllServiceModule(){
 		try {
-			const response = await this.$api.getAllServiceModule({project: this.projectInfo.id})
-			if (response.status === 200){
-				this.serviceModuleTree = response.data.results
+			// 服务模块树在后端按 project 硬过滤，project 缺失时命中 0 条、
+			// 返回 200 但**没有 results 键** ⇒ 树数据为 undefined ⇒ 模块管理空白。
+			// 因此先确保项目上下文可用（三层兜底），再发请求。
+			const res = await this.$api.getAllServiceModule({project: this.projectInfo && this.projectInfo.id})
+			if (res.status === 200){
+				this.serviceModuleTree = (res.data && res.data.results) || []
+				// 空且无项目上下文 → 静默尝试自动恢复一次，再重查
+				if (!this.serviceModuleTree.length && !(this.projectInfo && this.projectInfo.id)) {
+					const r = await this.resolveProjectOrWarn({ silent: true })
+					if (r.ok) {
+						const retry = await this.$api.getAllServiceModule({project: this.projectInfo.id})
+						if (retry.status === 200) this.serviceModuleTree = (retry.data && retry.data.results) || []
+					}
+					// 仍为空 → 明确告知原因，不静默空白
+					if (!this.serviceModuleTree.length) this.resolveProjectOrWarn()
+				}
 			}
 		} catch (error) {
 			console.error('获取服务模块树失败:', error)
 		}
+	},
+
+	// 三层兜底：确保项目上下文可用。失败时给出可操作的提示。
+	// silent=true 时不弹提示（用于「先静默尝试自动恢复」的场景）。
+	async resolveProjectOrWarn({ silent = false } = {}) {
+		const r = await this.$store.dispatch('resolveProject')
+		if (!r.ok && !silent) {
+			const msgMap = {
+				'multi-project': '检测到多个项目，请先进入「我的项目」选择要操作的项目',
+				'empty': '当前账号没有可访问的项目，请先在「我的项目」中创建或申请项目',
+				'no-token': '登录状态已失效，请重新登录',
+				'error': '获取项目信息失败，请先进入「我的项目」选择项目'
+			}
+			ElMessage({
+				type: 'warning',
+				duration: 5000,
+				showClose: true,
+				message: msgMap[r.reason] || '请先进入「我的项目」选择项目'
+			})
+		}
+		return r
 	},
 	
 	filterServiceNode(value, data) {
@@ -2950,18 +2984,24 @@ export default{
 	  }
 	},
   },
-  created() {
+  async created() {
+    // ★ 先恢复项目上下文，再加载依赖 project 的数据 ——
+    // 否则模块树拿到「无 results 键」的 200 响应 ⇒ el-tree 数据 undefined ⇒ 完全空白（不报错）。
+    await this.resolveProjectOrWarn({ silent: true })
     this.check_permission()
     this.getAllServiceModule()
 	this.user_list = JSON.parse(localStorage.getItem('user_list')) || []
 	const node = JSON.parse(localStorage.getItem('api_node'))
-	if (node) {
+	// ★ 仅在节点有效时复用历史选中模块；否则可能指向已不存在的模块，把接口列表静默过滤成空。
+	if (node && node.id) {
 	  this.$nextTick(() => {
 	    if (this.$refs.treeRef) {
 	      this.$refs.treeRef.setCurrentKey(node.id)
 	    }
 	  })
 	  this.apiSearch.module_list = this.getAllIds(node)
+	} else {
+	  this.apiSearch.module_list = []
 	}
     this.getApis()
     this.user_list =  JSON.parse(localStorage.getItem('user_list'))
