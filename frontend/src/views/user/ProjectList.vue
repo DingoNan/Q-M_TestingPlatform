@@ -468,16 +468,6 @@ export default {
   name: 'ProjectManagement',
   computed: {
     ...mapState(['projectInfo', 'userInfo']),
-    calcMinWidth() {
-      let visibleButtons = 0
-      if (this.project_list.results && this.project_list.results.length > 0) {
-        const row = this.project_list.results[0]
-        if (row.has_appeal === '未申请' && this.userInfo.user_id !== row.create_by) visibleButtons += 1
-        if (row.user.includes(this.userInfo.user_id)) visibleButtons += 2
-        if (this.userInfo.user_id === row.create_by) visibleButtons += 2
-      }
-      return Math.max(10, visibleButtons * 100)
-    }
   },
   data() {
     return {

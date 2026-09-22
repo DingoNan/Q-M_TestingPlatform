@@ -39,3 +39,101 @@ html.dark .el-table .el-scrollbar__wrap::-webkit-scrollbar-track {
 .el-table .el-scrollbar__bar.is-horizontal {
   display: none !important;
 }
+
+/* ============================================================================
+ * 全站表格「操作列」统一规范（2026-09-22）
+ *
+ * 背景：全站 39 个操作列里有 34 个把列宽写成 `Math.max(10, 可见按钮数 × N)`。
+ *   el-table 在【初始化时就锁定列宽】，而「可见按钮数」来自异步拉取的 permission
+ *   ⇒ 初始化瞬间 permission={} 算出 Math.max(10, 0)=10，列被锁成 80px；
+ *   等权限到达、按钮渲染出来时列宽已不再重算 ⇒ 按钮左右溢出（右侧被裁、左侧压住邻列）。
+ *   → 列宽已统一改成各页面自己的静态常量（ACTION_COL_WIDTH），见各页注释。
+ *
+ * 本段解决另一半缺陷：**固定列必须是不透明实底**。
+ *   `fixed="right"` 在 el-table 里编译成 position:sticky，而 Element Plus 自带规则
+ *       .el-table__body-wrapper tr td.el-table-fixed-column--right { background: inherit }
+ *   `background: inherit` 会去继承父级 <tr> 的背景。而本项目的页面普遍把行背景设在
+ *   **tr** 上、且**只在偶数行 / hover / 选中时**才设（奇数行不设）
+ *   ⇒ 奇数行的固定列最终继承到 transparent ⇒ 横向滚动时下层列文字透过它显示、
+ *     与按钮视觉重叠。这就是用户报的「操作列图标按钮有遮挡」。
+ *
+ * 判据：不要依赖 `inherit`，固定列一律显式给不透明底色，并补齐各种行状态。
+ * 说明：使用 Element Plus 内置类 el-table-fixed-column--left/--right，
+ *   因此对**任何**固定列生效（不依赖各页面自定义的 .action-column 类名）。
+ * ============================================================================ */
+
+/* 表体：常规行 */
+.el-table__body-wrapper tr > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr > td.el-table-fixed-column--left {
+  background-color: var(--qm-table-fixed-bg, var(--qm-bg-2));
+}
+
+/* 表体：斑马行（页面把背景设在 tr 上：.el-table__row:nth-child(even)） */
+.el-table__body-wrapper tr.el-table__row:nth-child(even) > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr.el-table__row:nth-child(even) > td.el-table-fixed-column--left {
+  background-color: var(--qm-bg-1);
+}
+
+/* 表体：hover / 当前行 —— 先用不透明底色打底，再把半透明高亮当背景图叠上去。
+   直接写 background: var(--qm-warning-soft) 在深色主题下是 rgba(...,0.10)，
+   又会把下层文字透出来，等于没修。
+   注：:hover 是**选择器**，不依赖页面的 .hover-row 类，覆盖面更广。 */
+.el-table__body-wrapper tr.el-table__row:hover > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr.el-table__row:hover > td.el-table-fixed-column--left,
+.el-table__body-wrapper tr.el-table__row.hover-row > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr.el-table__row.hover-row > td.el-table-fixed-column--left,
+.el-table__body-wrapper tr.el-table__row.active-row > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr.el-table__row.active-row > td.el-table-fixed-column--left,
+.el-table__body-wrapper tr.el-table__row.current-row > td.el-table-fixed-column--right,
+.el-table__body-wrapper tr.el-table__row.current-row > td.el-table-fixed-column--left {
+  background-color: var(--qm-bg-2);
+  background-image: linear-gradient(var(--qm-warning-soft), var(--qm-warning-soft));
+}
+
+/* 表头：固定列保持实底（页面表头用的是渐变，本身就是不透明的，
+   这里只兜底「页面没写渐变」的情况，避免表头也透底） */
+.el-table__header-wrapper tr > th.el-table-fixed-column--right,
+.el-table__header-wrapper tr > th.el-table-fixed-column--left {
+  background-color: var(--qm-table-header-bg, var(--qm-bg-3));
+}
+
+/* 固定列左/右分隔阴影：Element Plus 只在自己带的 .is-first-column 上给
+   inset 阴影，且部分滚动态下不出现；这里给右侧固定列统一补一条，
+   让「固定区」与「滚动区」有明确视觉边界。 */
+.el-table__body-wrapper tr > td.el-table-fixed-column--right.is-first-column::before,
+.el-table__header-wrapper tr > th.el-table-fixed-column--right.is-first-column::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -8px;
+  width: 8px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.10));
+}
+html.dark .el-table__body-wrapper tr > td.el-table-fixed-column--right.is-first-column::before,
+html.dark .el-table__header-wrapper tr > th.el-table-fixed-column--right.is-first-column::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.36));
+}
+
+/* ============================================================================
+ * 全站「操作按钮组」统一布局
+ * 之前 27 个页面各自写了一遍几乎相同的 .action-buttons { display:flex; gap:8px }
+ * 且都漏了归零 Element Plus 默认给相邻按钮加的 margin-left:12px —— 它会和 gap
+ * 叠加（实测按钮 x 间距变成 50 = 32 + 8 + 10，需求宽 169 > 列可视宽 156），
+ * 这是「按按钮数算明明够、实际却溢出」的直接原因。
+ * 收敛到全局后：新增页面只要用 .action-buttons 容器就自动正确。
+ * 注：各页面 scoped 样式里的同名规则优先级更高，会覆盖本段，行为不变。
+ * ============================================================================ */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.action-buttons .el-button + .el-button {
+  margin-left: 0;
+}
+.el-table .action-buttons .el-button {
+  flex: 0 0 auto;
+}
+

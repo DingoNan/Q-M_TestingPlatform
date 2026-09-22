@@ -293,7 +293,7 @@
                 </template>
               </el-table-column>
               
-              <el-table-column align="center" :width='calcMinWidth' label="操作" class-name="action-column" fixed="right">
+              <el-table-column align="center" :width="ACTION_COL_WIDTH" label="操作" class-name="action-column" fixed="right">
                 <template #default="scope">
                   <div class="action-buttons">
                     <el-tooltip content="查看函数" placement="top" effect="dark">
@@ -559,18 +559,19 @@ export default{
         this.$emit('update:choosePythonFuncVisible', value)
       }
     },
-    calcMinWidth() {
-      let visibleButtons = 0;
-      if (this.permission.has_read_permission) visibleButtons += 1;
-      if (this.permission.has_edit_permission) visibleButtons += 1;
-      if (this.permission.has_delete_permission) visibleButtons += 1;
-      if (this.isCanChoose === true) visibleButtons += 1;
-      return Math.max(10, visibleButtons * 60);
-    }
   },
   emits: ['update:choosePythonFuncVisible', 'setPythonFuncData'],
   data() {
     return {
+      /* ★ 操作列固定宽度（px）。**不要**改回「可见按钮数 × N」这种依赖 permission 的
+         响应式计算：el-table 在初始化时就锁定列宽，而 permission 是 check_permission()
+         异步拉取的 —— 初始化瞬间 permission={} 会算出 Math.max(10, 0) = 10，列被锁成
+         80px；等权限到达、按钮渲染出来时列宽已不会再重算，按钮只能左右溢出
+         （右侧被容器裁掉、左侧压住相邻列）。
+         取值 = 41 × 该列最多可能出现的按钮数 + 20，锚定 CaseList（4 按钮 = 184px）实测值。
+         见 src/assets/css/global-table.css「全站表格操作列统一规范」。 */
+      ACTION_COL_WIDTH: 184,   // 4 个按钮
+
       bind_case_data: [],
       activeNames: ['1'],
       funcView: false,

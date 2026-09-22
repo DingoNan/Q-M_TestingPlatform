@@ -132,12 +132,22 @@ html.dark .el-message-box {
   border-color: var(--qm-line);
 }
 
-html.dark .el-table {
+/* ===== 表格主题变量（深浅色**都**要设） =====
+ * 原来这段只写在 html.dark 下，浅色主题走的是 Element Plus 默认值
+ * （--el-table-tr-bg-color → --el-fill-color-blank → #fff），
+ * 导致「固定列背景继承父级 tr」在浅色下取到的值与项目语义色不一致，
+ * 表现不稳定。统一提到两个主题都生效，并补两个固定列专用变量
+ * （见 assets/css/global-table.css 的「操作列统一规范」）。
+ */
+.el-table {
   --el-table-bg-color: var(--qm-bg-2);
   --el-table-tr-bg-color: var(--qm-bg-2);
   --el-table-header-bg-color: var(--qm-bg-3);
   --el-table-border-color: var(--qm-line);
   --el-table-row-hover-bg-color: var(--qm-bg-3);
+  /* 固定列（sticky）专用：必须是不透明色，绝不能是 rgba 半透明 */
+  --qm-table-fixed-bg: var(--qm-bg-2);
+  --qm-table-header-bg: var(--qm-bg-3);
 }
 
 /* 主色渐变按钮 */

@@ -1680,7 +1680,7 @@
 				</div>
 			  </template>
 			</vxe-column>
-			<vxe-column title="操作" :width="calcMinWidth" header-align="center" align="center">
+			<vxe-column title="操作" :width="ACTION_COL_WIDTH" header-align="center" align="center">
 			  <template #default="{ row, rowIndex }">
 				<div class="table-action-buttons">
 				  <el-tooltip content="查看步骤">
@@ -1860,6 +1860,15 @@ export default {
   },
   data() {
     return {
+      /* ★ 操作列固定宽度（px）。**不要**改回「可见按钮数 × N」这种依赖 permission 的
+         响应式计算：el-table 在初始化时就锁定列宽，而 permission 是 check_permission()
+         异步拉取的 —— 初始化瞬间 permission={} 会算出 Math.max(10, 0) = 10，列被锁成
+         80px；等权限到达、按钮渲染出来时列宽已不会再重算，按钮只能左右溢出
+         （右侧被容器裁掉、左侧压住相邻列）。
+         取值 = 41 × 该列最多可能出现的按钮数 + 20，锚定 CaseList（4 按钮 = 184px）实测值。
+         见 src/assets/css/global-table.css「全站表格操作列统一规范」。 */
+      ACTION_COL_WIDTH: 184,   // 4 个按钮
+
       fill_color: 'green',
       activeNames: '3',
       selenium_label: '',
@@ -2098,16 +2107,6 @@ export default {
     isAppUI() {
       return this.case_info.type?.includes?.('APP_UI') || false
     },
-    calcMinWidth() {
-      let visibleButtons = 0
-      if (this.permission.has_read_permission) visibleButtons += 1
-      if (this.permission.has_add_permission) visibleButtons += 1 // header中的新增按钮
-      if (this.permission.has_edit_permission) visibleButtons += 1
-      if (this.permission.has_delete_permission) visibleButtons += 1
-
-      // 每个按钮约85px，加上一些边距
-      return Math.max(10, visibleButtons * 55)
-    }
   },
   methods: {
     // ★ 直取 store 现值的路径权限表。
