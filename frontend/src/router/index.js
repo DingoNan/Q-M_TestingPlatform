@@ -266,8 +266,24 @@ const router = createRouter({
 })
 
 
+// ★★ 免权限校验路径（模块级常量）。
+// 守卫与 hasPermission 共用同一份，避免两处硬编码各自漂移。
+// ★★★ 必须包含 '/no-permission'，这是「无限重定向」死锁的止血点：
+//   若它不在免校验名单里，一旦某个页面的权限判定为 false，就会
+//     判定无权限 → next({name:'noPermission'}) → 落到 /no-permission
+//     → 该路径同样判定无权限 → 再次 next({name:'noPermission'}) → ……
+//   形成不收敛的重定向。实测：进入 /no-permission 后
+//   loginFreeList.includes 在同一处被调用 20000+ 次、Object.assign 20 万次，
+//   主线程被彻底占满，页面表现为「完全无响应」，连 DevTools 都连不上。
+const NO_AUTH_PATHS = [
+	'/user/login', '/user/help', '/user/navigation', '/projectManager',
+	'/project/index', '/myProjects', '/project/list', '/project/appeal',
+	'/project/myAppeal', '/project/systemSetting', '/project/tools', '/user/auditLog',
+	'/no-permission'
+]
+
 async function hasPermission(path){
-	if (['/user/login', '/user/help', '/user/navigation', '/projectManager', '/project/index', '/myProjects', '/project/list', '/project/appeal', '/project/myAppeal', '/project/systemSetting', '/project/tools', '/user/auditLog'].includes(path)){
+	if (NO_AUTH_PATHS.includes(path)){
 		return true
 	}
 	let permission_map = store.state.pathPermission
@@ -280,8 +296,21 @@ async function hasPermission(path){
 	if (!project_id) {
 		return true
 	}
-	if (!permission_map || !permission_map[path]) {
-		return false
+	// ★★★ 权限表尚未就绪 ⇒ 不具备校验前提，放行。
+	//   pathPermission 全项目只有一个写入点：Menu.vue 拉到角色权限后调用
+	//   setPathPermission()。而守卫在「首次进入项目内页面」时就会先执行，
+	//   此刻它必然是初始值 {} ⇒ 旧实现返回 false ⇒ 用户被直接推到无权限页。
+	if (!permission_map || typeof permission_map !== 'object' || !Object.keys(permission_map).length) {
+		return true
+	}
+	// ★★★ 该路径未纳入权限表 ⇒ 视为不受「页面级」管控，放行。
+	//   权限表只收录 27 个列表/主页级路径（实测），编辑页、详情页等子页面
+	//   不在其中（例：/resource/scriptCaseEdit 不在表内，而 /resource/scriptCase 在）。
+	//   子页面权限由所属列表页负责；真正的数据级鉴权仍由后端接口保证。
+	//   旧实现对「表里没有」与「真的没权限」不加区分，一律 false ⇒
+	//   点开脚本用例（跳编辑页）即触发无限重定向。
+	if (!permission_map[path]) {
+		return true
 	}
 	const response =  await check_permission({user_id: user_id, project_id: project_id, permission_id: permission_map[path]})
 	if (response.data.result.has_permission){
@@ -308,9 +337,17 @@ router.beforeEach(async (to, from, next) => {
 		return
 	}
 
+	// ★★★ 最终防线：无权限页自身绝不再进入权限校验分支。
+	//   否则 next({name:'noPermission'}) 会在下一轮导航里再次落进下面的
+	//   权限分支 ⇒ 再次 next({name:'noPermission'}) ⇒ 无限重定向 ⇒ 页面锁死。
+	//   按 to.name 判断（而非 path），避免路径尾斜杠/大小写差异绕过这道闸门。
+	if (to.name === 'noPermission') {
+		next()
+		return
+	}
+
 	// 系统层页面与免校验页面：直接放行，不触发项目上下文恢复
-	const loginFreeList = ['/user/login', '/user/help', '/user/navigation', '/projectManager', '/project/index', '/myProjects', '/project/list', '/project/appeal', '/project/myAppeal', '/project/systemSetting', '/project/tools', '/user/auditLog']
-	if (loginFreeList.includes(to.path)) {
+	if (NO_AUTH_PATHS.includes(to.path)) {
 		next()
 		return
 	}
