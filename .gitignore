@@ -42,8 +42,14 @@ __pycache__/
 .Python
 venv/
 .venv/
-env/
-ENV/
+# ★★ 绝不可写裸的 env/ 或 ENV/：Windows 文件系统大小写不敏感，会连
+#    frontend/src/views/env/（环境配置页源码共 6 个文件）一起忽略，
+#    导致它们从未被 add 进版本库（2026-09-22 发现并修复）。
+#    改为锚定「仓库根」与「backend/」两层。
+/env/
+/ENV/
+backend/env/
+backend/ENV/
 *.egg-info/
 .eggs/
 backend/media/
@@ -62,3 +68,8 @@ backend/.buildcache/
 # 此处补规则防止再次被 add 进来（磁盘上的本地文件不受影响）。
 *.exe
 backend/packages.zip
+
+# ---------- 会话内临时产物（提交信息草稿 / 探针输出等，不入库） ----------
+_COMMIT_MSG*.txt
+_cm_v*.txt
+_gitprobe*.txt
