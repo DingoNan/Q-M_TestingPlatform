@@ -2550,7 +2550,12 @@ export default {
 			plant: this.one_step_obj.plant || undefined
 		})
 		if (response.status === 200) {
-			const body = response.data || {}
+			// ★ 2026-09-22 修复：后端 CustomRender 会把「写接口」的返回体统一包成
+			//   {code, msg, result:{...}}，直接读 response.data.added_count 恒为 undefined，
+			//   提示语会变成「成功添加 undefined 个步骤」。必须按全站约定先取 result
+			//   （与 ApiList.vue 的 previewHar 同一写法），取不到再回落顶层以兼容直发形态。
+			const respBody = response.data || {}
+			const body = respBody.result || respBody
 			if (body.skipped_count > 0) {
 				const reasons = (body.skipped || []).slice(0, 3)
 					.map(item => `${item.name || item.api_id}：${item.reason}`)
@@ -2629,11 +2634,38 @@ export default {
 			if (response.status !== 200) {
 				return
 			}
-			const body = response.data || {}
+			// ★★ 2026-09-22 修复「提示：HAR 中没有解析到可导入的接口」：
+			//   后端 CustomRender 会把写接口的返回体统一包成 {code,msg,result:{...}}，
+			//   这里原先直接读 response.data.api_ids ⇒ 恒为 undefined ⇒ 明明后端已
+			//   成功落库 24 个接口，前端却报「没有解析到接口」。
+			//   按全站约定先取 result（与 ApiList.vue 的 previewHar 同一写法）。
+			const respBody = response.data || {}
+			const body = respBody.result || respBody
+			const stats = body.stats || {}
 			const apiIds = body.api_ids || []
 			if (apiIds.length === 0) {
-				ElMessage.warning('HAR 中没有解析到可导入的接口')
+				// 区分两种「空」：① 真的没解析到接口 ② 解析到了但逐条落库失败
+				const errs = stats.errors || []
+				if (errs.length) {
+					ElMessage({
+						type: 'error',
+						duration: 8000,
+						showClose: true,
+						message: `HAR 解析出 ${stats.total || 0} 个接口，但落库失败 ${stats.failed || 0} 个：${errs.slice(0, 2).join('；')}`
+					})
+				} else {
+					ElMessage.warning('HAR 中没有解析到可导入的接口')
+				}
 				return
+			}
+			// 部分成功也要说清楚，别让用户误以为全部导入
+			if (stats.failed > 0) {
+				ElMessage({
+					type: 'warning',
+					duration: 8000,
+					showClose: true,
+					message: `已导入 ${apiIds.length} 个接口，另有 ${stats.failed} 个落库失败：${(stats.errors || []).slice(0, 2).join('；')}`
+				})
 			}
 
 			// 第二步：批量建为用例步骤（复用「添加为步骤」的同一个后端端点）
