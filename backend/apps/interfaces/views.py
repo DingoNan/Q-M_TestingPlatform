@@ -4,6 +4,7 @@ import requests
 import copy
 import time
 import uuid
+import logging
 from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from requests.sessions import Session
@@ -26,6 +27,14 @@ from apps.interfaces.api_guard import count_api_reference
 from rest_framework.permissions import IsAuthenticated
 from apps.interfaces.filters import ApiFilter, ApiMockFilter
 from apps.messages.models import Message
+
+# ★ 2026-09-22：本文件此前**没有**模块级 logger，har_analyze_ai 里直接写
+#   logger.info(...) 会在运行期抛 NameError: name 'logger' is not defined ——
+#   而它位于业务逻辑**之后**，会把一个本来成功的请求变成 HTTP 500，
+#   且只在日志里留一条 NameError，极易被误读成「落库失败/模型问题」。
+#   这里按 app 命名空间建 logger（与 apps/interfaces/tasks.py、har_ai.py 一致），
+#   对应条目已在 qm_testing/settings.py 的 LOGGING 中补齐。
+logger = logging.getLogger('interfaces')
 
 
 class UserRequest:
@@ -2410,6 +2419,213 @@ def import_har_sync(request: Request):
         })
 
     return Response({'stats': stats, 'api_ids': api_ids, 'apis': apis}, status=200)
+
+
+@api_view(['POST'])
+def har_analyze_ai(request: Request):
+    """HAR 轨迹 → 规则式分析 → LLM 归因 → 用例草稿（阶段一最小闭环）
+
+    ★ 2026-09-22 新增。把此前两条**互不相连**的链串起来：
+
+      _har_analyze（时序 / 认证补齐 / 动态参数 / 跨请求依赖 / 路径族分组，确定性、零幻觉）
+        → build_trace_digest 压成一份 LLM 读得懂的轨迹摘要
+        → LLM 归因（业务场景划分 / 数据流解释 / 可验证断言 / 风险与覆盖缺口 / 用例草稿）
+
+    在此之前，「规则式分析」只服务于「把接口导进资产库」，而「AI 生成用例」只能从
+    用户手写的需求文本出发 —— 浏览器里真实发生过什么，AI 是看不到的。本接口补上这一段。
+
+    参数:
+      - source      : file / url / content（默认 file）
+      - file / url / content : HAR 内容来源
+      - ai_config_id: AI 模型配置 ID（必填）
+      - project     : 项目 ID（必填）
+      - uriPrefix   : URL 前缀（可选，进入轨迹摘要用）
+      - authConfig  : 认证补齐配置（可选，JSON 字符串或对象）
+      - module      : 落库目标模块 ID（可选，缺省用项目第一个模块）
+      - apply       : 是否把用例草稿落库为功能用例（默认 false，只归因不入库）
+      - draft       : 可选。把上一次 apply=false 返回的 ai 对象原样回传，
+                      则**跳过 LLM 调用**直接用它落库 —— 保证「你审阅的那份」和
+                      「入库的那份」是同一份数据（LLM 有随机性，重跑结果会变），
+                      同时省掉一次 30s+ 的模型调用。与 apply=true 搭配使用。
+
+    返回（裸 payload，由全局渲染器 CustomRender 统一套 {code,msg,result}）:
+      {
+          "digest": 喂给 LLM 的轨迹摘要（原文回传，便于人工复核归因依据）,
+          "rule_stats": _har_analyze 统计,
+          "apis": 精简接口清单,
+          "ai": {scenarios, data_flow, risks, coverage_gaps, cases},
+          "ai_error": LLM 失败时的原因（空串=成功）。失败时 ai 为空结构，
+                     但 digest/rule_stats/apis 仍然有效 —— 规则层不会因模型故障而丢,
+          "saved": [{"id":..,"name":..}],           # apply=true 时
+          "apply_requested": bool,
+          "apply_note": not_requested | saved | no_case_saved | llm_produced_no_case
+      }
+      ⚠ 不要再手写一层 {code,msg,result} —— 那会产生 result.result 双层嵌套。
+
+    说明：本接口**同步**执行（归因一般 20~60 秒）。做成异步 task + 站内信会切断
+    「导入后立刻看到归因」这个闭环，而这正是本链路的全部价值所在。
+    """
+    from apps.interfaces.har_ai import (
+        build_trace_digest, run_llm_attribution, save_cases_as_func_case,
+        normalize_attribution,
+    )
+    from apps.projects.models import Project
+
+    # ---- 0. 先鉴权，再干活 ----
+    #   顺序很重要：若先解析内容，未带凭据的请求会先撞上「请上传 HAR 文件」的 400，
+    #   把「没登录」这个真正的失败原因盖掉，排查时极易误判为参数问题。
+    user = getattr(request, 'user', None)
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return Response({'detail': '未认证，请先登录'}, status=401)
+
+    # ---- 0.5 先读 draft（透传模式：跳过 LLM，也就不需要模型配置） ----
+    #   放在 ai_config_id 校验**之前**，否则「只把审阅过的草稿入库」这条路径
+    #   会被「请选择 AI 模型」这个无关的 400 拦下。
+    draft = request.data.get('draft')
+    if draft:
+        if isinstance(draft, str):
+            try:
+                draft = json.loads(draft)
+            except (json.JSONDecodeError, ValueError):
+                return Response({'detail': 'draft 不是合法 JSON'}, status=400)
+        if not isinstance(draft, dict):
+            return Response({'detail': 'draft 必须是对象'}, status=400)
+
+    # ---- 1. 解析 HAR 内容来源（与 import_har_sync 同一套口径） ----
+    #   ⚠ 走 content(JSON body) 时受 Django DATA_UPLOAD_MAX_MEMORY_SIZE（默认 2.5MB）限制，
+    #     超出会由框架直接返回 400 HTML（连本函数都进不来）。前端请用 file(multipart)
+    #     上传 —— FILES 走 FILE_UPLOAD_MAX_MEMORY_SIZE，超大文件自动落临时文件，不受该限制。
+    source = (request.data.get('source') or 'file').lower()
+    content = ''
+    if source == 'url':
+        url = request.data.get('url')
+        if not url:
+            return Response({'detail': '请输入 URL'}, status=400)
+        try:
+            content = _fetch_url_content_v2(url)
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=400)
+    else:
+        uploaded = request.FILES.get('file')
+        if uploaded is not None:
+            try:
+                content = uploaded.read().decode('utf-8', errors='ignore')
+            except Exception as e:
+                return Response({'detail': f'文件读取失败: {e}'}, status=400)
+        else:
+            raw = request.data.get('content') or ''
+            content = raw.decode('utf-8', errors='ignore') if isinstance(raw, bytes) else raw
+        if not content or not str(content).strip():
+            return Response({'detail': '请上传 HAR 文件或提供 content'}, status=400)
+
+    ai_config_id = request.data.get('ai_config_id')
+    if not ai_config_id and not draft:
+        # 透传 draft 时不走 LLM，模型 ID 无意义，不强行要求
+        return Response({'detail': '请选择 AI 模型'}, status=400)
+
+    project_id = request.data.get('project') or request.data.get('project_id')
+    if not project_id:
+        return Response({'detail': '项目 ID 不能为空'}, status=400)
+
+    auth_config = request.data.get('authConfig')
+    if isinstance(auth_config, str) and auth_config.strip():
+        try:
+            auth_config = json.loads(auth_config)
+        except (json.JSONDecodeError, ValueError):
+            return Response({'detail': 'authConfig 不是合法 JSON'}, status=400)
+    if auth_config is not None and not isinstance(auth_config, dict):
+        return Response({'detail': 'authConfig 必须是对象'}, status=400)
+
+    # ---- 2. 规则式分析（事实来源，LLM 不得改写） ----
+    try:
+        api_list, dependencies, stats = _har_analyze(str(content), auth_config)
+    except ValueError as e:
+        return Response({'detail': str(e)}, status=400)
+
+    # ---- 3. 轨迹摘要 ----
+    digest = build_trace_digest(api_list, dependencies, stats)
+
+    project_obj = Project.objects.filter(id=project_id).first()
+    project_name = project_obj.name if project_obj is not None else ''
+
+    # ---- 4. LLM 归因 ----
+    #   ★ 支持 draft 透传：调用方可以先把 apply=false 拿到的 ai 结果给用户审阅，
+    #     再把**同一份** JSON 通过 draft 回传落库。否则 apply=true 会重跑一次 LLM，
+    #     用户看到的草稿和实际入库的草稿就不是同一份（LLM 有随机性），
+    #     既不可审计，也白花一次 30s+ 的模型调用。
+    ai_result = None
+    ai_error = ''
+    if draft:
+        # draft 已在 ---- 0.5 段解析完毕
+        ai_result = normalize_attribution(draft)
+        logger.info('[HAR归因] 使用调用方透传的 draft（跳过 LLM 调用）')
+    else:
+        try:
+            ai_result = run_llm_attribution(int(ai_config_id), digest, project_name)
+        except Exception as e:
+            # ★ 优雅降级：规则式分析（时序/认证/动态参数/跨依赖/分组）是确定性的、
+            #   已经成功，那部分价值不该被 LLM 的失败一笔勾销；而 LLM 失败最常见的原因
+            #   是「输出被 max_tokens 截断」，重试一次往往就好。
+            #   因此这里**不返 4xx/5xx**（前端拦截器会把非 200 弹成一个不说明原因的通用错误），
+            #   改为 200 + ai_error 字段，与本平台 /test/system_function_doc/ 的既有约定一致。
+            logger.exception('[HAR归因] LLM 调用失败，降级为仅返回规则层结果')
+            ai_error = str(e)
+            ai_result = {'scenarios': [], 'data_flow': [], 'risks': [],
+                         'coverage_gaps': [], 'cases': []}
+
+    # ---- 5. 可选落库（默认不入库，避免未评审的草稿污染用例库） ----
+    saved = []
+    apply_requested = str(request.data.get('apply')).lower() in ('1', 'true', 'yes', 'on')
+    if apply_requested:
+        module_id = request.data.get('module') or None
+        try:
+            saved = save_cases_as_func_case(
+                ai_result.get('cases') or [], project_id, user, module_id,
+            )
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=400)
+        logger.info('[HAR归因] 已落库功能用例 %d 条', len(saved))
+
+    # 落库结果要能被机器判定：调用方靠 apply_requested + case_drafts 才能区分
+    # 「没要求落库」/「要求了但 LLM 这次没产出用例」/「落库失败」三种情况。
+    # 否则 saved=[] 有歧义，很容易被当成「功能坏了」（实测就误判过一轮）。
+    if not apply_requested:
+        apply_note = 'not_requested'
+    elif saved:
+        apply_note = 'saved'
+    elif ai_result.get('cases'):
+        apply_note = 'no_case_saved'      # 有草稿但一条都没落进去 —— 需要查
+    else:
+        apply_note = 'llm_produced_no_case'  # LLM 本次未产出有效用例（重试即可）
+
+    apis = [{
+        'seq': a.get('seq'),
+        'method': a.get('method'),
+        'path': a.get('path'),
+        'name': a.get('name'),
+        'status': a.get('status'),
+        'host': a.get('host'),
+        'dynamic': sorted((a.get('dynamic') or {}).keys()),
+    } for a in api_list[:200]]
+
+    # ⚠ 返回契约：这里必须交**裸 payload**。
+    #   全局渲染器 utils/base.py:90 CustomRender 会无条件把视图返回的 dict
+    #   塞进 result（data 为 dict 且无 'results' 键 → response['result'] = data）。
+    #   若此处再手写一层 {code,msg,result}，响应体就变成
+    #   {"code":200,"msg":"ok","result":{"code":0,"msg":"ok","result":{...}}}
+    #   —— 前端按 result.digest 取值会全部拿到 undefined，而且 HTTP 仍是 200，
+    #   排查时极易误判为「LLM 没产出内容」。同类端点 import_har_sync(L2412)
+    #   同样是裸 payload，保持一致。
+    return Response({
+        'digest': digest,
+        'rule_stats': stats,
+        'apis': apis,
+        'ai': ai_result,
+        'ai_error': ai_error,
+        'saved': saved,
+        'apply_requested': apply_requested,
+        'apply_note': apply_note,
+    }, status=200)
 
 
 @api_view(['POST'])

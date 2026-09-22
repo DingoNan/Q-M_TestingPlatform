@@ -376,6 +376,15 @@
               </div>
             </div>
             <div class="header-action-section">
+              <ColumnSetting
+                v-if="!isCanChoose"
+                v-model="visibleColKeys"
+                :columns="columnMeta"
+                storage-key="case_list"
+                :available-width="tableAvailWidth"
+                :overflow-px="tableOverflowPx"
+                @change="handleColumnsChanged"
+              />
               <div class="selected-count-badge" v-if="!isCanChoose && multipleSelection.length > 0">
                 <el-icon><SuccessFilled /></el-icon>
                 <span>已选 {{ multipleSelection.length }}</span>
@@ -425,8 +434,9 @@
         </div>
 
         <!-- 数据表格 -->
-        <div class="table-wrapper">
+        <div class="table-wrapper" ref="tableWrapRef">
           <el-table 
+            ref="caseTableRef"
             :data="case_list.results" 
             :max-height="'calc(100vh - 595px)'" 
 			@selection-change="handleSelectionChange"
@@ -454,7 +464,8 @@
             </el-table-column>
             
             <el-table-column 
-              label="用例信息" 
+              v-if="isColVisible('info')"
+              label="用例信息"
               min-width="180" 
               align="center"
               class-name="case-info-column"
@@ -480,7 +491,8 @@
             </el-table-column>
             
             <el-table-column 
-              label="最近测试结果" 
+              v-if="isColVisible('result')"
+              label="最近测试结果"
               prop="recent_test_result_name" 
               width="92" 
               align="center"
@@ -515,7 +527,8 @@
             </el-table-column>
             
             <el-table-column 
-              label="用例标签" 
+              v-if="isColVisible('tag')"
+              label="用例标签"
               prop="tag_name" 
               min-width="130" 
               align="center"
@@ -565,7 +578,8 @@
             
             <!-- 合并列：创建信息 -->
             <el-table-column 
-              label="创建信息" 
+              v-if="isColVisible('createInfo')"
+              label="创建信息"
               width="148" 
               align="center"
 			  sortable="custom"  
@@ -588,7 +602,8 @@
             
             <!-- 合并列：更新信息 -->
             <el-table-column 
-              label="更新信息" 
+              v-if="isColVisible('updateInfo')"
+              label="更新信息"
               width="148" 
               align="center"
 			  sortable="custom"  
@@ -740,6 +755,7 @@ import {
   SuccessFilled,
   Pointer
 } from '@element-plus/icons-vue'
+import ColumnSetting from '../../components/ColumnSetting.vue'
 
 export default{
   watch: {
@@ -875,6 +891,13 @@ export default{
       //   按钮（4×32 + 3×8 = 152px）只能左右溢出：右侧被容器裁掉、左侧压住「更新信息」列。
       //   取 184 = 152 按钮 + 20 左右内边距 + 12 余量。
       ACTION_COL_WIDTH: 184,
+      // ★ 列显隐状态（列设置组件通过 v-model 写回）。
+      //   持久化与「按容器宽自动适配」由 ColumnSetting 负责，
+      //   这里只作为渲染开关：isColVisible(key) 决定 el-table-column 的 v-if。
+      visibleColKeys: [],
+      // 表格容器实测宽 / 横向溢出量（ResizeObserver 维护）
+      tableAvailWidth: 0,
+      tableOverflowPx: 0,
       caseSearch:{
         name: '',
         service: '',
@@ -915,7 +938,14 @@ export default{
     CopyDocument,
     Setting,
     Expand,
-    Fold
+    Fold,
+    ColumnSetting
+  },
+  mounted() {
+    this.setupTableObserver()
+  },
+  beforeUnmount() {
+    this.teardownTableObserver()
   },
   computed: {
     /**
@@ -926,10 +956,72 @@ export default{
     visibleAutomationTypes() {
       const hidden = this.hiddenAutomationTypes || []
       return this.automationTypes.filter(t => !hidden.includes(t.value))
+    },
+    /**
+     * ★ 列元数据（供 ColumnSetting 计算「按容器宽自动适配」）
+     * width / minWidth 必须与下方 el-table-column 上的取值一一对应，否则自动适配总宽会算错。
+     * hideable === false 的列不可隐藏，但其宽度计入总宽。
+     * priority 越小越重要、越晚被自动收起。
+     */
+    columnMeta() {
+      return [
+        { key: 'selection', label: '选择框', width: 52, hideable: false },
+        { key: 'index', label: '序号', width: 64, hideable: false },
+        { key: 'info', label: '用例信息', minWidth: 180, hideable: false },
+        { key: 'result', label: '最近测试结果', width: 92, priority: 20 },
+        { key: 'tag', label: '用例标签', minWidth: 130, priority: 30 },
+        { key: 'createInfo', label: '创建信息', width: 148, priority: 40 },
+        { key: 'updateInfo', label: '更新信息', width: 148, priority: 50 },
+        { key: 'action', label: '操作', width: this.ACTION_COL_WIDTH, hideable: false },
+      ]
     }
   },
   methods:{
     ...mapActions(['getRolePermission']),
+
+    /* ===== 列设置（ColumnSetting）===== */
+    /** 某列 key 当前是否可见；未初始化时全部可见，避免首帧闪空 */
+    isColVisible(key) {
+      if (!this.visibleColKeys || this.visibleColKeys.length === 0) return true
+      return this.visibleColKeys.includes(key)
+    },
+    /** 列显隐变化后 el-table 需要重新布局（fixed 列 sticky 定位会变） */
+    handleColumnsChanged() {
+      this.$nextTick(() => {
+        const t = this.$refs.caseTableRef
+        if (t && typeof t.doLayout === 'function') t.doLayout()
+        this.updateTableMetrics()
+      })
+    },
+    /**
+     * 实测容器宽与横向溢出量。
+     * 用容器宽（不随列变化）而非 body 宽，避免「隐藏列 → 滚动条消失 → 可显示更多」的振荡。
+     */
+    updateTableMetrics() {
+      const wrap = this.$refs.tableWrapRef
+      if (!wrap) return
+      this.tableAvailWidth = Math.round(wrap.clientWidth)
+      const body = wrap.querySelector('.el-table__body-wrapper')
+      this.tableOverflowPx = body
+        ? Math.max(0, Math.round(body.scrollWidth - body.clientWidth))
+        : 0
+    },
+    setupTableObserver() {
+      this.$nextTick(() => {
+        this.updateTableMetrics()
+        // 表格首帧渲染可能晚于 mounted，补一次延迟测量
+        setTimeout(() => this.updateTableMetrics(), 300)
+      })
+      if (typeof ResizeObserver === 'undefined') return
+      this._tableRO = new ResizeObserver(() => this.updateTableMetrics())
+      if (this.$refs.tableWrapRef) this._tableRO.observe(this.$refs.tableWrapRef)
+    },
+    teardownTableObserver() {
+      if (this._tableRO) {
+        this._tableRO.disconnect()
+        this._tableRO = null
+      }
+    },
     
     handleTypeChange() {
 	  localStorage.setItem('case_type', JSON.stringify(this.caseSearch.type))

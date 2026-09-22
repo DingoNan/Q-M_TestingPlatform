@@ -811,6 +811,15 @@
               </div>
             </div>
             <div class="header-action-section">
+              <ColumnSetting
+                v-if="!isCanChoose"
+                v-model="visibleColKeys"
+                :columns="columnMeta"
+                storage-key="func_case_list"
+                :available-width="tableAvailWidth"
+                :overflow-px="tableOverflowPx"
+                @change="handleColumnsChanged"
+              />
               <div class="selected-count-badge" v-if="!isCanChoose && multipleSelection.length > 0">
                 <el-icon><SuccessFilled /></el-icon>
                 <span>已选 {{ multipleSelection.length }}</span>
@@ -866,8 +875,9 @@
         </div>
 
         <!-- 数据表格 -->
-        <div class="table-wrapper">
+        <div class="table-wrapper" ref="tableWrapRef">
           <el-table 
+            ref="funcTableRef"
             :data="case_list.results" 
             :max-height="'calc(100vh - 540px)'"
             class="elegant-table"
@@ -918,6 +928,7 @@
 			</el-table-column> -->
 			
 			<el-table-column
+			  v-if="isColVisible('autoStatus')"
 			  label="自动化状态"
 			  width="130"
 			  align="center"
@@ -1000,6 +1011,7 @@
             </el-table-column> -->
             
             <el-table-column
+              v-if="isColVisible('tag')"
               label="用例标签"
               prop="tag_name"
               min-width="140"
@@ -1049,6 +1061,7 @@
             </el-table-column>
 
 			<el-table-column
+			  v-if="isColVisible('caseStatus')"
 			  label="用例状态"
 			  width="96"
 			  align="center"
@@ -1063,6 +1076,7 @@
 			</el-table-column>
 
 			<el-table-column
+			  v-if="isColVisible('owner')"
 			  label="负责人"
 			  width="120"
 			  align="center"
@@ -1099,7 +1113,8 @@
 
             <!-- 合并列：创建信息 -->
             <el-table-column 
-              label="创建信息" 
+              v-if="isColVisible('createInfo')"
+              label="创建信息"
               width="148" 
               align="center"
 			  prop='create_time'
@@ -1122,7 +1137,8 @@
             
             <!-- 合并列：更新信息 -->
             <el-table-column 
-              label="更新信息" 
+              v-if="isColVisible('updateInfo')"
+              label="更新信息"
               width="148" 
               align="center"
 			  prop='update_time'
@@ -1263,6 +1279,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import FullText from '../../components/FullText.vue'
 import CaseList from './CaseList.vue'
 import FunCaseTable from '../../components/FunCaseTable.vue'
+import ColumnSetting from '../../components/ColumnSetting.vue'
 
 import {
   Refresh,
@@ -1316,6 +1333,32 @@ export default{
   },
   computed:{
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
+    /**
+     * ★ 列元数据（供 ColumnSetting 计算「按容器宽自动适配」）
+     * width / minWidth 必须与下方 el-table-column 上的取值一一对应，否则自动适配总宽会算错。
+     * hideable === false 的列不可隐藏，但其宽度计入总宽。
+     * priority 越小越重要、越晚被自动收起。
+     */
+    columnMeta() {
+      return [
+        { key: 'selection', label: '选择框', width: 52, hideable: false },
+        { key: 'index', label: '序号', width: 64, hideable: false },
+        { key: 'name', label: '用例名称', minWidth: 200, hideable: false },
+        { key: 'autoStatus', label: '自动化状态', width: 130, priority: 20 },
+        { key: 'caseStatus', label: '用例状态', width: 96, priority: 25 },
+        { key: 'tag', label: '用例标签', minWidth: 140, priority: 30 },
+        { key: 'owner', label: '负责人', width: 120, priority: 35 },
+        { key: 'createInfo', label: '创建信息', width: 148, priority: 40 },
+        { key: 'updateInfo', label: '更新信息', width: 148, priority: 50 },
+        { key: 'action', label: '操作', width: this.ACTION_COL_WIDTH, hideable: false },
+      ]
+    }
+  },
+  mounted() {
+    this.setupTableObserver()
+  },
+  beforeUnmount() {
+    this.teardownTableObserver()
   },
   data() {
     return {
@@ -1435,6 +1478,11 @@ export default{
 	  ],
       permission: {},
       ACTION_COL_WIDTH: 184,
+      // ★ 列显隐状态（列设置组件通过 v-model 写回）
+      visibleColKeys: [],
+      // 表格容器实测宽 / 横向溢出量（ResizeObserver 维护）
+      tableAvailWidth: 0,
+      tableOverflowPx: 0,
       caseSearch:{
         name: '',
         service: '',
@@ -1503,10 +1551,55 @@ export default{
 	FunCaseTable,
 	CaseList,
     SuccessFilled,
-    ArrowDown
+    ArrowDown,
+    ColumnSetting
   },
   methods:{
     ...mapActions(['getRolePermission']),
+
+    /* ===== 列设置（ColumnSetting）===== */
+    /** 某列 key 当前是否可见；未初始化时全部可见，避免首帧闪空 */
+    isColVisible(key) {
+      if (!this.visibleColKeys || this.visibleColKeys.length === 0) return true
+      return this.visibleColKeys.includes(key)
+    },
+    /** 列显隐变化后 el-table 需要重新布局（fixed 列 sticky 定位会变） */
+    handleColumnsChanged() {
+      this.$nextTick(() => {
+        const t = this.$refs.funcTableRef
+        if (t && typeof t.doLayout === 'function') t.doLayout()
+        this.updateTableMetrics()
+      })
+    },
+    /**
+     * 实测容器宽与横向溢出量。
+     * 用容器宽（不随列变化）而非 body 宽，避免「隐藏列 → 滚动条消失 → 可显示更多」的振荡。
+     */
+    updateTableMetrics() {
+      const wrap = this.$refs.tableWrapRef
+      if (!wrap) return
+      this.tableAvailWidth = Math.round(wrap.clientWidth)
+      const body = wrap.querySelector('.el-table__body-wrapper')
+      this.tableOverflowPx = body
+        ? Math.max(0, Math.round(body.scrollWidth - body.clientWidth))
+        : 0
+    },
+    setupTableObserver() {
+      this.$nextTick(() => {
+        this.updateTableMetrics()
+        // 表格首帧渲染可能晚于 mounted，补一次延迟测量
+        setTimeout(() => this.updateTableMetrics(), 300)
+      })
+      if (typeof ResizeObserver === 'undefined') return
+      this._tableRO = new ResizeObserver(() => this.updateTableMetrics())
+      if (this.$refs.tableWrapRef) this._tableRO.observe(this.$refs.tableWrapRef)
+    },
+    teardownTableObserver() {
+      if (this._tableRO) {
+        this._tableRO.disconnect()
+        this._tableRO = null
+      }
+    },
 
     handleTypeChange() {
       this.page_size_params.page = 1

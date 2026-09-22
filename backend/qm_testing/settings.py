@@ -309,6 +309,19 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False
         },
+        # ★ 接口服务日志（2026-09-22 补）
+        #   背景：apps/interfaces/tasks.py 与 apps/interfaces/har_ai.py 一直用
+        #   logging.getLogger('interfaces')，但 LOGGING 里**从来没有这个条目**，
+        #   且本配置没有根 logger('')、disable_existing_loggers=True
+        #   ⇒ 这些 logger 无 handler、冒泡到根也无 handler，最终只落到
+        #   logging.lastResort（仅 WARNING 以上、且只写 stderr）——
+        #   表现为「打了日志但日志文件里什么都没有」，排查时会误判为「没执行到」。
+        #   这里按 app 命名空间补齐，与 'elements' / 'ai_service' 同规格。
+        'interfaces': {
+            'handlers': ['console', 'info', 'error'],
+            'level': 'INFO',
+            'propagate': False
+        },
         # 测试任务日志
         'apps.tests.tasks': {
             'handlers': ['console', 'info', 'error'],

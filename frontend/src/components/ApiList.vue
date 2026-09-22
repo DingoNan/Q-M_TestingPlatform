@@ -1177,6 +1177,121 @@
             </el-button>
           </div>
         </div>
+
+        <!-- ★ AI 归因（阶段一闭环）：规则式分析 → LLM 业务归因 → 用例草稿
+             上面「接口清单 / 动态参数」是规则层看到的事实；这里把它交给 LLM
+             做业务语义归因。默认不入库，确认后才写成功能用例草稿。 -->
+        <div class="har-block har-ai-block">
+          <div class="har-block-title">
+            <el-icon><MagicStick /></el-icon>
+            AI 归因（把这段真实轨迹变成用例草稿）
+          </div>
+          <div class="har-block-sub">
+            规则式分析负责<b>事实</b>（调用时序、认证补齐、动态参数、跨请求依赖，零幻觉）；
+            AI 负责<b>业务语义</b>（场景划分、数据流解释、可验证断言、风险与覆盖缺口、用例草稿）。
+            归因结果<b>默认不入库</b>，需你确认后才写成功能用例草稿。
+          </div>
+
+          <div class="har-ai-bar">
+            <el-select v-model="harAiConfigId" placeholder="选择 AI 模型" size="default"
+                       class="select" popper-class="select-dropdown-rounded" style="width:280px">
+              <el-option v-for="c in harAiConfigs" :key="c.id"
+                         :label="(c.provider_name || '') + ' / ' + (c.model_name || '')" :value="c.id" />
+            </el-select>
+            <el-button type="primary" :loading="harAiLoading" :disabled="!harAiConfigId"
+                       class="dialog-confirm-btn" @click="runHarAi">
+              <el-icon style="margin-right:4px"><MagicStick /></el-icon>
+              {{ harAiResult ? '重新归因' : '运行 AI 归因' }}
+            </el-button>
+            <span class="har-ai-tip">同步执行，约 20~60 秒</span>
+          </div>
+
+          <template v-if="harAiResult">
+            <el-alert v-if="harAiResult.ai_error" type="error" :closable="false" class="har-alert"
+                      title="AI 归因这一步失败了"
+                      :description="'规则层分析（调用时序 / 认证 / 动态参数 / 跨请求依赖）仍然有效，可直接用于导入；AI 部分可稍后重试。原因：' + harAiResult.ai_error" />
+            <div class="har-ai-summary">
+              <span class="har-ai-chip">业务场景 <b>{{ (harAiResult.ai.scenarios || []).length }}</b></span>
+              <span class="har-ai-chip">数据流 <b>{{ (harAiResult.ai.data_flow || []).length }}</b></span>
+              <span class="har-ai-chip warn">风险 <b>{{ (harAiResult.ai.risks || []).length }}</b></span>
+              <span class="har-ai-chip warn">覆盖缺口 <b>{{ (harAiResult.ai.coverage_gaps || []).length }}</b></span>
+              <span class="har-ai-chip ok">用例草稿 <b>{{ (harAiResult.ai.cases || []).length }}</b></span>
+            </div>
+
+            <el-collapse class="har-ai-collapse">
+              <el-collapse-item name="scenarios"
+                                :title="'业务场景（' + (harAiResult.ai.scenarios || []).length + '）'">
+                <div v-for="(s, i) in (harAiResult.ai.scenarios || [])" :key="'sc' + i" class="har-ai-item">
+                  <div class="har-ai-item-h"><b>{{ s.name }}</b>
+                    <span class="har-ai-seqs">接口序号 {{ (s.api_seqs || []).join(', ') }}</span>
+                  </div>
+                  <div class="har-ai-item-b">{{ s.intent }}</div>
+                  <div v-if="s.assertions && s.assertions.length" class="har-ai-sub">断言</div>
+                  <ul class="har-ai-list">
+                    <li v-for="(a, j) in s.assertions" :key="'as' + j">{{ a }}</li>
+                  </ul>
+                </div>
+              </el-collapse-item>
+
+              <el-collapse-item name="dataflow"
+                                :title="'跨请求数据流（' + (harAiResult.ai.data_flow || []).length + '）'">
+                <div v-for="(d, i) in (harAiResult.ai.data_flow || [])" :key="'df' + i" class="har-ai-item">
+                  <div class="har-ai-item-h">
+                    <b>{{ d.var }}</b>
+                    <span class="har-ai-seqs">来自序号 {{ d.from_seq }} → 用于 {{ (d.to_seqs || []).join(', ') }}</span>
+                  </div>
+                  <div class="har-ai-item-b">{{ d.note }}</div>
+                </div>
+              </el-collapse-item>
+
+              <el-collapse-item name="risks"
+                                :title="'风险（' + (harAiResult.ai.risks || []).length + '）'">
+                <ul class="har-ai-list">
+                  <li v-for="(r, i) in (harAiResult.ai.risks || [])" :key="'rk' + i">{{ r }}</li>
+                </ul>
+              </el-collapse-item>
+
+              <el-collapse-item name="gaps"
+                                :title="'覆盖缺口（' + (harAiResult.ai.coverage_gaps || []).length + '）'">
+                <ul class="har-ai-list">
+                  <li v-for="(g, i) in (harAiResult.ai.coverage_gaps || [])" :key="'gp' + i">{{ g }}</li>
+                </ul>
+              </el-collapse-item>
+
+              <el-collapse-item name="cases"
+                                :title="'用例草稿（' + (harAiResult.ai.cases || []).length + '）'">
+                <div v-for="(c, i) in (harAiResult.ai.cases || [])" :key="'cs' + i" class="har-ai-item">
+                  <div class="har-ai-item-h"><b>{{ c.name }}</b>
+                    <span class="har-ai-seqs">{{ (c.step_table || []).length }} 步</span>
+                  </div>
+                  <div v-if="c.setup_condition" class="har-ai-item-b">前置：{{ c.setup_condition }}</div>
+                  <table class="har-ai-steps">
+                    <tr v-for="st in (c.step_table || [])" :key="'st' + i + '-' + st.step">
+                      <td class="n">{{ st.step }}</td>
+                      <td class="d">{{ st.desc }}</td>
+                      <td class="e">{{ st.exp }}</td>
+                    </tr>
+                  </table>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+
+            <div class="har-ai-actions">
+              <el-button type="primary" class="dialog-confirm-btn"
+                         :disabled="!(harAiResult.ai.cases || []).length"
+                         :loading="harAiSaving" @click="applyHarAiDraft">
+                <el-icon style="margin-right:4px"><DataAnalysis /></el-icon>
+                确认入库为功能用例（{{ (harAiResult.ai.cases || []).length }} 条）
+              </el-button>
+              <span class="har-ai-tip">
+                入库后为「待修改 / 手工」状态的草稿，需人工评审后再启用
+              </span>
+              <span v-if="harAiSaved.length" class="har-ai-saved">
+                已入库 {{ harAiSaved.length }} 条：{{ harAiSaved.map(s => '#' + s.id).join('、') }}
+              </span>
+            </div>
+          </template>
+        </div>
       </div>
       <div v-else class="har-preview-empty">暂无预览数据</div>
     </el-drawer>
@@ -1266,7 +1381,9 @@ import {
   Link,
   Key,
   SuccessFilled,
-  Document
+  Document,
+  MagicStick,
+  DataAnalysis
 } from '@element-plus/icons-vue'
 import Params from './Params.vue'
 import MockParams from './MockParams.vue'
@@ -1597,6 +1714,13 @@ export default{
       harPreviewVisible: false,
       harPreviewLoading: false,
       harPreview: null,
+      // ★ AI 归因（HAR 轨迹 → 规则式分析 → LLM 归因 → 用例草稿）
+      harAiLoading: false,
+      harAiSaving: false,
+      harAiResult: null,   // { digest, rule_stats, apis, ai:{scenarios,data_flow,risks,coverage_gaps,cases}, saved, apply_note }
+      harAiSaved: [],      // 已入库的功能用例 [{id,name}]
+      harAiConfigId: '',
+      harAiConfigs: [],
       apiImportSet: {
         format: 'openapi-swagger',
         source: 'file',
@@ -2825,6 +2949,8 @@ export default{
         if(response.status === 200 && inner && inner.apis){
           this.harPreview = inner
           this.harPreviewVisible = true
+          // AI 归因用的模型列表也在打开抽屉时备好（懒加载，失败不影响预览）
+          this.loadHarAiConfigs()
           // 首次预览若后端探测到登录接口且用户还没填，自动补上
           if(inner.authSuggestion && inner.authSuggestion.url && !this.harAuth.login.url){
             this.applyAuthSuggestion()
@@ -2851,6 +2977,111 @@ export default{
         this.harAuth.login.json = JSON.stringify(s.json, null, 2)
       }
       ElMessage({ type: 'success', message: '已填入认证配置，请确认账号密码后重新预览' })
+    },
+    // ===== AI 归因：HAR 轨迹 → 规则式分析 → LLM 归因 → 用例草稿 =====
+    // 上面的「解析预览」只到规则层（接口清单/动态参数/依赖）；
+    // 这里把同一段轨迹交给 LLM 做业务归因。默认不入库，确认后才落 FuncCase。
+    async loadHarAiConfigs(){
+      if(this.harAiConfigs.length) return
+      try{
+        const res = await this.$api.getAiConfigs({ is_active: true, project: this.projectInfo.id })
+        if(res.status === 200){
+          this.harAiConfigs = res.data.results || res.data.result || []
+          if(!this.harAiConfigId){
+            const def = this.harAiConfigs.find(c => c.is_default)
+            if(def) this.harAiConfigId = def.id
+          }
+        }
+      }catch(e){
+        this.harAiConfigs = []
+      }
+    },
+    async runHarAi(){
+      if(!this.apiImportSet.file){
+        ElMessage({ type: 'warning', message: '请先上传 HAR 文件' })
+        return
+      }
+      if(!this.harAiConfigId){
+        ElMessage({ type: 'warning', message: '请先选择 AI 模型' })
+        return
+      }
+      this.harAiLoading = true
+      this.harAiResult = null
+      this.harAiSaved = []
+      try{
+        const payload = new FormData()
+        payload.append('file', this.apiImportSet.file)
+        payload.append('source', 'file')
+        payload.append('ai_config_id', this.harAiConfigId)
+        payload.append('project', this.projectInfo.id)
+        payload.append('apply', 'false')        // 先只归因，绝不落库
+        const authCfg = this.buildHarAuthConfig()
+        if(authCfg) payload.append('authConfig', JSON.stringify(authCfg))
+
+        const response = await this.$api.harAnalyzeAi(payload)
+        const respBody = response.data || {}
+        const inner = respBody.result || respBody
+        if(response.status === 200 && inner && inner.ai){
+          this.harAiResult = inner
+          if(inner.ai_error){
+            // 后端是 200 + ai_error 的降级形态：规则层结果仍然可用，如实告知 AI 这一步失败
+            ElMessage({ type: 'error', duration: 8000,
+              message: 'AI 归因失败（规则层分析结果仍可用）：' + inner.ai_error })
+          }else{
+            ElMessage({ type: 'success', message:
+              `归因完成：${(inner.ai.scenarios || []).length} 个场景 / ${(inner.ai.cases || []).length} 条用例草稿` })
+          }
+        }else{
+          ElMessage({ type: 'error', message: inner.detail || respBody.detail || 'AI 归因失败' })
+        }
+      }catch(e){
+        ElMessage({ type: 'error', message: 'AI 归因异常：' + (e && e.message ? e.message : e) })
+      }finally{
+        this.harAiLoading = false
+      }
+    },
+    async applyHarAiDraft(){
+      const draft = this.harAiResult && this.harAiResult.ai
+      if(!draft || !(draft.cases || []).length){
+        ElMessage({ type: 'warning', message: '没有可入库的用例草稿' })
+        return
+      }
+      try{
+        await ElMessageBox.confirm(
+          `将 ${draft.cases.length} 条用例草稿写入当前项目的功能用例（状态：待修改/手工），后续可人工编辑。是否继续？`,
+          '确认入库', { type: 'warning', confirmButtonText: '确认入库', cancelButtonText: '取消' }
+        )
+      }catch(e){
+        return   // 用户取消
+      }
+      this.harAiSaving = true
+      try{
+        const payload = new FormData()
+        payload.append('file', this.apiImportSet.file)
+        payload.append('source', 'file')
+        payload.append('project', this.projectInfo.id)
+        payload.append('apply', 'true')
+        // ★ draft 透传：让后端跳过 LLM 重跑，保证「刚才审阅的那份」就是「入库的那份」
+        //   （LLM 有随机性，重跑会得到不同草稿，既不真实也白花一次 30s+ 调用）
+        payload.append('draft', JSON.stringify(draft))
+
+        const response = await this.$api.harAnalyzeAi(payload)
+        const respBody = response.data || {}
+        const inner = respBody.result || respBody
+        const saved = (inner && inner.saved) || []
+        if(response.status === 200 && saved.length){
+          this.harAiSaved = saved
+          ElMessage({ type: 'success', message: `已入库 ${saved.length} 条功能用例草稿` })
+        }else if(response.status === 200 && inner && inner.apply_note === 'llm_produced_no_case'){
+          ElMessage({ type: 'warning', message: '本次没有可入库的用例（草稿为空）' })
+        }else{
+          ElMessage({ type: 'error', message: (inner && inner.detail) || respBody.detail || '入库失败' })
+        }
+      }catch(e){
+        ElMessage({ type: 'error', message: '入库异常：' + (e && e.message ? e.message : e) })
+      }finally{
+        this.harAiSaving = false
+      }
     },
     async deleteApi(id){
       ElMessageBox.confirm(
@@ -4603,6 +4834,158 @@ export default{
   padding: 40px;
   text-align: center;
   color: var(--qm-text-3);
+}
+
+/* ===== AI 归因区块（HAR 解析预览抽屉内） ===== */
+.har-ai-block {
+  border: 1px solid var(--qm-line-strong);
+  background: var(--qm-bg-1);
+}
+
+.har-ai-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0 4px;
+}
+
+.har-ai-tip {
+  font-size: 12px;
+  color: var(--qm-text-3);
+}
+
+.har-ai-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.har-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--qm-bg-2);
+  border: 1px solid var(--qm-line-strong);
+  color: var(--qm-text-2);
+}
+
+.har-ai-chip b {
+  color: var(--qm-text-1);
+  font-weight: 600;
+}
+
+.har-ai-chip.ok {
+  background: var(--qm-ok-bg, rgba(16, 185, 129, .1));
+  border-color: rgba(16, 185, 129, .35);
+}
+
+.har-ai-chip.warn {
+  background: var(--qm-warn-bg, rgba(245, 158, 11, .1));
+  border-color: rgba(245, 158, 11, .35);
+}
+
+.har-ai-collapse {
+  margin-top: 10px;
+  border-top: none;
+}
+
+.har-ai-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--qm-bg-2);
+  margin-bottom: 8px;
+}
+
+.har-ai-item-h {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--qm-text-1);
+}
+
+.har-ai-seqs {
+  font-size: 12px;
+  color: var(--qm-text-3);
+}
+
+.har-ai-item-b {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--qm-text-2);
+  word-break: break-word;
+}
+
+.har-ai-sub {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--qm-text-3);
+}
+
+.har-ai-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--qm-text-2);
+}
+
+.har-ai-list li {
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.har-ai-steps {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.har-ai-steps td {
+  border: 1px solid var(--qm-line-strong);
+  padding: 6px 8px;
+  vertical-align: top;
+  line-height: 1.7;
+  color: var(--qm-text-2);
+  word-break: break-word;
+}
+
+.har-ai-steps td.n {
+  width: 34px;
+  text-align: center;
+  color: var(--qm-text-3);
+}
+
+.har-ai-steps td.d {
+  width: 46%;
+}
+
+.har-ai-steps td.e {
+  color: var(--qm-text-1);
+}
+
+.har-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--qm-line-strong);
+}
+
+.har-ai-saved {
+  font-size: 12px;
+  color: var(--qm-ok-fg, #10b981);
+  font-weight: 600;
 }
 
 .form-tip {

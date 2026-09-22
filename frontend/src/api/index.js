@@ -886,6 +886,18 @@ export default {
 			: {}
 		return http_request.post('/har_preview/', params, config)
 	},
+	harAnalyzeAi(params){
+		// ★ HAR 轨迹 → 规则式分析 → LLM 归因（同步，20~60s）
+		//   apply=false：只归因、返回 digest/scenarios/risks/coverage_gaps/cases
+		//   apply=true ：把草稿落库为功能用例；可同时带 draft（上次返回的 ai 对象）
+		//                跳过 LLM，保证「审阅的那份」就是「入库的那份」
+		//   ⚠ 必须走 FormData（file 上传）：HAR 常有 2MB+，走 JSON body 会撞 Django
+		//     DATA_UPLOAD_MAX_MEMORY_SIZE（默认 2.5MB）而被框架直接 400。
+		const config = params instanceof FormData
+			? { headers: { 'Content-Type': 'multipart/form-data' } }
+			: {}
+		return http_request.post('/har_analyze_ai/', params, config)
+	},
 	import_element(params){
 		return http_request.post('/import_element/', params)
 	},
