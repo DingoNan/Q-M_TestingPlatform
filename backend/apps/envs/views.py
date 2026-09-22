@@ -348,8 +348,23 @@ def get_request_host(request):
             service = ServiceModule.objects.get(id=module).service_id
         else:
             service = -module
-    if Service.objects.get(id=service).is_server_host:
-        env_service_hosts = EnvNameServiceSerializers(EnvService.objects.filter(is_delete=False, service=service),
+    # ★ 2026-09-22 修复 500（原报错：Service.DoesNotExist @ envs/views.py:351）
+    #   原实现直接 Service.objects.get(id=service)：当前端切到「测试」页签、
+    #   还没选中服务/模块（service 为空、或指向已软删的服务）时会直接抛异常。
+    #   实测 12 个参数变体里有 8 个返回 500（ApiList.vue 切页签时无前置判断）。
+    #   这里改为容错查询 + 空列表回退，前端可正常渲染「暂无可用域名」。
+    try:
+        svc = Service.objects.filter(id=service, is_delete=False).first() if service else None
+    except (ValueError, TypeError):
+        svc = None
+    if svc is None:
+        return Response({
+            'is_server_host': False,
+            'env_hosts': [],
+            'warning': '未找到对应的服务配置，请先在服务管理中选择所属服务',
+        })
+    if svc.is_server_host:
+        env_service_hosts = EnvNameServiceSerializers(EnvService.objects.filter(is_delete=False, service=svc.id),
                                                       many=True).data
         return Response({'is_server_host': True, 'env_hosts': env_service_hosts})
     else:
@@ -426,26 +441,29 @@ def get_all_plant_module_page(request):
 
 @api_view(['GET'])
 def get_all_plant_element(request):
+    """获取「平台 → 模块 → 元素」三级树
+
+    ★ 2026-09-22 修复 500（原报错：FieldError: Cannot resolve keyword 'page'）：
+      原实现按「平台 → 模块 → 页面 → 元素」四层拼装，其中
+        elements = Element.objects.filter(is_delete=False, page=page['id'])
+      引用了一个**不存在的字段** —— Element 模型（apps/elements/models.py）只有
+        project / module / name / type / web / ios / android / status
+      元素是直接挂在「模块」下的，根本没有「页面」这一层外键，
+      该查询必然抛 FieldError，接口稳定返回 500。
+      现改为按 module 关联，返回 plant → module → element 三级结构。
+      注意：返回层级由四层变三层，是本次修复带来的**结构变更**。
+    """
     project_id = request.query_params.get('project')
     all_plant = []
-    plants = Plant.objects.all().filter(is_delete=False, project=project_id).values()
+    plants = Plant.objects.filter(is_delete=False, project=project_id).values()
     for plant in plants:
-        has_element = False
-        modules = Module.objects.all().filter(is_delete=False, plant=plant['id']).values()
         all_module = []
-        for module in modules:
-            pages = Page.objects.all().filter(is_delete=False, module=module['id']).values()
-            all_page = []
-            for page in pages:
-                elements = Element.objects.all().filter(is_delete=False, page=page['id']).values()
-                if elements:
-                    page['children'] = elements
-                    has_element = True
-                all_page.append(page)
-            if has_element:
-                module['children'] = all_page
+        for module in Module.objects.filter(is_delete=False, plant=plant['id']).values():
+            elements = list(Element.objects.filter(is_delete=False, module=module['id']).values())
+            if elements:
+                module['children'] = elements
                 all_module.append(module)
-        if has_element:
+        if all_module:
             plant['children'] = all_module
             all_plant.append(plant)
 

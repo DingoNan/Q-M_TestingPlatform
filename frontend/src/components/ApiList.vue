@@ -422,6 +422,21 @@
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+                  <!-- ★ 2026-09-22 新增：选择接口模式下的批量入口。
+                       此前「增加接口」只能逐行点圆形按钮单选，加 N 个接口要重复 N 轮
+                       （添加步骤 → 选接口 → 勾同步项 → 确定 → 保存）。
+                       表格的多选列本来就存在（本页批量操作已在用），这里只是补上
+                       「把勾中的接口一次性加入用例步骤」这个出口。 -->
+                  <el-button
+                    v-if="isCanChoose"
+                    type="primary"
+                    class="add-steps-btn"
+                    :disabled="multipleSelection.length === 0"
+                    @click="addSelectedApisAsSteps"
+                  >
+                    <el-icon><Pointer /></el-icon>
+                    添加为步骤<template v-if="multipleSelection.length > 0">（{{ multipleSelection.length }}）</template>
+                  </el-button>
                   <el-button 
                     v-if='permission.has_add_permission' 
                     @click="addApi" 
@@ -1342,7 +1357,7 @@ export default{
       return Math.max(10, visibleButtons * 60);
     }
   },
-  emits: ['update:chooseApiVisible', 'setApiData'],
+  emits: ['update:chooseApiVisible', 'setApiData', 'setManyApiData'],
   props: {
     'isCanChoose': {
       type: Boolean,
@@ -2404,6 +2419,49 @@ export default{
       }
       this.$emit('update:chooseApiVisible', false)
       this.$emit('setApiData', apiData)
+    },
+
+    /**
+     * ★ 2026-09-22 新增：把表格里勾选的接口一次性加入用例步骤。
+     *
+     * 与单条 chooseApiId 的区别：
+     *   - 单条路径会打开「从接口文档同步」对话框，让用户逐个勾选
+     *     Url/Headers/Params/Body 后保存，加 N 个接口就要走 N 遍；
+     *   - 批量路径没有逐个勾选的交互空间，因此由后端按「全字段快照」直接建步骤
+     *     （等同于单条路径勾选全部同步项的结果）。
+     *   需要精细调整某一步的，仍可用单条方式单独添加。
+     *
+     * 顺序约定：按接口 id 升序（先创建的在前）传出，保证可复现，
+     *   也与 HAR/OpenAPI 等导入路径「还原真实发起顺序」的口径一致。
+     * 废弃接口（status=10）集中拦截并提示明细，不静默丢弃。
+     */
+    addSelectedApisAsSteps() {
+      const selected = this.multipleSelection || []
+      if (selected.length === 0) {
+        ElMessage.warning('请先勾选要添加的接口')
+        return
+      }
+      const usable = []
+      const blocked = []
+      selected.forEach(item => {
+        if (Number(item.status) === 10) {
+          blocked.push(item)
+        } else {
+          usable.push(item)
+        }
+      })
+      if (blocked.length > 0) {
+        const names = blocked.slice(0, 3).map(i => i.name).join('、')
+        ElMessage.warning(
+          `已跳过 ${blocked.length} 个废弃接口：${names}${blocked.length > 3 ? ' 等' : ''}`
+        )
+      }
+      if (usable.length === 0) {
+        return
+      }
+      usable.sort((a, b) => (a.id || 0) - (b.id || 0))
+      this.$emit('setManyApiData', usable)
+      this.$emit('update:chooseApiVisible', false)
     },
     editApi(row_data){
       this.$router.push({path:'/resource/apiEdit', query:{id:row_data.id, mode:'edit'}})

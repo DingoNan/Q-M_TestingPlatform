@@ -4106,15 +4106,34 @@ export default {
         ElMessage.warning('请输入正则表达式')
         return
       }
+      // ★ 2026-09-22 修复「正则测试导致页面直接卡死」：
+      //   new RegExp(pattern, 'g') 配合 while(regex.exec(...)) 时，
+      //   只要模式能匹配**空字符串**（例如 a* / .* / \b / () / x? / (?:)），
+      //   RegExp.exec 在每次命中后 lastIndex 不会前进，于是永远返回同一个
+      //   零长度匹配 → 死循环 → 主线程阻塞 → 整个页面无响应（只能强杀标签页）。
+      //   这里加两道保险：
+      //     ① 命中空串时手动把 lastIndex 推进一步，保证循环一定会前进；
+      //     ② 结果条数上限截断，避免超大文本 + 宽泛模式把页面卡爆。
+      const MAX_MATCHES = 5000
       try {
         const regex = new RegExp(this.regexPattern, 'g')
         let match
         const matches = []
+        let truncated = false
         while ((match = regex.exec(this.regexText)) !== null) {
+          if (match[0] === '') {
+            regex.lastIndex++
+          }
           matches.push(match[0])
+          if (matches.length >= MAX_MATCHES) {
+            truncated = true
+            break
+          }
         }
         if (matches.length > 0) {
-          this.regexOutput = `匹配到 ${matches.length} 个结果:\n${matches.join('\n')}`
+          this.regexOutput = truncated
+            ? `匹配到超过 ${MAX_MATCHES} 个结果（已截断，仅显示前 ${MAX_MATCHES} 个）:\n${matches.join('\n')}`
+            : `匹配到 ${matches.length} 个结果:\n${matches.join('\n')}`
         } else {
           this.regexOutput = '没有匹配到任何结果'
         }

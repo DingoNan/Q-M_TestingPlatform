@@ -342,7 +342,10 @@ export default {
 		},
 			flowLines: [],
 			particles: [],
-			floatElements: []
+			floatElements: [],
+			// ★ 2026-09-22：保存两个定时器句柄，供 beforeUnmount 清理
+			floatMoveTimer: null,
+			onlineUsersTimer: null
 		}
 	},
 	mounted() {
@@ -586,9 +589,12 @@ export default {
 		startAnimations() {
 			// 浮动元素动画
 			this.floatAnimation();
-			
+
 			// 随机移动动画
-			setInterval(() => {
+			// ★ 2026-09-22：原 setInterval 无句柄、无清理，每进一次注册页就多留一个
+			//   永久运行的定时器。现保存句柄并由 beforeUnmount 清除。
+			if (this.floatMoveTimer) clearInterval(this.floatMoveTimer)
+			this.floatMoveTimer = setInterval(() => {
 				document.querySelectorAll('.float-element').forEach(el => {
 					const randomX = Math.random() * 10 - 5;
 					const randomY = Math.random() * 10 - 5;
@@ -606,7 +612,10 @@ export default {
 			// 立即获取一次在线用户数
 			this.fetchOnlineUsersCount();
 			// 每5秒获取一次在线用户数
-			setInterval(() => {
+			// ★ 2026-09-22：同理保存句柄。这个定时器更严重 —— 组件卸载后仍会
+			//   每 5 秒发一次接口请求，属于真实的资源泄漏。
+			if (this.onlineUsersTimer) clearInterval(this.onlineUsersTimer)
+			this.onlineUsersTimer = setInterval(() => {
 				this.fetchOnlineUsersCount();
 			}, 5000);
 		},
@@ -629,6 +638,15 @@ export default {
 		this.floatElements = [];
 		if (this.registerError.timer) {
 			clearInterval(this.registerError.timer);
+		}
+		// ★ 2026-09-22：清掉浮动动画与在线人数轮询两个定时器
+		if (this.floatMoveTimer) {
+			clearInterval(this.floatMoveTimer);
+			this.floatMoveTimer = null;
+		}
+		if (this.onlineUsersTimer) {
+			clearInterval(this.onlineUsersTimer);
+			this.onlineUsersTimer = null;
 		}
 	}
 }

@@ -62,8 +62,19 @@ export default {
   },
   methods: {
     goBack() {
-      // 尝试返回上一页，跳过当前页面和可能的权限页面
-      window.history.go(-2) || this.$router.push('/project/index')
+      const fallback = '/project/index'
+      // ★ 2026-09-22 修复：
+      //   window.history.go() 的返回值恒为 undefined（不是布尔），
+      //   所以原写法 `window.history.go(-2) || this.$router.push(fallback)`
+      //   里 push 分支**永远会执行** —— 结果是「回退」和「push」两个跳转
+      //   同时发生、相互竞争，用户看到的现象是点了返回没反应或又落回本页。
+      //   这里改为单一出口：有可回退的历史就回退，否则用 replace 落到首页
+      //   （replace 不会在历史里留下本页，避免再次被守卫拦回来）。
+      if (window.history.length > 1 && window.history.state && window.history.state.back) {
+        this.$router.go(-1)
+      } else {
+        this.$router.replace(fallback)
+      }
     }
   }
 }

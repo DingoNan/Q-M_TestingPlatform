@@ -39,5 +39,8 @@ urlpatterns = [
     path('test/run_system_function/', views.run_system_function),
     path('test/run_user_function/', views.run_user_function),
     path('test/add_many_step/', views.add_many_step_for_case),
+    # ★ 2026-09-22 新增：把选中的接口批量追加为用例的请求步骤
+    #   配合用例内「增加接口」从单选升级为多选（照搬 add_many_step 的范式）
+    path('test/add_many_api_step/', views.add_many_api_step_for_case),
 
 ]

@@ -6,8 +6,8 @@ import time
 from threading import Thread
 from django.http import StreamingHttpResponse
 from django.utils import timezone
-from django.db import models
-from django.db.models import Case as DjCase, When, IntegerField
+from django.db import models, transaction
+from django.db.models import Case as DjCase, When, IntegerField, Max
 from django_q.tasks import async_task
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, action, permission_classes
@@ -383,18 +383,31 @@ class StepViewSet(BaseModelViewSet):
         return response
 
     def retrieve(self, request, *args, **kwargs):
-        case_step_id = self.kwargs.get('pk')
-        ids = case_step_id.split('_')
-        case_id = ids[0]
-        step_id = ids[1]
-        case_step_id = int(ids[2])
+        raw_pk = str(self.kwargs.get('pk') or '')
+        # ★ 2026-09-22 修复 500（原报错：IndexError @ tests/views.py:389）
+        #   原实现无条件按 '_' 拆分后取 ids[1] / ids[2]，只要 pk 不是
+        #   「caseId_stepId_caseStepId」三段式（例如前端传纯数字 id、
+        #   或调用方漏传某一段）就会抛 IndexError → 500。
+        #   改为先校验段数与类型，不满足复合格式时退化为标准 retrieve。
+        parts = raw_pk.split('_')
+        if len(parts) < 3:
+            return super().retrieve(request, *args, **kwargs)
+        case_id, step_id, case_step_raw = parts[0], parts[1], parts[2]
+        try:
+            case_step_id = int(case_step_raw)
+        except (TypeError, ValueError):
+            return super().retrieve(request, *args, **kwargs)
         self.kwargs['pk'] = step_id
         # 从用例里获取步骤详情
         if case_step_id:
-            case_step_obj = CaseSteps.objects.get(id=case_step_id, case_id=case_id, step_id=step_id, is_delete=False)
+            case_step_obj = CaseSteps.objects.filter(
+                id=case_step_id, case_id=case_id, step_id=step_id, is_delete=False).first()
         # 从步骤列表获取
         else:
-            case_step_obj = CaseSteps.objects.filter(case_id=case_id, step_id=step_id, is_delete=False)[0]
+            case_step_obj = CaseSteps.objects.filter(
+                case_id=case_id, step_id=step_id, is_delete=False).first()
+        if case_step_obj is None:
+            return Response(data={'detail': '步骤不存在或已删除'}, status=404)
         response = super().retrieve(request, *args, **kwargs)
         response.data['step_params'] = case_step_obj.step_params
         response.data['case_step_id'] = case_step_obj.id
@@ -1012,17 +1025,34 @@ def get_check_list(request: Request):
 
 @api_view(['GET'])
 def get_system_function_params_doc(request: Request):
+    """获取平台系统函数文档
+
+    ★ 2026-09-22 修复 500（原报错：KeyError: None @ tests/views.py:1023）
+      原实现直接用查询参数 step_key 去索引 faker_function_doc /
+      faker_function_map，未传参时 step_key 为 None，字典索引直接 KeyError → 500；
+      传了未登记的函数名同样 500。现改为先校验再取值，
+      并以 200 + error 字段回传（不返回 4xx，避免前端拦截器弹通用错误提示）。
     """
-    获取平台系统函数文档
-    """
-    params_doc_map = dict()
     system_function_name = request.query_params.get('step_key')
-    if request.query_params.get('docs_type'):
-        params_doc_map['doc'] = faker_function_doc_two[system_function_name]
-    else:
-        params_doc_map['doc'] = faker_function_doc[system_function_name]
-    params_doc_map['params'] = get_function_params(faker_function_map[system_function_name])
-    return Response(data=params_doc_map, status=200)
+    doc_map = faker_function_doc_two if request.query_params.get('docs_type') else faker_function_doc
+
+    if not system_function_name or system_function_name not in doc_map:
+        return Response(data={
+            'doc': '',
+            'params': [],
+            'error': f'未找到系统函数「{system_function_name}」的文档',
+        }, status=200)
+
+    func = faker_function_map.get(system_function_name)
+    if func is None:
+        return Response(data={
+            'doc': doc_map[system_function_name],
+            'params': [],
+            'error': f'系统函数「{system_function_name}」未实现，暂无法获取参数说明',
+        }, status=200)
+
+    return Response(data={'doc': doc_map[system_function_name],
+                          'params': get_function_params(func)}, status=200)
 
 
 @api_view(['POST'])
@@ -1505,3 +1535,134 @@ def add_many_step_for_case(request: Request):
                                      step_params=[], create_by_id=user_id, update_by_id=user_id)
 
     return Response(data='成功', status=200)
+
+
+@api_view(['POST'])
+def add_many_api_step_for_case(request: Request):
+    """把选中的接口批量追加为用例的请求步骤（2026-09-22 新增）
+
+    背景：用例内「增加接口」原先只能单选 —— 加一个接口要「添加步骤 → 选接口 →
+    勾选同步项（Url/Headers/Params/Body）→ 确定 → 保存」共 5 步交互，加 N 个就 N 轮。
+    而平台里公共步骤早已支持多选（POST /test/add_many_step/），接口侧缺的是同一个入口。
+
+    请求体:
+      - case_id : 目标用例 ID（必填）
+      - api_ids : 接口 ID 数组，按期望加入步骤的顺序传入（必填）
+      - plant   : 步骤所属平台 ID（可选；缺省时依次尝试「用例已有步骤的平台」→
+                  「用例所属项目的第一个平台」）
+      - user_id : 操作人 ID（可选）
+
+    返回:
+      {
+        "message": "...", "added_count": n, "skipped_count": m,
+        "added":   [{"api_id","step_id","case_step_id","name","step_index"}],
+        "skipped": [{"api_id","name","reason"}]
+      }
+
+    设计要点（对应本轮评估里列出的落地风险）:
+      1. 步骤是接口的「快照」而非引用：一次深拷贝 Api 的
+         headers/params/json/data/response 到 Step，接口后续变更不会自动同步 ——
+         与单条路径（CaseStepCreate.setApiData 全量复制 api_all）语义保持一致。
+      2. step_index 不再用 len(...) 逐个重算：改为事务内取一次 max 后递增，
+         避免并发导入时两个请求拿到同一下标而互相覆盖。
+      3. 废弃接口（status=10）逐个校验并回传跳过明细，不静默丢弃。
+    """
+    case_id = request.data.get('case_id')
+    api_ids = request.data.get('api_ids') or []
+    plant_id = request.data.get('plant')
+    user_id = request.data.get('user_id')
+
+    if not case_id:
+        return Response(data={'detail': '缺少参数 case_id'}, status=400)
+    if not isinstance(api_ids, (list, tuple)) or len(api_ids) == 0:
+        return Response(data={'detail': '缺少参数 api_ids（需为非空数组）'}, status=400)
+
+    case_obj = Case.objects.filter(id=case_id, is_delete=False).first()
+    if case_obj is None:
+        return Response(data={'detail': f'用例 {case_id} 不存在或已删除'}, status=404)
+
+    # Step.plant 是必填外键，这里做三级兜底
+    plant_obj = None
+    if plant_id:
+        plant_obj = Plant.objects.filter(id=plant_id, is_delete=False).first()
+    if plant_obj is None:
+        existing_case_step = CaseSteps.objects.filter(case_id=case_id, is_delete=False).first()
+        if existing_case_step is not None:
+            existing_step = Step.objects.filter(id=existing_case_step.step_id).first()
+            if existing_step is not None and existing_step.plant_id:
+                plant_obj = Plant.objects.filter(id=existing_step.plant_id, is_delete=False).first()
+    if plant_obj is None:
+        plant_obj = Plant.objects.filter(project_id=case_obj.project_id, is_delete=False).first()
+    if plant_obj is None:
+        return Response(
+            data={'detail': '未找到可用的平台配置，请先在「环境配置 - 平台管理」中为本项目创建平台'},
+            status=400,
+        )
+
+    added, skipped = [], []
+
+    with transaction.atomic():
+        # ★ 取一次最大下标再递增。
+        #   旧实现（add_many_step_for_case）在每个循环里 len(CaseSteps.objects.filter(...))
+        #   重算，并发下多个请求会取到同一个下标，步骤顺序互相覆盖。
+        current_max = CaseSteps.objects.filter(
+            case_id=case_id, is_delete=False).aggregate(m=Max('step_index'))['m']
+        next_index = 0 if current_max is None else int(current_max) + 1
+
+        for api_id in api_ids:
+            api_obj = Api.objects.filter(id=api_id, is_delete=False).first()
+            if api_obj is None:
+                skipped.append({'api_id': api_id, 'name': '', 'reason': '接口不存在或已删除'})
+                continue
+            if api_obj.status == 10:
+                skipped.append({'api_id': api_id, 'name': api_obj.name,
+                                'reason': '接口已废弃，不允许被用例引用'})
+                continue
+            try:
+                step_obj = Step.objects.create(
+                    type=StepType.Request,
+                    desc=(api_obj.name or '未命名接口')[:100],
+                    project_id=case_obj.project_id,
+                    plant=plant_obj,
+                    step_active_tab='body',
+                    keyword=str(api_obj.id),
+                    api_service_id=api_obj.service_id,
+                    api_method=(api_obj.method or '')[:10],
+                    api_uri=(api_obj.url or '')[:100],
+                    # 以下 JSONField 全部从接口做一次快照拷贝（步骤 = 快照，非引用）
+                    api_headers=copy.deepcopy(api_obj.headers or []),
+                    api_params=copy.deepcopy(api_obj.params or []),
+                    api_json=copy.deepcopy(api_obj.json or []),
+                    api_json_type=getattr(api_obj, 'api_json_type', None) or 'object',
+                    api_json_tree=[],
+                    api_data=copy.deepcopy(api_obj.data or []),
+                    body_type=getattr(api_obj, 'body_type', None) or 1,
+                    api_response=copy.deepcopy(api_obj.response or []),
+                    api_response_tree=[],
+                    api_response_type='object',
+                    check_params=[], run_params=[], loop=[], until=[], func_params=[],
+                    create_by_id=user_id, update_by_id=user_id,
+                )
+                case_step_obj = CaseSteps.objects.create(
+                    case_id=case_id, step_id=step_obj.id, step_index=next_index,
+                    step_params=[], create_by_id=user_id, update_by_id=user_id,
+                )
+            except Exception as e:
+                skipped.append({'api_id': api_id, 'name': api_obj.name, 'reason': str(e)})
+                continue
+            added.append({
+                'api_id': api_obj.id,
+                'step_id': step_obj.id,
+                'case_step_id': case_step_obj.id,
+                'name': api_obj.name,
+                'step_index': next_index,
+            })
+            next_index += 1
+
+    return Response(data={
+        'message': f'成功添加 {len(added)} 个步骤，跳过 {len(skipped)} 个',
+        'added': added,
+        'skipped': skipped,
+        'added_count': len(added),
+        'skipped_count': len(skipped),
+    }, status=200)

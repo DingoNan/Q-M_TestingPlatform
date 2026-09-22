@@ -162,7 +162,9 @@ export default {
 			},
 			flowLines: [],
 			particles: [],
-			floatElements: []
+			floatElements: [],
+			// ★ 2026-09-22：保存浮动动画定时器句柄，供 beforeUnmount 清理
+			floatMoveTimer: null
 		}
 	},
 	mounted() {
@@ -433,9 +435,13 @@ export default {
 		startAnimations() {
 			// 浮动元素动画
 			this.floatAnimation();
-			
+
 			// 随机移动动画
-			setInterval(() => {
+			// ★ 2026-09-22：原来这个 setInterval 既没保存句柄、卸载时也不清理，
+			//   每进一次登录页就多留一个永远运行的定时器（闭包还持有组件上下文）。
+			//   现保存句柄，由 beforeUnmount 统一清除。
+			if (this.floatMoveTimer) clearInterval(this.floatMoveTimer)
+			this.floatMoveTimer = setInterval(() => {
 				document.querySelectorAll('.float-element').forEach(el => {
 					const randomX = Math.random() * 10 - 5;
 					const randomY = Math.random() * 10 - 5;
@@ -482,6 +488,11 @@ export default {
 		this.floatElements = [];
 		if (this.loginError.timer) {
 			clearInterval(this.loginError.timer);
+		}
+		// ★ 2026-09-22：清掉浮动动画定时器，避免离开登录页后仍在后台运行
+		if (this.floatMoveTimer) {
+			clearInterval(this.floatMoveTimer);
+			this.floatMoveTimer = null;
 		}
 	}
 }

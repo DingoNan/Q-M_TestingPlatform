@@ -679,16 +679,30 @@ def _create_or_update_api_v2(api_data, match_mode):
     method = api_data['method']
     url = api_data['url']
     service_id = api_data['service'].id if hasattr(api_data['service'], 'id') else api_data['service']
-    qs = Api.objects.filter(service_id=service_id, method=method, url=url, is_delete=False)
-    if qs.exists():
+    # ★ 2026-09-22 修复：
+    #   去重键是 (service, method, url)。历史原因（KeepBoth 模式重复导入、
+    #   或早期版本重复落库）同一组键可能存在多条记录，此时
+    #     - qs.first() 取到的不一定是同组里最早的一条；
+    #     - qs.update(**api_data) 会**一次性改写全部重复记录**，而调用方只把它
+    #       记为 1 次 updated，导致「导入结果条数与实际落库对不上」。
+    #   现改为：按 id 升序取最早的一条作为主记录，overwrite 只覆盖这一条。
+    #   （不主动删除其余历史重复记录，避免导出路径之外的数据损失。）
+    qs = Api.objects.filter(service_id=service_id, method=method, url=url,
+                            is_delete=False).order_by('id')
+    first = qs.first()
+    if first is not None:
         if match_mode == ImportMatchMode.Skip:
-            return qs.first(), 'skipped'
+            return first, 'skipped'
         if match_mode == ImportMatchMode.KeepBoth:
             api_obj = Api.objects.create(**api_data)
             return api_obj, 'created'
         # overwrite
-        qs.update(**api_data, update_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
-        return qs.first(), 'updated'
+        main_id = first.id
+        Api.objects.filter(id=main_id).update(
+            **api_data,
+            update_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+        )
+        return Api.objects.get(id=main_id), 'updated'
     api_obj = Api.objects.create(**api_data)
     return api_obj, 'created'
 
@@ -1952,11 +1966,14 @@ def _har_detect_auth_endpoint(api_list) -> dict:
 def _parse_har_v2(content: str, service_id: int, user_id: int,
                   uri_prefix: str = '', match_mode: str = ImportMatchMode.Overwrite,
                   target_module_id=None, auth_config: dict = None,
-                  dry_run: bool = False):
+                  dry_run: bool = False, api_ids_out: list = None):
     """解析 HAR 文件，提取 XHR/Fetch 接口并入库
 
     auth_config: 见 _har_apply_auth / _har_fetch_token
     dry_run: True 时只解析不落库，stats 里回传完整解析结果供前端预览
+    api_ids_out: 传入 list 时，会把本次落库的接口 id 按 HAR 真实发起顺序
+                 追加进去（供「用例内 HAR 导入」接着批量建步骤用）。
+                 2026-09-22 新增。
     """
     service_obj = Service.objects.get(id=service_id, is_delete=False)
     user_obj = User.objects.get(id=user_id, is_delete=False)
@@ -1972,7 +1989,15 @@ def _parse_har_v2(content: str, service_id: int, user_id: int,
     if har_stats.get('auth_error'):
         stats['errors'].append(f"认证补齐失败: {har_stats['auth_error']}")
 
-    for api in api_list:
+    # ★ 2026-09-22 修复「HAR 导入后接口列表顺序整体反了」：
+    #   解析层 _har_sort_entries_by_time() 已按 startedDateTime 把 api_list 排成
+    #   真实发起顺序（升序），但 Api.Meta.ordering = ['-update_time', '-id']，
+    #   而 update_time 是 auto_now ⇒ 同批导入单调递增 ⇒ 列表倒序展示时会把
+    #   刚排好的顺序整体翻回去（161 线上实测：列表 id 序列严格递减）。
+    #   这里改为「逆序落库」：最先发起的接口最后入库、拿到最大的 id，
+    #   再配合 '-id' 倒序，列表即可还原成 HAR 里的真实发起顺序。
+    #   注意：dry_run 预览需保持正序，见下方 stats['preview'].reverse()。
+    for api in reversed(api_list):
         try:
             # 目标 URL：优先按 uriPrefix 重写前缀，否则沿用 HAR 里的路径
             final_url = (uri_prefix or '') + api['path']
@@ -2076,16 +2101,29 @@ def _parse_har_v2(content: str, service_id: int, user_id: int,
                 stats['success'] += 1
                 continue
 
-            _, action = _create_or_update_api_v2(api_model_map, match_mode)
+            api_obj, action = _create_or_update_api_v2(api_model_map, match_mode)
             if action == 'skipped':
                 stats['skipped'] += 1
             elif action == 'updated':
                 stats['updated'] += 1
             else:
                 stats['success'] += 1
+            # ★ 2026-09-22：回传落库接口 id，供「用例内 HAR 导入」接着批量建步骤。
+            #   循环是逆序的，这里先按落库顺序收集，函数末尾统一翻回发起顺序。
+            if api_ids_out is not None and api_obj is not None:
+                api_ids_out.append(api_obj.id)
         except Exception as e:
             stats['failed'] += 1
             stats['errors'].append(f"[{api['seq']}] {api['name']}: {e}")
+
+    # ★ 逆序落库后 dry_run 的预览列表也变成倒序了，这里翻回真实发起顺序，
+    #   保证前端「导入预览」表格与 HAR 抓包时间线一致。
+    if dry_run and len(stats['preview']) > 1:
+        stats['preview'].reverse()
+
+    # ★ 同理，回传的接口 id 列表也翻回真实发起顺序
+    if api_ids_out is not None and len(api_ids_out) > 1:
+        api_ids_out.reverse()
 
     return stats
 
@@ -2271,6 +2309,107 @@ def har_preview(request: Request):
         'dependencies': dependencies,
         'authSuggestion': auth_suggestion,
     }, status=200)
+
+
+@api_view(['POST'])
+def import_har_sync(request: Request):
+    """同步导入 HAR（解析 → 落库 → 回传接口 id，按 HAR 真实发起顺序）
+
+    ★ 2026-09-22 新增，服务于「用例内 HAR 导入」。
+
+    与 import_api_v2 的区别：那个是**异步**的（返回 task_id、完成后发站内信），
+    调用方拿不到落库结果，也就无法接着做后续动作；而「用例里导入一段 HAR
+    并直接把接口挂成步骤」必须知道刚导入了哪些接口。本接口同步执行并回传
+    api_ids，调用方拿到后再调 POST /test/add_many_api_step/ 建步骤即可。
+
+    参数:
+      - file / url : HAR 内容来源（二选一；也支持直接传 content）
+      - service    : 目标服务 ID（必填）
+      - module     : 目标模块 ID（可选；不传则按 HAR 分组自动建模块）
+      - uriPrefix  : URL 前缀（可选）
+      - matchMode  : overwrite / skip / keep_both（默认 overwrite）
+      - authConfig : 认证补齐配置（可选）
+
+    返回:
+      {"stats": {...}, "api_ids": [...], "apis": [{id,name,method,url,status}]}
+
+    注意：api_ids 的顺序是 HAR 里的**真实发起顺序**（已由
+    _parse_har_v2 的逆序落库 + 末尾 reverse 还原），可直接按序建步骤。
+    """
+    source = (request.data.get('source') or 'file').lower()
+    content = ''
+    if source == 'url':
+        url = request.data.get('url')
+        if not url:
+            return Response({'detail': '请输入 URL'}, status=400)
+        try:
+            content = _fetch_url_content_v2(url)
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=400)
+    else:
+        uploaded = request.FILES.get('file')
+        if uploaded is not None:
+            try:
+                content = uploaded.read().decode('utf-8', errors='ignore')
+            except Exception as e:
+                return Response({'detail': f'文件读取失败: {e}'}, status=400)
+        else:
+            raw = request.data.get('content') or ''
+            content = raw.decode('utf-8', errors='ignore') if isinstance(raw, bytes) else raw
+        if not content or not str(content).strip():
+            return Response({'detail': '请上传 HAR 文件或提供 content'}, status=400)
+
+    service_id = request.data.get('service') or request.data.get('service_id')
+    if not service_id:
+        return Response({'detail': '缺少参数 service（目标服务 ID）'}, status=400)
+    service_obj = Service.objects.filter(id=service_id, is_delete=False).first()
+    if service_obj is None:
+        return Response({'detail': f'服务 {service_id} 不存在或已删除'}, status=400)
+
+    module_id = request.data.get('module') or None
+    uri_prefix = request.data.get('uriPrefix') or ''
+    match_mode = request.data.get('matchMode') or ImportMatchMode.Overwrite
+    if match_mode not in (ImportMatchMode.Overwrite, ImportMatchMode.Skip,
+                          ImportMatchMode.KeepBoth):
+        match_mode = ImportMatchMode.Overwrite
+
+    auth_config = request.data.get('authConfig')
+    if isinstance(auth_config, str) and auth_config.strip():
+        try:
+            auth_config = json.loads(auth_config)
+        except (json.JSONDecodeError, ValueError):
+            return Response({'detail': 'authConfig 不是合法 JSON'}, status=400)
+    if auth_config is not None and not isinstance(auth_config, dict):
+        return Response({'detail': 'authConfig 必须是对象'}, status=400)
+
+    user = getattr(request, 'user', None)
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return Response({'detail': '未认证，请先登录'}, status=401)
+
+    api_ids = []
+    try:
+        stats = _parse_har_v2(str(content), service_obj.id, user.id,
+                              uri_prefix=uri_prefix, match_mode=match_mode,
+                              target_module_id=module_id, auth_config=auth_config,
+                              api_ids_out=api_ids)
+    except (Service.DoesNotExist, ServiceModule.DoesNotExist):
+        return Response({'detail': '目标服务或模块不存在'}, status=400)
+    except User.DoesNotExist:
+        return Response({'detail': '当前用户不存在'}, status=401)
+    except ValueError as e:
+        return Response({'detail': str(e)}, status=400)
+
+    apis = []
+    for api_obj in Api.objects.filter(id__in=api_ids):
+        apis.append({
+            'id': api_obj.id,
+            'name': api_obj.name,
+            'method': api_obj.method,
+            'url': api_obj.url,
+            'status': api_obj.status,
+        })
+
+    return Response({'stats': stats, 'api_ids': api_ids, 'apis': apis}, status=200)
 
 
 @api_view(['POST'])

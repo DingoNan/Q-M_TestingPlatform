@@ -44,7 +44,12 @@ class Api(BaseModel):
         db_table = 'tb_api'
         verbose_name = '接口表'
         verbose_name_plural = verbose_name
-        ordering = ['-update_time']
+        # ★ 2026-09-22：补稳定二级排序键。
+        #   update_time 是 auto_now，同一批导入的接口常常落在同一秒，
+        #   只按 -update_time 排序时同秒内的相对顺序不确定（取决于数据库物理顺序），
+        #   表现为「导入后列表顺序时对时错」。加上 -id 后顺序稳定，
+        #   并与 _parse_har_v2 的「逆序落库」配合，还原 HAR 里的真实发起顺序。
+        ordering = ['-update_time', '-id']
 
 
 class ApiMock(BaseModel):
@@ -80,4 +85,9 @@ class ApiMock(BaseModel):
         db_table = 'tb_api_mock'
         verbose_name = '接口Mock表'
         verbose_name_plural = verbose_name
-        ordering = ['-update_time']
+        # ★ 2026-09-22：补稳定二级排序键。
+        #   update_time 是 auto_now，同一批导入的接口常常落在同一秒，
+        #   只按 -update_time 排序时同秒内的相对顺序不确定（取决于数据库物理顺序），
+        #   表现为「导入后列表顺序时对时错」。加上 -id 后顺序稳定，
+        #   并与 _parse_har_v2 的「逆序落库」配合，还原 HAR 里的真实发起顺序。
+        ordering = ['-update_time', '-id']

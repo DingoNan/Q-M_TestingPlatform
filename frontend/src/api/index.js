@@ -567,6 +567,17 @@ export default {
 	addManyStep(params){
 		return http_request.post('/test/add_many_step/', params)
 	},
+	// ★ 2026-09-22 新增：把选中的接口批量追加为用例的请求步骤
+	//   （用例内「增加接口」由单选升级为多选；后端按接口字段快照建 Step）
+	addManyApiStep(params){
+		return http_request.post('/test/add_many_api_step/', params)
+	},
+	// ★ 2026-09-22 新增：同步版 HAR 导入，回传落库接口 id（按 HAR 真实发起顺序）。
+	//   用例内「HAR 导入」拿到 id 后再调 addManyApiStep 建步骤。
+	//   params 支持 FormData（含 file）或 JSON（含 content）。
+	importHarSync(params){
+		return http_request.post('/import_har_sync/', params)
+	},
 	getSystemFunctionDoc(params){
 		return http_request.get('/test/system_function_doc/', {params: params})
 	},

@@ -185,9 +185,65 @@
     </template>
   </el-dialog>
 
+  <!-- ★ 2026-09-22 新增：用例内 HAR 导入。
+       一次完成「解析 HAR → 落库为接口（按真实发起顺序）→ 自动批量建为用例步骤」，
+       取代原先「先到接口管理导入、再回用例里逐个勾选」的跨页面手工流程。 -->
+  <el-dialog v-model="harImportVisible" title="导入 HAR（自动生成步骤）" width="640" :z-index="1001" :append-to-body="true" destroy-on-close class="elegant-dialog">
+    <el-form label-width="110px">
+      <el-form-item label="HAR 文件">
+        <input
+          type="file"
+          ref="harFileRef"
+          accept=".har,.json,application/json"
+          @change="onHarFileChange"
+          style="width: 100%"
+        />
+      </el-form-item>
+      <el-form-item label="或粘贴内容">
+        <el-input
+          v-model="harImportForm.content"
+          type="textarea"
+          :rows="4"
+          placeholder="也可以直接粘贴 HAR 的 JSON 内容（与上面的文件二选一）"
+        />
+      </el-form-item>
+      <el-form-item label="目标服务" required>
+        <el-select v-model="harImportForm.service" filterable placeholder="选择接口要归属的服务" style="width: 100%">
+          <el-option v-for="item in serviceList" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="重复处理">
+        <el-select v-model="harImportForm.matchMode" style="width: 100%">
+          <el-option label="覆盖已有接口（推荐）" value="overwrite" />
+          <el-option label="跳过已存在的接口" value="skip" />
+          <el-option label="保留两者（会新增重复接口）" value="keep_both" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="URL 前缀">
+        <el-input v-model="harImportForm.uriPrefix" placeholder="可选，例如 /api/v1" />
+      </el-form-item>
+      <el-alert
+        title="导入后会按 HAR 里的真实发起顺序，把接口自动添加为本用例的步骤。注意：Chrome 导出的 HAR 会剥离 Authorization 头，回放前请自行补充认证信息。"
+        type="info"
+        :closable="false"
+        show-icon
+      />
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="harImportVisible = false" class="dialog-cancel-btn">
+          <span class="button-text">取消</span>
+        </el-button>
+        <el-button @click="submitHarImport" :loading="harImportLoading" class="dialog-confirm-btn">
+          <span class="button-text">导入并生成步骤</span>
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
   <!-- 各种选择抽屉 -->
   <el-drawer v-model="chooseApiVisible" :with-header="false" direction="ttb" show-close :append-to-body="true" :z-index="1001" fullscreen="true" destroy-on-close size="97%">
-    <ApiList :parentPermission="permission" :isCanChoose="true" v-model:chooseApiVisible="chooseApiVisible" @setApiData="setApiData"></ApiList>
+    <ApiList :parentPermission="permission" :isCanChoose="true" v-model:chooseApiVisible="chooseApiVisible" @setApiData="setApiData" @setManyApiData="addManyApiSteps"></ApiList>
   </el-drawer>
 
   <el-dialog v-model="choosePythonFuncVisible" :show-close="show_close" :z-index="1001" fullscreen="true" destroy-on-close class="elegant-dialog">
@@ -1329,6 +1385,17 @@
               </template>
             </el-dropdown>
 			
+			<!-- ★ 2026-09-22 新增：用例内直接导入 HAR，把抓到的请求一次性变成步骤。
+			     流程：解析 HAR → 落库为接口（按真实发起顺序）→ 自动批量建为用例步骤。 -->
+			<el-button
+			  v-if="permission.has_add_permission"
+			  type="primary"
+			  class="action-btn har-import-btn"
+			  :loading="harImportLoading"
+			  @click="openHarImport"
+			>
+			  <el-icon><UploadFilled /></el-icon>导入HAR
+			</el-button>
 			<el-dropdown @command="controlStepCommand" class="control-dropdown" v-if="permission.has_add_permission">
 			  <el-button type="primary" class="action-btn add-btn">
 			    <el-icon><Plus /></el-icon>添加步骤
@@ -1662,7 +1729,8 @@ import {
   DocumentAdd,
   Setting,
   Download,
-  InfoFilled
+  InfoFilled,
+  UploadFilled
 } from '@element-plus/icons-vue'
 import ApiList from '../../components/ApiList.vue'
 import {v4 as uuidv4} from 'uuid'
@@ -1856,6 +1924,12 @@ export default {
       bind_case_params: [],
       bind_step_params: [],
       chooseApiVisible: false,
+      // ★ 2026-09-22 新增：用例内 HAR 导入
+      harImportVisible: false,
+      harImportLoading: false,
+      harImportForm: { service: null, matchMode: 'overwrite', uriPrefix: '', content: '' },
+      harFile: null,
+      serviceList: [],
       choosePythonFuncVisible: false,
       chooseSeleniumVisible: false,
       chooseAppiumVisible: false,
@@ -2453,6 +2527,123 @@ export default {
 		if (response.status === 200) {
 		  this.getCase()
 		  ElMessage({ message: '添加成功', type: 'success' })
+		}
+	},
+	/**
+	 * ★ 2026-09-22 新增：接口选择器「添加为步骤」的批量落地。
+	 *
+	 * apis 为接口对象数组，已在 ApiList 侧按 id 升序排好并剔除废弃接口。
+	 * 与 setManyStepData（公共步骤批量）的区别：那边传的是 Step 对象、
+	 * 后端复制 Step 记录；这里传的是 Api 的 id，由后端新建 Step
+	 * （接口字段快照）再挂到用例上，因此走独立的 add_many_api_step 端点。
+	 */
+	async addManyApiSteps(apis) {
+		if (!Array.isArray(apis) || apis.length === 0) {
+			return
+		}
+		this.editStepDetailVisible = false
+		const response = await this.$api.addManyApiStep({
+			case_id: this.$route.query.id,
+			api_ids: apis.map(item => item.id),
+			// 步骤必须归属某个平台；未选时后端会依次回退到
+			// 「用例已有步骤的平台」→「项目下第一个平台」
+			plant: this.one_step_obj.plant || undefined
+		})
+		if (response.status === 200) {
+			const body = response.data || {}
+			if (body.skipped_count > 0) {
+				const reasons = (body.skipped || []).slice(0, 3)
+					.map(item => `${item.name || item.api_id}：${item.reason}`)
+					.join('；')
+				ElMessage({
+					type: 'warning',
+					duration: 6000,
+					showClose: true,
+					message: `已添加 ${body.added_count} 个步骤，跳过 ${body.skipped_count} 个（${reasons}）`
+				})
+			} else {
+				ElMessage({ message: `成功添加 ${body.added_count} 个步骤`, type: 'success' })
+			}
+			this.getCase()
+		}
+	},
+	/**
+	 * ★ 2026-09-22 新增：用例内 HAR 导入。
+	 * openHarImport 打开对话框 → 选服务 / 上传 HAR → submitHarImport 一步完成
+	 * 「同步导入接口（按真实发起顺序）」+「批量建为用例步骤」。
+	 */
+	async openHarImport() {
+		this.harImportForm = { service: null, matchMode: 'overwrite', uriPrefix: '', content: '' }
+		this.harFile = null
+		if (this.$refs.harFileRef) {
+			this.$refs.harFileRef.value = ''
+		}
+		this.harImportVisible = true
+		await this.loadServiceList()
+	},
+	async loadServiceList() {
+		if (this.serviceList.length > 0) {
+			return
+		}
+		try {
+			const response = await this.$api.getServices({ project: this.projectInfo.id, size: 200 })
+			if (response.status === 200) {
+				const body = response.data || {}
+				this.serviceList = body.results || body || []
+			}
+		} catch (e) {
+			console.error('获取服务列表失败:', e)
+		}
+	},
+	onHarFileChange(event) {
+		const files = event.target && event.target.files
+		this.harFile = (files && files[0]) ? files[0] : null
+	},
+	async submitHarImport() {
+		const hasFile = !!this.harFile
+		const hasContent = !!(this.harImportForm.content || '').trim()
+		if (!hasFile && !hasContent) {
+			ElMessage.warning('请上传 HAR 文件，或粘贴 HAR 内容')
+			return
+		}
+		if (!this.harImportForm.service) {
+			ElMessage.warning('请选择目标服务')
+			return
+		}
+		this.harImportLoading = true
+		try {
+			const formData = new FormData()
+			if (hasFile) {
+				formData.append('file', this.harFile)
+			} else {
+				formData.append('content', this.harImportForm.content)
+			}
+			formData.append('service', this.harImportForm.service)
+			formData.append('matchMode', this.harImportForm.matchMode || 'overwrite')
+			if (this.harImportForm.uriPrefix) {
+				formData.append('uriPrefix', this.harImportForm.uriPrefix)
+			}
+
+			// 第一步：同步导入接口，拿回按 HAR 真实发起顺序排列的接口 id
+			const response = await this.$api.importHarSync(formData)
+			if (response.status !== 200) {
+				return
+			}
+			const body = response.data || {}
+			const apiIds = body.api_ids || []
+			if (apiIds.length === 0) {
+				ElMessage.warning('HAR 中没有解析到可导入的接口')
+				return
+			}
+
+			// 第二步：批量建为用例步骤（复用「添加为步骤」的同一个后端端点）
+			await this.addManyApiSteps(apiIds.map(id => ({ id })))
+			this.harImportVisible = false
+		} catch (e) {
+			console.error('HAR 导入失败:', e)
+			ElMessage.error('HAR 导入失败：' + (e && e.message ? e.message : e))
+		} finally {
+			this.harImportLoading = false
 		}
 	},
     actionChange(value) {
