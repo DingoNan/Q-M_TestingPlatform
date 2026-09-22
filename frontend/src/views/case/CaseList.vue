@@ -435,11 +435,27 @@
 			@sort-change='handleSortChange'
             @row-dblclick="editStep"
           >
-            <el-table-column type="selection" width="55"></el-table-column>
+            <el-table-column type="selection" width="52" align="center" class-name="selection-column"></el-table-column>
+
+            <!-- 首列序号：与「接口管理 - 接口列表」保持一致（用应用侧的 page/size 换算全局序号） -->
+            <el-table-column
+              label="序号"
+              width="64"
+              type="index"
+              align="center"
+              class-name="index-column"
+              :show-overflow-tooltip="true"
+            >
+              <template #default="scope">
+                <div class="index-cell">
+                  {{ scope.$index + 1 + (page_size_params.page - 1) * page_size_params.size }}
+                </div>
+              </template>
+            </el-table-column>
             
             <el-table-column 
               label="用例信息" 
-              min-width="250" 
+              min-width="180" 
               align="center"
               class-name="case-info-column"
             >
@@ -466,7 +482,7 @@
             <el-table-column 
               label="最近测试结果" 
               prop="recent_test_result_name" 
-              width="120" 
+              width="92" 
               align="center"
               class-name="result-column"
             >
@@ -501,7 +517,7 @@
             <el-table-column 
               label="用例标签" 
               prop="tag_name" 
-              min-width="180" 
+              min-width="130" 
               align="center"
               class-name="tag-column"
             >
@@ -550,7 +566,7 @@
             <!-- 合并列：创建信息 -->
             <el-table-column 
               label="创建信息" 
-              width="200" 
+              width="148" 
               align="center"
 			  sortable="custom"  
 			  prop='create_time'
@@ -573,7 +589,7 @@
             <!-- 合并列：更新信息 -->
             <el-table-column 
               label="更新信息" 
-              width="200" 
+              width="148" 
               align="center"
 			  sortable="custom"  
 			   prop='update_time'
@@ -595,7 +611,7 @@
             
             <el-table-column 
               align="center" 
-              :width="calcMinWidth" 
+              :width="ACTION_COL_WIDTH" 
               label="操作"
               class-name="action-column"
               fixed="right"
@@ -756,15 +772,6 @@ export default{
   },
   computed:{
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
-    calcMinWidth() {
-      let visibleButtons = 0
-      if (this.permission.has_read_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_edit_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_add_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_delete_permission && !this.isCanChoose) visibleButtons += 1
-	  if (this.isCanChoose) visibleButtons += 1;
-      return Math.max(10, visibleButtons * 60)
-    }
   },
   data() {
     return {
@@ -861,6 +868,13 @@ export default{
 	    tag: [],
 	  },
       permission: {},
+      // ★ 操作列固定宽度（px）。**不要**再改成依赖 permission 的响应式计算：
+      //   el-table 在初始化时就锁定列宽，而 permission 由 check_permission() 异步拉取，
+      //   初始化瞬间 permission={} ⇒ 旧实现 calcMinWidth 得 Math.max(10, 0) = 10，
+      //   列被锁成 80px；等权限到达、4 个按钮渲染出来时列宽已不会再变，
+      //   按钮（4×32 + 3×8 = 152px）只能左右溢出：右侧被容器裁掉、左侧压住「更新信息」列。
+      //   取 184 = 152 按钮 + 20 左右内边距 + 12 余量。
+      ACTION_COL_WIDTH: 184,
       caseSearch:{
         name: '',
         service: '',
@@ -2548,7 +2562,7 @@ export default{
 }
 
 .elegant-table >>> .el-table__header-wrapper .cell {
-  padding: 0 16px;
+  padding: 0 10px;
 }
 
 .elegant-table >>> .el-table__body-wrapper .el-table__row {
@@ -2586,7 +2600,7 @@ export default{
 }
 
 .elegant-table >>> .el-table__body-wrapper .cell {
-  padding: 0 16px;
+  padding: 0 10px;
 }
 
 .index-cell {
@@ -2833,6 +2847,39 @@ export default{
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* 列宽已按最坏情况（4 个按钮）预留，这里只需禁止换行，
+     避免列被压缩时按钮竖排、行高突变。 */
+  flex-wrap: nowrap;
+}
+
+/* ★ Element Plus 默认给相邻 .el-button 加了 margin-left:12px，会和上面的 gap
+   叠加成 18px，把 4 个按钮整体撑到 182px 而溢出列宽（实测 need=169 > have=156，
+   按钮左右各溢出约 13px）。这里把默认外边距归零，间距只由 gap 统一控制。 */
+.action-buttons >>> .action-btn + .action-btn {
+  margin-left: 0;
+}
+
+/* ★ 固定（fixed="right" 在 el-table 里是 sticky）操作列必须有不透明背景。
+   否则表格横向滚动时下层列的文字会透过它显示、与按钮视觉重叠 ——
+   这正是用户反馈「操作列图标按钮有遮挡」的另一半原因。 */
+.elegant-table >>> th.action-column {
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+  box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.18);
+}
+.elegant-table >>> tbody td.action-column {
+  background: var(--qm-bg-2);
+  box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.12);
+}
+.elegant-table >>> tbody .el-table__row:nth-child(even) td.action-column {
+  background: var(--qm-bg-1);
+}
+/* hover / 选中行：先用不透明底色打底，再把半透明高亮当背景图叠上去。
+   直接写 background: var(--qm-warning-soft) 在暗色主题下是 rgba(...,0.10)，
+   又会把下层文字透出来 —— 那正是这次要修掉的问题。 */
+.elegant-table >>> tbody .el-table__row:hover td.action-column,
+.elegant-table >>> tbody .el-table__row.active-row td.action-column {
+  background-color: var(--qm-bg-2);
+  background-image: linear-gradient(var(--qm-warning-soft), var(--qm-warning-soft));
 }
 
 .action-btn::before {

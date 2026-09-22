@@ -875,11 +875,27 @@
             :header-row-style="headerRowStyle"
 			@sort-change='handleSortChange'
           >
-            <el-table-column type="selection" width="55" align="center"></el-table-column>
+            <el-table-column type="selection" width="52" align="center" class-name="selection-column"></el-table-column>
+
+            <!-- 首列序号：与「接口管理 - 接口列表」保持一致 -->
+            <el-table-column
+              label="序号"
+              width="64"
+              type="index"
+              align="center"
+              class-name="index-column"
+              :show-overflow-tooltip="true"
+            >
+              <template #default="scope">
+                <div class="index-cell">
+                  {{ scope.$index + 1 + (page_size_params.page - 1) * page_size_params.size }}
+                </div>
+              </template>
+            </el-table-column>
 
             <el-table-column
               label="用例名称"
-              min-width="250"
+              min-width="200"
               align="center"
 			  prop="name"
               class-name="case-info-column"
@@ -903,7 +919,7 @@
 			
 			<el-table-column
 			  label="自动化状态"
-			  width="150"
+			  width="130"
 			  align="center"
 			  prop="auto_status_name"
 			  class-name="case-info-column"
@@ -986,7 +1002,7 @@
             <el-table-column
               label="用例标签"
               prop="tag_name"
-              min-width="180"
+              min-width="140"
               align="center"
               class-name="tag-column"
             >
@@ -1034,7 +1050,7 @@
 
 			<el-table-column
 			  label="用例状态"
-			  width="120"
+			  width="96"
 			  align="center"
 			  prop="case_status_name"
 			  class-name="case-info-column"
@@ -1048,7 +1064,7 @@
 
 			<el-table-column
 			  label="负责人"
-			  width="160"
+			  width="120"
 			  align="center"
 			  prop="owner_name"
 			  class-name="case-info-column"
@@ -1084,7 +1100,7 @@
             <!-- 合并列：创建信息 -->
             <el-table-column 
               label="创建信息" 
-              width="200" 
+              width="148" 
               align="center"
 			  prop='create_time'
 			  sortable="customer"
@@ -1107,7 +1123,7 @@
             <!-- 合并列：更新信息 -->
             <el-table-column 
               label="更新信息" 
-              width="200" 
+              width="148" 
               align="center"
 			  prop='update_time'
 			  sortable='customer'
@@ -1129,7 +1145,7 @@
             
             <el-table-column 
               align="center" 
-              :width="calcMinWidth" 
+              :width="ACTION_COL_WIDTH" 
               label="操作"
               class-name="action-column"
               fixed="right"
@@ -1300,16 +1316,6 @@ export default{
   },
   computed:{
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
-
-    calcMinWidth() {
-      let visibleButtons = 0
-      if (this.permission.has_read_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_edit_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_add_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.permission.has_delete_permission && !this.isCanChoose) visibleButtons += 1
-      if (this.isCanChoose) visibleButtons += 1;
-      return Math.max(10, visibleButtons * 60)
-    }
   },
   data() {
     return {
@@ -1428,6 +1434,7 @@ export default{
 	    { label: '性能测试', value: '5' },
 	  ],
       permission: {},
+      ACTION_COL_WIDTH: 184,
       caseSearch:{
         name: '',
         service: '',
@@ -3806,7 +3813,7 @@ export default{
 }
 
 .elegant-table >>> .el-table__header-wrapper .cell {
-  padding: 0 16px;
+  padding: 0 10px;
 }
 
 .elegant-table :deep(.el-table__body-wrapper .el-table__row) {
@@ -3844,7 +3851,7 @@ export default{
 }
 
 .elegant-table :deep(.el-table__body-wrapper .cell) {
-  padding: 0 16px;
+  padding: 0 10px;
 }
 
 .index-cell {
@@ -3991,6 +3998,33 @@ export default{
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* ★ Element Plus 默认给相邻 .el-button 加了 margin-left:12px，会和 gap 叠加，
+   把按钮整体撑宽而溢出列宽。归零后间距只由 gap 控制（详见 CaseList.vue）。 */
+.action-buttons :deep(.action-btn + .action-btn) {
+  margin-left: 0;
+}
+
+/* ★ 固定（fixed="right" → sticky）操作列必须有不透明背景，
+   否则横向滚动时下层列文字会透过它与按钮重叠（详见 CaseList.vue 的同类说明）。 */
+.elegant-table :deep(th.action-column) {
+  background: linear-gradient(180deg, var(--qm-bg-1) 0%, var(--qm-bg-3) 100%);
+  box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.18);
+}
+.elegant-table :deep(tbody td.action-column) {
+  background: var(--qm-bg-2);
+  box-shadow: -6px 0 8px -6px rgba(15, 23, 42, 0.12);
+}
+.elegant-table :deep(tbody .el-table__row:nth-child(even) td.action-column) {
+  background: var(--qm-bg-1);
+}
+/* 不透明底色打底 + 半透明高亮叠加（暗色主题下 --qm-warning-soft 是 rgba） */
+.elegant-table :deep(tbody .el-table__row:hover td.action-column),
+.elegant-table :deep(tbody .el-table__row.active-row td.action-column) {
+  background-color: var(--qm-bg-2);
+  background-image: linear-gradient(var(--qm-warning-soft), var(--qm-warning-soft));
 }
 
 .action-btn::before {
