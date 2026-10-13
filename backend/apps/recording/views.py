@@ -34,6 +34,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.projects.models import Project
+from apps.recording import ai_enhance
 from apps.recording.importer import (
     ELEMENT_BY_CHOICES,
     MODE_CHOICES,
@@ -578,26 +579,81 @@ def recording_session_discard(request, session_id):
 
 
 # ---------------------------------------------------------------------------
-# 7) AI 增强（P2 落地，这里先给出确定的契约与「未启用」的明确回执）
+# 7) AI 增强（P2）—— A1 定位器优化 / A2 断言补全 / A3 用例命名
 # ---------------------------------------------------------------------------
+AI_SCOPES = ai_enhance.SCOPES
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def recording_session_ai_enhance(request, session_id):
-    """对 IR 做 AI 增强。
+    """对 IR 做 AI 增强（P2）：A1 定位器优化 / A2 断言补全 / A3 用例命名。
 
-    P2 的三件事（A1 定位器优化 / A2 断言补全 / 用例命名）都会走这个端点，
-    用 `task` 区分；现在先返回 501 + 明确原因，避免前端拿到 200 却以为生效了
-    —— 「静默不生效」比「明确报未启用」难排查得多。
+    请求:
+      scopes        ['locator'|'assertion'|'naming']  要跑哪几件事（**必填、不默认**）
+      ai_config_id  int                               可选，指定项目下的 AI 配置
+    返回（**永不 4xx**）:
+      {session_id, scopes, rule:{added, assertions, report},
+       locator:[...], assertion:[...], naming:[...],
+       dropped:[...], ai_meta:{used_calls, limit, calls}, ai_error}
+
+    ★ 三条设计决策（改动前先读 `ai_enhance.py` 模块 docstring）
+      1) **永远 200**：AI 不可用 / 超时 / 输出被截断，统统降级成
+         「规则产物 + `ai_error`」。录制 IR 本身已是有效产物，
+         AI 失败绝不能让用户以为录制坏了 —— 这是平台上 HAR 归因踩过的坑
+         （返 5xx 会让前端把「AI 没跑成」显示成「功能不可用」）。
+      2) **只建议不落库**：本视图**不写** `session.ir_payload`（唯一的例外是
+         `ai_meta` 记账）。所有建议原样回给审阅台，由人勾选后走 `patch/`。
+         这样「AI 建议未采纳 ⇒ 元素库零改动」是**结构上成立**的，而不是靠自觉。
+      3) **scopes 必填**：三个 scope 都不自动跑（设计方案 §05 明确要求），
+         缺参数属于调用方契约错误，这里返 400 是合理的 —— 它不是「AI 失败」。
     """
     session = RecordingSession.objects.filter(id=session_id, is_delete=False).first()
     if session is None:
         return Response(data={'detail': '录制会话 %s 不存在或已删除' % session_id}, status=404)
-    return Response(data={
-        'detail': 'AI 增强（P2）尚未启用。当前可用的是规则式断言推导，'
-                  '它已在归一化阶段自动执行；如需 AI 补全，请先核对项目的 AI 配置。',
-        'session_id': session.id,
-        'enabled': False,
-    }, status=501)
+
+    body = request.data if isinstance(request.data, dict) else {}
+    scopes = body.get('scopes')
+    if isinstance(scopes, str):
+        scopes = [x.strip() for x in scopes.split(',') if x.strip()]
+    if not isinstance(scopes, list) or not scopes:
+        return Response(data={
+            'detail': '缺少参数 scopes。可选：%s —— 三个 AI 动作都不自动触发，'
+                      '必须显式指定要跑哪几个。' % '、'.join(AI_SCOPES),
+        }, status=400)
+    bad = [s for s in scopes if s not in AI_SCOPES]
+    if bad:
+        return Response(data={'detail': '不支持的 scope：%s（可选：%s）'
+                                      % ('、'.join(map(str, bad)), '、'.join(AI_SCOPES))},
+                        status=400)
+
+    ir = session.ir_payload
+    if not isinstance(ir, dict) or not isinstance(ir.get('actions'), list):
+        return Response(data={'detail': '该会话还没有 IR。请先解析录制文件'
+                                        '（POST /recording/parse/）。'}, status=400)
+
+    ai_config_id = body.get('ai_config_id')
+    try:
+        ai_config_id = int(ai_config_id) if ai_config_id not in (None, '') else None
+    except (TypeError, ValueError):
+        return Response(data={'detail': 'ai_config_id 必须是整数'}, status=400)
+
+    try:
+        payload = ai_enhance.enhance(session, session.project_id, scopes, ai_config_id)
+    except Exception as e:                      # noqa: BLE001
+        # 兜底：连编排本身都炸了，也必须是「有内容的 200 + ai_error」，
+        # 而不是 500 —— 否则前端会渲染成「平台挂了」。
+        logger.exception('[REC-AI] 编排异常 session=%s', session_id)
+        payload = {
+            'session_id': session.id,
+            'scopes': scopes,
+            'rule': {'added': [], 'assertions': [], 'report': {}},
+            'locator': [], 'assertion': [], 'naming': [], 'dropped': [],
+            'ai_meta': {'used_calls': None, 'limit': ai_enhance.MAX_AI_CALLS_PER_SESSION,
+                        'calls': []},
+            'ai_error': 'AI 增强执行异常：%s' % e,
+        }
+    return Response(data=payload)
 
 
 # ---------------------------------------------------------------------------

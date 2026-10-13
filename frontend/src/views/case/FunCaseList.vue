@@ -1354,12 +1354,11 @@ export default{
       ]
     }
   },
-  mounted() {
-    this.setupTableObserver()
-  },
-  beforeUnmount() {
-    this.teardownTableObserver()
-  },
+  // ★ 这里原本还有第二组 mounted / beforeUnmount（调 setupTableObserver /
+  //   teardownTableObserver），已合并到文件末尾那一组里 —— **顶层选项键必须唯一**：
+  //   JS 对象字面量后键覆盖前键，重复的 mounted 会让靠前那个**整块不执行**，
+  //   于是 ResizeObserver 从未装配、也从未断开（表格宽度自适应失效 + 观察器泄漏），
+  //   而 @vue/compiler-sfc 一句错都不报。
   data() {
     return {
       module_node: {},
@@ -2567,6 +2566,9 @@ export default{
   },
   },
   async mounted() {
+    // ★ 表格宽度测量（列设置「按容器宽自适应」靠它）。
+    //   这一句原先写在文件前部的另一个 mounted() 里，被后键覆盖后**从未执行**。
+    this.setupTableObserver()
     // 【AI 用例可见性修复 - 兜底】生成完成通知若以"整页跳转"打开链接，
     // RouterLink/href 的 hash 变化可能在组件挂载前就被 hashchange 消费掉，
     // 导致 mounted 里读到的 $route.query 不含 filter。
@@ -2619,6 +2621,10 @@ export default{
     }
   },
   beforeUnmount() {
+    // ★ 与 setupTableObserver 配对。这一句原先写在文件前部的另一个
+    //   beforeUnmount() 里，被后键覆盖后**从未执行** ⇒ ResizeObserver 不断开，
+    //   组件销毁后仍被观察目标持有（泄漏）。
+    this.teardownTableObserver()
     window.removeEventListener('hashchange', this._onHashChange, true)
   },
 }

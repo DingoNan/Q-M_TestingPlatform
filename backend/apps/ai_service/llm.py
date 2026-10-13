@@ -4,6 +4,7 @@ LLM客户端统一封装
 """
 import json
 import re
+import time
 import logging
 from typing import Optional, Generator, List
 from openai import OpenAI
@@ -55,12 +56,41 @@ class LLMClient:
             raise
 
     def chat_json(self, system_prompt: str, user_prompt: str, temperature: float = 0.7,
-                  max_tokens: int = 8192) -> dict:
-        """JSON模式调用，返回解析后的dict。带自动修复+重试"""
+                  max_tokens: int = 8192, return_meta: bool = False):
+        """JSON模式调用，返回解析后的dict。带自动修复+重试
+
+        ★ `return_meta=True` 时返回 `(payload, meta)`；meta 含
+          model / elapsed_ms / prompt_tokens / completion_tokens / total_tokens /
+          attempts / repaired。
+          **默认 False**：既有调用方（api_case_graph / graph / scenario_case_graph…）
+          的返回契约完全不变 —— 这是纯增量改动，不要把默认值改掉。
+          加的动机是 P2 的 `ai_meta` 要记录**真实** token 消耗用于成本核算；
+          在外面估算（按字符数猜）会得到一个看着精确其实失真的数字，
+          比不记录更误导。
+        """
         # OpenAI 兼容 API 要求 response_format=json_object 时 prompt 必须包含 "json" 字样，
         # 否则报 400 invalid_request_error。此处兜底确保任何调用方都能通过该校验。
         if 'json' not in f"{system_prompt}\n{user_prompt}".lower():
             system_prompt += '\n请以 JSON 对象格式输出结果，不要输出多余解释。'
+
+        t0 = time.time()
+        meta = {
+            'model': self.model, 'attempts': 0, 'repaired': False,
+            'prompt_tokens': None, 'completion_tokens': None, 'total_tokens': None,
+        }
+
+        def _usage(resp):
+            u = getattr(resp, 'usage', None)
+            if u is None:
+                return
+            meta['prompt_tokens'] = getattr(u, 'prompt_tokens', None)
+            meta['completion_tokens'] = getattr(u, 'completion_tokens', None)
+            meta['total_tokens'] = getattr(u, 'total_tokens', None)
+
+        def _finish(payload):
+            meta['elapsed_ms'] = int((time.time() - t0) * 1000)
+            return (payload, meta) if return_meta else payload
+
         raw_content = None
         try:
             response = self.client.chat.completions.create(
@@ -73,8 +103,10 @@ class LLMClient:
                 response_format={"type": "json_object"},
                 max_tokens=max_tokens,
             )
+            meta['attempts'] = 1
+            _usage(response)
             raw_content = response.choices[0].message.content
-            return json.loads(raw_content)
+            return _finish(json.loads(raw_content))
         except json.JSONDecodeError as e:
             logger.warning(f"LLM JSON解析失败（尝试修复）: {e}")
             logger.debug(f"LLM原始输出(前500字): {(raw_content or '')[:500]}")
@@ -85,7 +117,8 @@ class LLMClient:
                     repaired = _repair_json(raw_content)
                     result = json.loads(repaired)
                     logger.info("LLM JSON修复成功")
-                    return result
+                    meta['repaired'] = True
+                    return _finish(result)
                 except json.JSONDecodeError:
                     pass
 
@@ -102,9 +135,10 @@ class LLMClient:
                             truncated += '}' * brace_count
                         result = json.loads(truncated)
                         logger.info("LLM JSON截断修复成功")
+                        meta['repaired'] = True
                         # 如果有cases字段，返回修复后的结果
                         if 'cases' in result:
-                            return result
+                            return _finish(result)
                 except json.JSONDecodeError:
                     pass
 
@@ -123,8 +157,10 @@ class LLMClient:
                     response_format={"type": "json_object"},
                     max_tokens=max_tokens,
                 )
+                meta['attempts'] += 1
+                _usage(retry_response)
                 retry_content = retry_response.choices[0].message.content
-                return json.loads(retry_content)
+                return _finish(json.loads(retry_content))
             except Exception as retry_e:
                 logger.error(f"LLM JSON重试也失败: {retry_e}")
                 raise

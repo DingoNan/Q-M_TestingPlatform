@@ -44,6 +44,168 @@
       </div>
     </div>
 
+    <!-- ===================== AI 补短板（P2） =====================
+         ★ 三个按钮**都不自动触发**（设计方案 §05 的硬要求）。
+           AI 是按量计费的，自动跑就等于「每次打开审阅台都在花钱」，
+           而且用户往往只是想看一眼录制结果。
+         ★ 建议一律**只建议不落库**：勾选后走与手工编辑完全相同的 patch 通道，
+           所以「不采纳 ⇒ 元素库/IR 零改动」是结构上成立的，不靠自觉。 -->
+    <div class="rr-ai">
+      <div class="rr-ai-head">
+        <el-icon class="rr-ai-ico"><MagicStick /></el-icon>
+        <span class="rr-ai-title">AI 补短板</span>
+        <span class="rr-ai-sub">
+          <template v-if="aiTouched">
+            规则层已覆盖 <b>{{ aiReport.counts.covered }}</b>/{{ aiReport.total }} 步
+            · 待补 <b>{{ aiReport.counts.uncovered }}</b> 步
+          </template>
+          <template v-else>
+            规则优先：只把规则覆盖不到的步骤交给模型 · 不会自动运行
+          </template>
+        </span>
+        <span class="rr-flex"></span>
+        <el-button
+          size="small"
+          :loading="aiLoading === 'locator'"
+          :disabled="!!aiLoading"
+          @click="runAi('locator')"
+        >定位器优化<template v-if="aiSuggestions.locator.length">（{{ aiSuggestions.locator.length }}）</template></el-button>
+        <el-button
+          size="small"
+          :loading="aiLoading === 'assertion'"
+          :disabled="!!aiLoading"
+          @click="runAi('assertion')"
+        >断言补全<template v-if="aiSuggestions.assertion.length">（{{ aiSuggestions.assertion.length }}）</template></el-button>
+        <el-button
+          size="small"
+          :loading="aiLoading === 'naming'"
+          :disabled="!!aiLoading"
+          @click="runAi('naming')"
+        >用例命名<template v-if="aiSuggestions.naming.length">（{{ aiSuggestions.naming.length }}）</template></el-button>
+        <el-button v-if="aiTouched" link size="small" @click="aiOpen = !aiOpen">
+          {{ aiOpen ? '收起建议' : '查看建议' }}
+        </el-button>
+      </div>
+
+      <!-- ★ AI 失败也要明明白白显示出来。降级成 200 + ai_error 是后端的设计，
+           但前端如果只把 ai_error 吞掉，用户会以为「点了没反应」。 -->
+      <div v-if="aiError" class="rr-ai-warn">
+        <el-icon><WarningFilled /></el-icon>
+        <span>{{ aiError }}</span>
+      </div>
+
+      <div v-if="aiTouched" class="rr-ai-meta">
+        本会话已调用 <b>{{ aiMeta.used_calls }}</b>/{{ aiMeta.limit }} 次
+        <span v-for="(c, i) in aiMeta.calls" :key="'c' + i" class="rr-ai-call">
+          · {{ scopeLabel(c.scope) }}<template v-if="c.ok">：{{ c.elapsed_ms }}ms<template v-if="c.total_tokens">／{{ c.total_tokens }} tok</template>／{{ c.suggestions }} 条</template><template v-else>：失败（{{ (c.error || '').slice(0, 60) }}）</template>
+        </span>
+      </div>
+
+      <div v-if="aiOpen" class="rr-ai-body">
+        <!-- ---- 规则推导（零 token，默认全选） ---- -->
+        <div v-if="aiRuleAdded.length" class="rr-ai-group is-rule">
+          <div class="rr-ai-g-head">
+            <span class="rr-ai-g-title">规则推导的新断言 · {{ aiRuleAdded.length }} 条</span>
+            <span class="rr-ai-g-tag">零 token</span>
+            <span class="rr-flex"></span>
+            <el-button size="small" type="primary" :disabled="!aiPickCount.rule" @click="adoptRules">
+              采纳选中
+            </el-button>
+          </div>
+          <div class="rr-ai-hint">
+            规则能推的先推 —— 这里不会花一分钱。规则推导的断言不落库，
+            同样要你点「采纳」才进 IR。
+          </div>
+          <label v-for="(r, i) in aiRuleAdded" :key="'r' + i" class="rr-ai-row">
+            <el-checkbox v-model="aiPick.rule[i]" />
+            <span class="rr-ai-seq">seq={{ r.seq }}</span>
+            <span class="rr-ai-txt">{{ ruleNote(r) }}</span>
+          </label>
+        </div>
+
+        <!-- ---- A1 定位器优化 ---- -->
+        <div v-if="aiSuggestions.locator.length" class="rr-ai-group">
+          <div class="rr-ai-g-head">
+            <span class="rr-ai-g-title">定位器建议 · {{ aiSuggestions.locator.length }} 条</span>
+            <span class="rr-flex"></span>
+            <el-button size="small" type="primary" :disabled="!aiPickCount.locator" @click="adoptLocators">
+              采纳选中
+            </el-button>
+          </div>
+          <div class="rr-ai-hint">
+            只对<b>规则打分偏低</b>的元素调模型（不为全量元素花钱）。
+            采纳后只改「用哪个定位器找它」，元素身份（element_ref）保持不变。
+          </div>
+          <label v-for="(s, i) in aiSuggestions.locator" :key="'l' + i" class="rr-ai-row">
+            <el-checkbox v-model="aiPick.locator[i]" />
+            <span class="rr-ai-seq">seq={{ s.seq }}</span>
+            <span class="rr-ai-code">{{ s.by }}={{ s.value }}</span>
+            <span class="rr-ai-conf">{{ fmtConf(s.confidence) }}</span>
+            <span class="rr-ai-txt">{{ s.reason }}</span>
+          </label>
+        </div>
+
+        <!-- ---- A2 断言补全 ---- -->
+        <div v-if="aiSuggestions.assertion.length" class="rr-ai-group">
+          <div class="rr-ai-g-head">
+            <span class="rr-ai-g-title">断言建议 · {{ aiSuggestions.assertion.length }} 条</span>
+            <span class="rr-flex"></span>
+            <el-button size="small" type="primary" :disabled="!aiPickCount.assertion" @click="adoptAssertions">
+              采纳选中
+            </el-button>
+          </div>
+          <div class="rr-ai-hint">
+            只把<b>规则覆盖不到的步骤</b>交给模型。期望值为空的需要你在断言面板里补。
+          </div>
+          <label v-for="(s, i) in aiSuggestions.assertion" :key="'a' + i" class="rr-ai-row">
+            <el-checkbox v-model="aiPick.assertion[i]" />
+            <span class="rr-ai-seq">seq={{ s.seq }}</span>
+            <span class="rr-ai-badge">{{ s.method }}</span>
+            <span v-if="s.extract_keyword" class="rr-ai-badge is-soft">{{ s.extract_keyword }}</span>
+            <span class="rr-ai-txt">
+              {{ s.expect === null || s.expect === undefined ? '（期望值待人工补）' : ('期望：' + s.expect) }}
+              <i v-if="s.reason">— {{ s.reason }}</i>
+            </span>
+          </label>
+        </div>
+
+        <!-- ---- A3 用例命名 ---- -->
+        <div v-if="aiSuggestions.naming.length" class="rr-ai-group">
+          <div class="rr-ai-g-head">
+            <span class="rr-ai-g-title">用例命名建议</span>
+          </div>
+          <div class="rr-ai-hint">采纳会写入「会话名称」，落库时作为默认用例名。</div>
+          <div v-for="(s, i) in aiSuggestions.naming" :key="'n' + i" class="rr-ai-row is-plain">
+            <el-button size="small" @click="adoptName(s.name)">用这个名字</el-button>
+            <span class="rr-ai-name">{{ s.name }}</span>
+            <span class="rr-ai-txt">{{ s.reason }}</span>
+          </div>
+        </div>
+
+        <!-- ---- 被丢弃的非法建议（透明化） ---- -->
+        <div v-if="aiDropped.length" class="rr-ai-group is-drop">
+          <div class="rr-ai-g-head">
+            <span class="rr-ai-g-title">已丢弃的非法建议 · {{ aiDropped.length }} 条</span>
+          </div>
+          <div class="rr-ai-hint">
+            模型的输出会经过取值白名单校验（`by` / `method` / `extract_keyword`）。
+            不合法的**直接丢弃并说明原因**，绝不「猜一个差不多的」——
+            静默降级会让错误定位器悄悄进元素库。
+          </div>
+          <div v-for="(s, i) in aiDropped" :key="'d' + i" class="rr-ai-row is-plain">
+            <span class="rr-ai-badge is-warn">{{ scopeLabel(s.scope) }}</span>
+            <span class="rr-ai-txt">{{ s.why }}：{{ s.item }}</span>
+          </div>
+        </div>
+
+        <div v-if="!aiRuleAdded.length && !aiSuggestions.locator.length
+          && !aiSuggestions.assertion.length && !aiSuggestions.naming.length && !aiDropped.length"
+          class="rr-ai-empty">
+          这次没有可采纳的建议{{ aiError ? '' : '（可能规则层已覆盖全部步骤，无需调用模型）' }}。
+        </div>
+      </div>
+    </div>
+
     <!-- ===================== 三栏主体 ===================== -->
     <div class="rr-body">
       <!-- ---------- 左：动作列表 ---------- -->
@@ -352,7 +514,7 @@
  *   本组件为此单独维护 `pendingAssertions` / `pendingDrops` 两个缓冲。
  */
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowRight, ArrowDown, InfoFilled } from '@element-plus/icons-vue'
+import { ArrowRight, ArrowDown, InfoFilled, MagicStick, WarningFilled } from '@element-plus/icons-vue'
 
 import RecActionCard from './ActionCard.vue'
 import RecLocatorPicker from './LocatorPicker.vue'
@@ -375,7 +537,7 @@ const ARG_WHITELIST = [
 
 export default {
   name: 'RecordingReview',
-  components: { RecActionCard, RecLocatorPicker, RecAssertionPanel, ArrowRight, ArrowDown, InfoFilled },
+  components: { RecActionCard, RecLocatorPicker, RecAssertionPanel, ArrowRight, ArrowDown, InfoFilled, MagicStick, WarningFilled },
   props: {
     /** 录制会话 id */
     sessionId: { type: [Number, String], required: true }
@@ -420,7 +582,25 @@ export default {
       // 服务端回传的统计（显示权威值 + 校验本地口径是否漂移）
       serverSummary: null,
       // 口径漂移告警限流：只在控制台吼一声，不自动重载（避免打断用户）
-      mismatchGuard: 0
+      mismatchGuard: 0,
+
+      // ---- AI 补短板（P2）----
+      // ★ 三个 scope 都是 null 表示「没跑过」；同一时刻只允许跑一个（aiLoading）。
+      aiLoading: null,
+      aiOpen: false,
+      aiTouched: false,          // 是否跑过或采纳过（决定面板是否显示）
+      aiError: '',
+      aiMeta: { used_calls: null, limit: 20, calls: [] },
+      aiSuggestions: { locator: [], assertion: [], naming: [] },
+      aiRuleAdded: [],           // 规则层新补的断言（带完整 spec，可被 patch 直接吃）
+      aiDropped: [],
+      // ★ 规则覆盖率**只能由后端算** —— 前端自己复算一遍必然与后端漂移
+      //   （这和 P1 的 elements_unique 是同一类陷阱）。
+      //   代价是「跑过 AI 之后才知道覆盖率」，但那也比两个数字对不上强。
+      aiReport: { total: 0, counts: { covered: 0, manual_only: 0, uncovered: 0 } },
+      // 勾选状态：按 group + 下标。默认全选（降低操作成本），
+      // 但每条都带 confidence/reason 供人复核。
+      aiPick: { rule: {}, locator: {}, assertion: {} }
     }
   },
   computed: {
@@ -538,6 +718,26 @@ export default {
       }
       walk(this.moduleTree, 0)
       return out
+    },
+    /**
+     * 已勾选的建议条数（按 group）。用于「采纳选中」按钮的禁用态。
+     * ★ 用 `=== true` 判断而不是真值判断：`el-checkbox` 的 `v-model` 在
+     *   未初始化时是 `undefined`，真值判断会把它当成未勾选 —— 行为上没错，
+     *   但一旦以后有人把默认值改成 'indeterminate' 字符串就会静默出问题。
+     * ★★ 必须留在**同一个 `computed` 块内**。本文件曾经出现两个 `computed:` 键：
+     *   对象字面量的后键会覆盖前键 ⇒ 整个原有 computed（actions / activeAction /
+     *   localStat / flatModules…）被**静默丢弃**，三栏联动与统计全废，
+     *   而 `@vue/compiler-sfc` 一句错都不报。这是「追加式编辑插错位置」的典型后果，
+     *   只能靠闸门的「顶层选项键唯一性」检查拦住。
+     */
+    aiPickCount() {
+      const count = (group) => Object.keys(this.aiPick[group] || {})
+        .filter((k) => this.aiPick[group][k] === true).length
+      return {
+        rule: count('rule'),
+        locator: count('locator'),
+        assertion: count('assertion')
+      }
     }
   },
   watch: {
@@ -582,6 +782,10 @@ export default {
         clearTimeout(this.patchTimer)
         this.patchTimer = null
       }
+      // ★ AI 建议必须跟着一起清：它们是基于**某一份具体的 IR** 算出来的，
+      //   重载后 IR 变了，旧建议里的 seq / 定位器可能已经不存在。
+      //   留着会让人「采纳成功但什么都没发生」，比不显示更糟。
+      this._aiClear()
     },
 
     // ---------------------------------------------------------------
@@ -902,6 +1106,209 @@ export default {
     },
 
     // ---------------------------------------------------------------
+    // AI 补短板（P2）
+    // ---------------------------------------------------------------
+    scopeLabel(s) {
+      return { locator: '定位器优化', assertion: '断言补全', naming: '用例命名' }[s] || s || ''
+    },
+    fmtConf(c) {
+      const n = Number(c)
+      return Number.isFinite(n) ? n.toFixed(2) : '—'
+    },
+    ruleNote(r) {
+      const spec = r.spec || {}
+      const note = spec.note || r.rule || ''
+      return spec.method ? `${note}（${spec.method}）` : note
+    },
+    /** 默认全选（降低操作成本），但每条都带依据供人复核。 */
+    _aiResetPicks(group, n) {
+      const next = {}
+      for (let i = 0; i < n; i += 1) next[i] = true
+      this.aiPick[group] = next
+    },
+    _aiClear() {
+      this.aiTouched = false
+      this.aiOpen = false
+      this.aiError = ''
+      this.aiMeta = { used_calls: null, limit: 20, calls: [] }
+      this.aiSuggestions = { locator: [], assertion: [], naming: [] }
+      this.aiRuleAdded = []
+      this.aiDropped = []
+      this.aiPick = { rule: {}, locator: {}, assertion: {} }
+    },
+    /**
+     * 跑一个 scope 的 AI 增强。
+     * ★ 三个按钮都不自动触发；且一次只允许跑一个（`aiLoading` 兼作互斥锁）——
+     *   并发跑两个 scope 会让 `ai_meta` 的记账互相覆盖。
+     */
+    async runAi(scope) {
+      if (this.aiLoading) return
+      if (!this.sessionId) return
+      // ★ 必须先 flush：AI 是**基于服务端 IR** 算的。本地若有未保存改动，
+      //   算出来的建议会对应一份用户已经改过的旧 IR —— 这是错位建议的头号来源。
+      const flushed = await this.flushPatch({ silent: true })
+      if (!flushed) {
+        ElMessage.warning('还有修改没有保存成功，已中止（避免 AI 基于旧 IR 给建议）')
+        return
+      }
+      this.aiLoading = scope
+      this.aiError = ''
+      try {
+        const resp = await this.$api.recordingSessionAiEnhance(this.sessionId, { scopes: [scope] })
+        const rb = resp.data || {}
+        const d = rb.result || rb
+        this.aiTouched = true
+        this.aiOpen = true
+        if (resp.status !== 200) {
+          this.aiError = d.detail || 'AI 增强请求失败'
+          return
+        }
+        // ★ 后端的设计是「AI 失败也返 200 + ai_error」，所以这里不能按状态码判断
+        //   成败，必须把 ai_error 显式呈现出来，否则用户会以为「点了没反应」。
+        this.aiError = d.ai_error || ''
+        this.aiMeta = d.ai_meta || this.aiMeta
+
+        const rule = d.rule || {}
+        this.aiReport = (rule.report && rule.report.counts)
+          ? rule.report
+          : { total: 0, counts: { covered: 0, manual_only: 0, uncovered: 0 } }
+
+        // ★ 用 concat 而不是覆盖：用户可以「先跑定位器、再跑断言」，
+        //   覆盖会把上一轮的建议与勾选全清掉，等于白花钱。
+        const added = Array.isArray(rule.added) ? rule.added : []
+        if (added.length) {
+          const base = this.aiRuleAdded.length
+          this.aiRuleAdded = this.aiRuleAdded.concat(added)
+          added.forEach((_, i) => { this.aiPick.rule[base + i] = true })
+        }
+        const adds = {
+          locator: Array.isArray(d.locator) ? d.locator : [],
+          assertion: Array.isArray(d.assertion) ? d.assertion : [],
+          naming: Array.isArray(d.naming) ? d.naming : []
+        }
+        Object.keys(adds).forEach((g) => {
+          if (!adds[g].length) return
+          const base = this.aiSuggestions[g].length
+          this.aiSuggestions[g] = this.aiSuggestions[g].concat(adds[g])
+          adds[g].forEach((_, i) => { this.aiPick[g][base + i] = true })
+        })
+        if (Array.isArray(d.dropped) && d.dropped.length) {
+          this.aiDropped = this.aiDropped.concat(d.dropped)
+        }
+
+        const total = added.length + adds.locator.length
+          + adds.assertion.length + adds.naming.length
+        if (this.aiError) {
+          ElMessage({ type: 'warning', duration: 8000, showClose: true, message: this.aiError })
+        } else {
+          ElMessage.success(`${this.scopeLabel(scope)}完成，得到 ${total} 条建议（尚未写入，需你勾选采纳）`)
+        }
+      } catch (e) {
+        this.aiTouched = true
+        this.aiOpen = true
+        this.aiError = 'AI 增强请求失败：' + (e && e.message ? e.message : e)
+      } finally {
+        this.aiLoading = null
+      }
+    },
+    /**
+     * 采纳选中的规则断言。
+     * ★ 走的是与手工「加断言」**完全相同**的通道（pendingAssertions → patch），
+     *   不新开写路径 —— 这样「不采纳 ⇒ 零改动」是结构保证。
+     * ★ 采纳后从列表里移除：`patch/assertions` 是**追加**语义，留在列表里
+     *   再点一次就会变成两条。
+     */
+    async adoptRules() {
+      const picked = this.aiRuleAdded.filter((r, i) => this.aiPick.rule[i] === true)
+      if (!picked.length) return
+      const spent = []
+      picked.forEach((r) => {
+        const spec = r.spec || {}
+        if (!Number.isInteger(r.seq)) return
+        this.pendingAssertions.push({
+          seq: r.seq,
+          method: spec.method,
+          expect: spec.expect,
+          extract_keyword: spec.extract_keyword,
+          extract_args: spec.extract_args || {}
+        })
+        spent.push(r)
+      })
+      if (!spent.length) {
+        ElMessage.warning('这些建议缺少 seq，无法采纳')
+        return
+      }
+      this.aiRuleAdded = this.aiRuleAdded.filter((r) => spent.indexOf(r) < 0)
+      this._aiResetPicks('rule', this.aiRuleAdded.length)
+      const ok = await this.flushPatch({ silent: false })
+      if (ok) ElMessage.success(`已采纳 ${spent.length} 条规则断言`)
+    },
+    async adoptAssertions() {
+      const picked = this.aiSuggestions.assertion.filter((s, i) => this.aiPick.assertion[i] === true)
+      if (!picked.length) return
+      const spent = []
+      picked.forEach((s) => {
+        if (!Number.isInteger(s.seq)) return
+        this.pendingAssertions.push({
+          seq: s.seq,
+          method: s.method,
+          expect: s.expect,
+          extract_keyword: s.extract_keyword,
+          extract_args: s.extract_args || {}
+        })
+        spent.push(s)
+      })
+      if (!spent.length) {
+        ElMessage.warning('这些建议缺少 seq，无法采纳')
+        return
+      }
+      this.aiSuggestions.assertion = this.aiSuggestions.assertion.filter((s) => spent.indexOf(s) < 0)
+      this._aiResetPicks('assertion', this.aiSuggestions.assertion.length)
+      const ok = await this.flushPatch({ silent: false })
+      if (ok) ElMessage.success(`已采纳 ${spent.length} 条断言建议`)
+    },
+    async adoptLocators() {
+      const picked = this.aiSuggestions.locator.filter((s, i) => this.aiPick.locator[i] === true)
+      if (!picked.length) return
+      const done = []
+      picked.forEach((s) => {
+        const a = this.actions.find((x) => x.seq === s.seq)
+        if (!a) return
+        // 本地乐观更新 —— 必须与 `onPickLocator` **完全同形**，
+        // 否则用户会看到「采纳了但琥珀色标记没消失」，以为没生效。
+        const el = a.element || (a.element = {})
+        const locs = Array.isArray(el.locators) ? el.locators : []
+        const head = {
+          by: s.by, value: s.value, opts: s.opts || {},
+          source: 'ai', pinned: true, score: 0.99
+        }
+        el.locators = [head].concat(locs.filter((c) => !(
+          String(c.by || '').toLowerCase() === String(s.by || '').toLowerCase()
+          && String(c.value || '') === String(s.value || ''))))
+        a.confidence = 1.0
+        a.needs_review = false
+        const pe = this._pe(s.seq)
+        if (pe) pe.locator = { by: s.by, value: s.value, opts: s.opts || {} }
+        done.push(s)
+      })
+      if (!done.length) {
+        ElMessage.warning('这些建议对应的动作已不在当前 IR 里，无法采纳')
+        return
+      }
+      this.aiSuggestions.locator = this.aiSuggestions.locator.filter((s) => done.indexOf(s) < 0)
+      this._aiResetPicks('locator', this.aiSuggestions.locator.length)
+      const ok = await this.flushPatch({ silent: false })
+      if (ok) ElMessage.success(`已采纳 ${done.length} 条定位器建议`)
+    },
+    async adoptName(name) {
+      if (!name) return
+      this.sessionName = name
+      this.caseName = name
+      const ok = await this.flushPatch({ silent: false })
+      if (ok) ElMessage.success(`已把会话名与用例名改为「${name}」`)
+    },
+
+    // ---------------------------------------------------------------
     // patch：防抖 + 显式 flush
     // ---------------------------------------------------------------
     schedulePatch() {
@@ -1181,6 +1588,132 @@ export default {
   flex: 1;
 }
 .rr-name-input { width: 240px; flex: none; }
+
+/* ---------------- AI 补短板（P2） ----------------
+   配色只用 theme.css 里已存在的变量，不新造颜色：
+   --qm-accent-strong（浅色 #b45309 / 深色 #fbbf24）做强调，
+   --qm-warning-soft / --qm-warning-soft-2 做提示底色。 */
+.rr-ai {
+  flex: none;
+  border-bottom: 1px solid var(--qm-line);
+  background: var(--qm-bg-3);
+}
+.rr-ai-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+}
+.rr-ai-ico { color: var(--qm-accent-strong); }
+.rr-ai-title { font-weight: 600; color: var(--qm-text-1); }
+.rr-ai-sub { color: var(--qm-text-3); font-size: 12px; }
+.rr-ai-sub b { color: var(--qm-accent-strong); }
+.rr-ai-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 12px 8px;
+  padding: 6px 10px;
+  border-radius: var(--qm-radius);
+  background: var(--qm-warning-soft);
+  color: var(--qm-text-1);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.rr-ai-meta {
+  padding: 0 12px 8px;
+  color: var(--qm-text-3);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.rr-ai-meta b { color: var(--qm-text-1); }
+.rr-ai-call { margin-left: 2px; }
+
+.rr-ai-body {
+  max-height: 320px;
+  overflow: auto;
+  padding: 0 12px 10px;
+}
+.rr-ai-group {
+  border: 1px solid var(--qm-line);
+  border-radius: var(--qm-radius);
+  background: var(--qm-bg-2);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.rr-ai-group.is-rule { border-left: 3px solid var(--qm-green); }
+.rr-ai-group.is-drop { border-left: 3px solid var(--qm-red); }
+.rr-ai-g-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.rr-ai-g-title { font-weight: 600; color: var(--qm-text-1); }
+.rr-ai-g-tag {
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--qm-warning-soft-2);
+  color: var(--qm-accent-strong);
+}
+.rr-ai-hint {
+  color: var(--qm-text-3);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+.rr-ai-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  cursor: pointer;
+}
+.rr-ai-row.is-plain { cursor: default; }
+.rr-ai-seq {
+  flex: none;
+  color: var(--qm-text-3);
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
+}
+.rr-ai-code {
+  flex: none;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
+  color: var(--qm-accent-strong);
+}
+.rr-ai-conf { flex: none; color: var(--qm-text-3); font-size: 12px; }
+.rr-ai-badge {
+  flex: none;
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid var(--qm-line-strong);
+  color: var(--qm-text-2);
+}
+.rr-ai-badge.is-soft { border-style: dashed; }
+.rr-ai-badge.is-warn {
+  border-color: var(--qm-red);
+  color: var(--qm-red);
+}
+.rr-ai-name { font-weight: 600; color: var(--qm-text-1); }
+.rr-ai-txt {
+  color: var(--qm-text-2);
+  font-size: 12px;
+  line-height: 1.6;
+  min-width: 0;
+}
+.rr-ai-txt i { color: var(--qm-text-3); font-style: normal; }
+.rr-ai-empty {
+  color: var(--qm-text-3);
+  font-size: 12px;
+  padding: 4px 2px 8px;
+}
 .rr-url {
   color: var(--qm-text-3);
   font-size: 12px;

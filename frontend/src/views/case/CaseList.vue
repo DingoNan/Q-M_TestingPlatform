@@ -805,19 +805,12 @@ export default{
 		default: 1,
 	}
   },
-  computed:{
-    ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
-    /**
-     * 当前是否处于「Web 自动化」类型。
-     * ★ 必须 String() 归一化再比：`caseSearch.type` 被 automationTypes 定义为
-     *   字符串（'1'/'2'/'3'…），而 created() 里又会用 localStorage.case_type
-     *   覆盖（JSON.parse 后同样是字符串）。写成 `=== 2` 永远为 false，
-     *   表现为「按钮在 Web 自动化页签下也不出现」且不报任何错。
-     */
-    isWebType() {
-      return String(this.caseSearch.type) === '2'
-    },
-  },
+  // ★★ 这里原本还有一个 `computed:{`（含 ...mapState 与 isWebType），
+  //   已合并到下方唯一的 computed 里 —— **顶层选项键必须唯一**：
+  //   JS 对象字面量后键覆盖前键，而 @vue/compiler-sfc 对同一文件里出现两个
+  //   `computed:` **一句错都不报**。合并前，这个靠前的块被靠后的块整体丢弃，
+  //   于是 `isWebType` 恒为 undefined ⇒ 「录制履历」按钮的
+  //   v-if="isWebType && !isCanChoose" 永远为假 ⇒ 入口从未渲染过（且无任何报错）。
   data() {
     return {
       module_node: {},
@@ -983,7 +976,26 @@ export default{
   beforeUnmount() {
     this.teardownTableObserver()
   },
+  // ★★ 本组件**唯一**的 computed 块。不要再往文件别处加第二个 `computed:` ——
+  //   后键会静默覆盖前键（见 props 之后的说明）。
   computed: {
+    // ★ mapState 派生项在 created() **同步**阶段可能尚未求值（曾导致
+    //   `this.userInfo.user_id` / `this.pathPermission[path]` 抛 TypeError ⇒
+    //   异常发生在首个 await 之前 ⇒ 权限请求根本没发出 ⇒ 按钮全不渲染）。
+    //   所以本组件的取参一律走 liveProjectId() / liveUserId() / livePathPermission()
+    //   这三个直取 store 现值的帮助方法；这里保留 mapState 是为了模板里
+    //   `projectInfo` / `userInfo` 的响应式刷新，不是给 created() 同步阶段用的。
+    ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
+    /**
+     * 当前是否处于「Web 自动化」类型。
+     * ★ 必须 String() 归一化再比：`caseSearch.type` 被 automationTypes 定义为
+     *   字符串（'1'/'2'/'3'…），而 created() 里又会用 localStorage.case_type
+     *   覆盖（JSON.parse 后同样是字符串）。写成 `=== 2` 永远为 false，
+     *   表现为「按钮在 Web 自动化页签下也不出现」且不报任何错。
+     */
+    isWebType() {
+      return String(this.caseSearch.type) === '2'
+    },
     /**
      * ★ 供模板渲染的自动化类型列表（2026-09-17 新增）
      * 过滤掉 hiddenAutomationTypes 里声明的类型（当前为 App自动化 '3'），
