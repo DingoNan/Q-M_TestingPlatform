@@ -138,7 +138,13 @@ class Step(BaseModel):
     allow_redirects = models.BooleanField(default=True, help_text='是否重定向', verbose_name='是否重定向')
     verify = models.BooleanField(default=False, help_text='是否验证SSL证书', verbose_name='是否验证SSL证书')
     com_step_type = models.IntegerField(verbose_name='共用步骤类型', default=5)
-    keyword = models.CharField(verbose_name='步骤关键字', max_length=25, null=True, blank=True)
+    # ★ 2026-10-13（P0-②）：25 → 64。
+    #   执行底座里 `scroll_into_view_if_needed` 是 **26 个字符**，
+    #   而线上 MySQL 8.0 的 sql_mode 含 STRICT_TRANS_TABLES ⇒ 写入超长字符串
+    #   会直接报 1406 Data too long（不是静默截断），整个落库事务回滚，
+    #   用户只看到「系统内部异常」。录制链路会大量使用该关键字，
+    #   所以这里把列放宽 —— 关键字名是给人看的，不该被 25 个字符锁死。
+    keyword = models.CharField(verbose_name='步骤关键字', max_length=64, null=True, blank=True)
     plant = models.ForeignKey('envs.Plant', verbose_name='步骤所属平台', on_delete=models.PROTECT)
     api_service = models.ForeignKey('envs.Service', verbose_name='所属服务', on_delete=models.PROTECT, null=True, blank=True)
     api_method = models.CharField(max_length=10, verbose_name='请求方法', help_text='请求方法', null=True, blank=True)

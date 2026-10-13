@@ -492,6 +492,83 @@ class PlaywrightBaseAction:
             self.locator(obj, element_index, timeout).clear()
         self._log.append({'title': formatter_log('INFO', '清空文本'), 'value': f'成功清空内容'})
 
+    # ★ 2026-10-13 新增（P0-①）：录制链路必需的元素操作关键字。
+    #   背景：录制（DevTools Recorder / codegen）产出的动作里，下拉选择、勾选、
+    #   文件上传是必然出现的三类；此前平台缺失，导致「录出来的步骤无法回放」。
+    #   注册表由 inspect 遍历本类 __dict__ 自动生成，故新增方法无需改任何前端代码。
+    @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
+    def select_option(self, obj: ElementSerializers, value: str, element_index: int = 0, timeout: int = 5):
+        """
+        选择下拉框选项
+        obj: 元素对象, 必填
+        value: 要选择的选项值（对应 option 的 value 属性，也接受 option 的可见文本）, str, 必填
+        element_index: 元素索引, int, 非必填，默认0，用于获取指定索引的元素, -1 返回所有元素
+        timeout: 查找元素超时时间, int, 非必填，默认5s
+        return: None
+        """
+        if element_index == -1:
+            for element in self.locator(obj, element_index, timeout):
+                element.select_option(value)
+        else:
+            self.locator(obj, element_index, timeout).select_option(value)
+        self._log.append({'title': formatter_log('INFO', '选择下拉框选项'), 'value': f'已选择：{value}'})
+
+    @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
+    def check(self, obj: ElementSerializers, element_index: int = 0, timeout: int = 5):
+        """
+        勾选复选框/单选框
+        obj: 元素对象, 必填
+        element_index: 元素索引, int, 非必填，默认0，用于获取指定索引的元素, -1 返回所有元素
+        timeout: 查找元素超时时间, int, 非必填，默认5s
+        return: None
+        """
+        # 已勾选时 playwright check() 为空操作，天然幂等，无需先判断状态
+        if element_index == -1:
+            for element in self.locator(obj, element_index, timeout):
+                element.check()
+        else:
+            self.locator(obj, element_index, timeout).check()
+        self._log.append({'title': formatter_log('INFO', '勾选元素'), 'value': '勾选成功'})
+
+    @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
+    def uncheck(self, obj: ElementSerializers, element_index: int = 0, timeout: int = 5):
+        """
+        取消勾选复选框
+        obj: 元素对象, 必填
+        element_index: 元素索引, int, 非必填，默认0，用于获取指定索引的元素, -1 返回所有元素
+        timeout: 查找元素超时时间, int, 非必填，默认5s
+        return: None
+        """
+        if element_index == -1:
+            for element in self.locator(obj, element_index, timeout):
+                element.uncheck()
+        else:
+            self.locator(obj, element_index, timeout).uncheck()
+        self._log.append({'title': formatter_log('INFO', '取消勾选元素'), 'value': '取消勾选成功'})
+
+    @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
+    def upload_file(self, obj: ElementSerializers, file_path: str, element_index: int = 0, timeout: int = 5):
+        """
+        上传文件
+        obj: 元素对象（必须是 input[type=file]）, 必填
+        file_path: 文件绝对路径；多个文件用英文逗号分隔, str, 必填
+        element_index: 元素索引, int, 非必填，默认0，用于获取指定索引的元素, -1 返回所有元素
+        timeout: 查找元素超时时间, int, 非必填，默认5s
+        return: None
+        """
+        # 录制无法获取真实本地文件路径，归一化阶段会生成 ${变量} 占位，执行前由用例参数提供
+        file_list = [p.strip() for p in str(file_path).split(',') if p.strip()]
+        if not file_list:
+            raise Exception('上传文件失败：file_path 为空')
+        targets = file_list if len(file_list) > 1 else file_list[0]
+        if element_index == -1:
+            for element in self.locator(obj, element_index, timeout):
+                element.set_input_files(targets)
+        else:
+            self.locator(obj, element_index, timeout).set_input_files(targets)
+        self._log.append({'title': formatter_log('INFO', '上传文件'),
+                          'value': f'已上传：{", ".join(file_list)}'})
+
     @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
     def text_content(self, obj: ElementSerializers, element_index: int = 0, timeout: int = 5):
         """
@@ -803,6 +880,33 @@ class PlaywrightBaseAction:
         mouse.up()
         self._log.append({'title': formatter_log('INFO', '拖放偏移'), 'value': f'拖放偏移({x_offset}, {y_offset})成功'})
 
+    # ★ 2026-10-13 新增（P0-①）：页面级滚动。录制里「滚动加载更多 / 滚动到底」是高频动作；
+    #   原平台的 scroll_into_view_if_needed 是元素级滚动，无法表达页面滚动。
+    @action_group(PlaywrightStepType.MouseAction, PlaywrightStepTypeName.MouseAction)
+    def scroll_page(self, direction: str = 'down', distance: int = 500):
+        """
+        滚动页面
+        direction: 滚动方向, str, 非必填，默认down，可选 up/down/left/right
+        distance: 滚动距离(像素), int, 非必填，默认500
+        return: None
+        """
+        direction = (direction or 'down').strip().lower()
+        if direction not in ('up', 'down', 'left', 'right'):
+            raise Exception(f'滚动方向 {direction} 不支持，仅支持 up/down/left/right')
+        delta = abs(int(distance))
+        dx, dy = 0, 0
+        if direction == 'down':
+            dy = delta
+        elif direction == 'up':
+            dy = -delta
+        elif direction == 'right':
+            dx = delta
+        else:
+            dx = -delta
+        self._current_page().mouse.wheel(dx, dy)
+        self._log.append({'title': formatter_log('INFO', '滚动页面'),
+                          'value': f'向 {direction} 滚动 {delta}px 成功'})
+
     # 键盘操作
     @action_group(PlaywrightStepType.KeyboardAction, PlaywrightStepTypeName.KeyboardAction)
     def press_enter(self):
@@ -1034,6 +1138,10 @@ class PlaywrightBaseAction:
 
         return self.page.locator(loc_value)
 
+    # ★ 2026-10-13 修复（P0-①）：此处原先没有任何装饰器 ⇒ 注册表里没有 group_id，
+    #   前端关键字下拉把没有分组的项过滤掉了，用户根本选不到「等待元素加载」。
+    #   本方法是所有元素操作的前置（locator() 内部会调它），却唯独它挂不上装饰器。
+    @action_group(PlaywrightStepType.ElementAction, PlaywrightStepTypeName.ElementAction)
     def wait_element_located(self, obj: ElementSerializers, timeout: int = 5):
         """
         等待元素被加载到Dom树中，并且可见

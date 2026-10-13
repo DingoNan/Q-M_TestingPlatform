@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('apps.messages.urls')),
     path('', include('apps.ai_service.urls')),
     path('', include('apps.audit.urls')),
+    path('', include('apps.recording.urls')),
     re_path(r'^api_mock(?P<sub_path>.*)$', views.api_mock_view),
     path('restframework/', include('rest_framework.urls')),
 ]

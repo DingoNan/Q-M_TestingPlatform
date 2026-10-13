@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'apps.messages.apps.MessagesConfig',
     'apps.ai_service.apps.AiServiceConfig',
     'apps.audit.apps.AuditConfig',
+    'apps.recording.apps.RecordingConfig',
     'simple_history',
 ]
 

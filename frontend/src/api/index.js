@@ -578,6 +578,60 @@ export default {
 	importHarSync(params){
 		return http_request.post('/import_har_sync/', params)
 	},
+	// ★ 2026-10-13 新增（P0-④）：Web 自动化「浏览器录制 → 用例步骤」九个端点。
+	//   与 HAR 导入的本质区别：HAR 录的是「网络请求」，只对接口自动化(type=1)有意义；
+	//   录制录的是「人在浏览器上的操作」（点击/输入/选择/断言），只对 Web 自动化(type=2)有意义。
+	//   ★ 后端 CustomRender 会无条件把返回包一层 result（含 results 键的除外），
+	//     所以消费端一律 `(resp.data || {}).result || resp.data || {}`；
+	//     只有列表端点因为返回体本身就是 {count, results} 而不会被二次包裹。
+	//   路径均不带 `recording/` 之外的前缀（根路由 path('', include(...))，各 app 自写全路径）。
+	// 1) 创建会话（扩展 / 实时推送流用；文件直传走 recordingParse）
+	recordingSessionCreate(params){
+		return http_request.post('/recording/session/', params)
+	},
+	// 2) 会话列表（录制履历页）
+	recordingSessionList(params){
+		return http_request.get('/recording/session/list/', { params: params })
+	},
+	// 3) 会话详情（含 IR 与摘要）
+	recordingSessionDetail(id){
+		return http_request.get(`/recording/session/${id}/`)
+	},
+	// 4) 事件增量推送。★ 走 multipart：DATA_UPLOAD_MAX_MEMORY_SIZE(2.5MB) 只卡 JSON body，
+	//    超限时 Django 在框架层直接 400，视图根本进不去。params 传 FormData。
+	recordingSessionEvents(id, params){
+		return http_request.post(`/recording/session/${id}/events/`, params)
+	},
+	// 5) 结束录制 → 归一化成 IR
+	recordingSessionFinish(id, params){
+		return http_request.post(`/recording/session/${id}/finish/`, params)
+	},
+	// 6) 丢弃会话
+	recordingSessionDiscard(id, params){
+		return http_request.post(`/recording/session/${id}/discard/`, params)
+	},
+	// 7) AI 增强（P2）。当前后端明确返 501 + enabled:false ——
+	//    「明确报未启用」优于「返 200 却静默不生效」，排查成本差一个数量级。
+	recordingSessionAiEnhance(id, params){
+		return http_request.post(`/recording/session/${id}/ai_enhance/`, params)
+	},
+	// 7b) ★ P1 审阅台：保存审阅编辑。**只改 IR 不落库**，可反复调整、可撤销。
+	//     落库是最后那一次 recordingImport() 的原子动作 —— 这样用户改 10 次
+	//     也不会在用例里留下 10 份半成品步骤。
+	//     params: {keep_seqs, enable_seqs, order, actions:{seq:{...}}, assertions, name}
+	recordingSessionPatch(id, params){
+		return http_request.post(`/recording/session/${id}/patch/`, params)
+	},
+	// 8) ★ P0-④ 主入口：录制文件直传解析（DevTools Recorder 导出 JSON / Playwright codegen 脚本）。
+	//    一次完成「建会话 + 归一化成 IR」，返回 {session_id, source, start_url, summary, ir}。
+	//    params 为 FormData（file | payload 二选一，另带 project_id / case_id / name / source）。
+	recordingParse(params){
+		return http_request.post('/recording/parse/', params)
+	},
+	// 9) IR → 落库成用例步骤（mode=new_case 新建 / append_steps 追加到 case_id）
+	recordingImport(params){
+		return http_request.post('/recording/import/', params)
+	},
 	getSystemFunctionDoc(params){
 		return http_request.get('/test/system_function_doc/', {params: params})
 	},

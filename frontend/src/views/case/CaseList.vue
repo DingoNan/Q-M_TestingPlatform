@@ -414,6 +414,13 @@
                 </template>
               </el-dropdown>
               <el-button
+                v-if="isWebType && !isCanChoose"
+                @click="openRecHistory"
+                class="toolbar-btn rec-history-btn"
+              >
+                <el-icon><VideoCamera /></el-icon>录制履历
+              </el-button>
+              <el-button
                 v-if="permission.has_add_permission && !isCanChoose"
                 @click="addCase"
                 type="primary"
@@ -735,6 +742,16 @@
         </div>
       </el-card>
     </div>
+
+    <!-- 录制履历 / 审阅台（P1）
+         ★ 为什么挂在 CaseList 里而不是新开路由页：本平台的菜单与路由由后端权限表
+           驱动，新增页面要同步改后端菜单数据、并在每个环境各配一遍。录制的入口
+           本来就长在「脚本用例 → Web 自动化」里，就近开弹窗零配置、零权限改动。 -->
+    <RecordingHistory
+      v-model="recHistoryVisible"
+      :initial-session-id="recHistorySessionId"
+      @imported="onRecImported"
+    />
   </div>
 </template>
 
@@ -753,9 +770,11 @@ import {
   Expand,
   Fold,
   SuccessFilled,
-  Pointer
+  Pointer,
+  VideoCamera
 } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
+import RecordingHistory from '../../components/recording/RecordingHistory.vue'
 
 export default{
   watch: {
@@ -788,6 +807,16 @@ export default{
   },
   computed:{
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
+    /**
+     * 当前是否处于「Web 自动化」类型。
+     * ★ 必须 String() 归一化再比：`caseSearch.type` 被 automationTypes 定义为
+     *   字符串（'1'/'2'/'3'…），而 created() 里又会用 localStorage.case_type
+     *   覆盖（JSON.parse 后同样是字符串）。写成 `=== 2` 永远为 false，
+     *   表现为「按钮在 Web 自动化页签下也不出现」且不报任何错。
+     */
+    isWebType() {
+      return String(this.caseSearch.type) === '2'
+    },
   },
   data() {
     return {
@@ -898,6 +927,12 @@ export default{
       // 表格容器实测宽 / 横向溢出量（ResizeObserver 维护）
       tableAvailWidth: 0,
       tableOverflowPx: 0,
+      // ===== 录制履历 / 审阅台（P1）=====
+      // ★ 只在「Web 自动化」类型下显示入口 —— 录制出来的是浏览器操作，
+      //   落库只能落到 Web UI 用例（type=2），在接口自动化/造数/性能页露出来只会误导。
+      recHistoryVisible: false,
+      // 由「导入录制」流程跳转过来时带上的会话 id（为 null 则进列表视图）
+      recHistorySessionId: null,
       caseSearch:{
         name: '',
         service: '',
@@ -939,7 +974,8 @@ export default{
     Setting,
     Expand,
     Fold,
-    ColumnSetting
+    ColumnSetting,
+    RecordingHistory
   },
   mounted() {
     this.setupTableObserver()
@@ -1702,6 +1738,26 @@ export default{
     editStepTwo(row){
       localStorage.setItem('case_model', 'tree')
       this.$router.push({name: 'caseStepEdit', query: {id: row.id}})
+    },
+
+    // ===== 录制履历 / 审阅台（P1）=====
+    /** 打开录制履历（列表视图）。要直接进某个会话的审阅台请用 openRecReview(id) */
+    openRecHistory() {
+      this.recHistorySessionId = null
+      this.recHistoryVisible = true
+    },
+    /**
+     * 直接进入指定会话的审阅台。
+     * 供「录制履历」之外的入口（如步骤编辑页解析完成后）复用一个弹窗组件的场景。
+     */
+    openRecReview(sessionId) {
+      if (!sessionId) return
+      this.recHistorySessionId = sessionId
+      this.recHistoryVisible = true
+    },
+    /** 落库完成后刷新列表，让新用例立刻出现 */
+    onRecImported() {
+      this.getCases()
     },
   },
   async created() {

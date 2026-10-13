@@ -2345,6 +2345,31 @@ def import_har_sync(request: Request):
     注意：api_ids 的顺序是 HAR 里的**真实发起顺序**（已由
     _parse_har_v2 的逆序落库 + 末尾 reverse 还原），可直接按序建步骤。
     """
+    # ★ 2026-10-13 新增（P0-⑤）：用例类型前置校验。
+    #
+    #   背景：前端「导入HAR」按钮此前**没有类型门槛**（v-if 只判了 has_add_permission），
+    #   于是 Web 自动化用例里也显示该按钮。但 HAR 是**网络抓包**，录的是接口请求，
+    #   把它挂成 Web UI 步骤在语义上就不成立 —— Web 自动化该用「导入录制」。
+    #
+    #   为什么前端收口了后端还要拦：前端的 v-if 只让按钮「界面上看不到」，
+    #   挡不住任何人直接调这个接口。本项目已有先例（权限表未登记的路径被前端判 false
+    #   而请求根本没发出去）—— 显隐与拦截是两件事，服务端必须自己守住。
+    #
+    #   兼容性：case_id 为**可选**参数。历史调用方（老的用例内 HAR 导入）若未传，
+    #   行为完全不变，不会因为本次加固而回归。
+    case_id_for_check = request.data.get('case_id') or request.data.get('caseId')
+    if case_id_for_check:
+        from apps.tests.models import Case
+        case_obj_check = Case.objects.filter(id=case_id_for_check, is_delete=False).first()
+        if case_obj_check is None:
+            return Response({'detail': f'用例 {case_id_for_check} 不存在或已删除'}, status=400)
+        if case_obj_check.type != Case.FunctionCaseType.API:
+            return Response({
+                'detail': 'HAR 导入仅适用于「接口自动化」用例（当前为 %s）。'
+                          'Web/App 自动化请改用「导入录制」入口。'
+                          % case_obj_check.get_type_display()
+            }, status=400)
+
     source = (request.data.get('source') or 'file').lower()
     content = ''
     if source == 'url':

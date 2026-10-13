@@ -241,7 +241,124 @@
     </template>
   </el-dialog>
 
-  <!-- 各种选择抽屉 -->
+  <!-- ★ 2026-10-13 新增（P0-④）：用例内「导入录制文件」。
+       一次完成「解析录制 → 归一化成 IR → 落库为 Web 自动化步骤」。
+       数据来源三类（后端按内容自动识别，也可手动指定）：
+         ① Chrome/Edge DevTools Recorder 导出的 JSON（最主流、零安装）
+         ② Playwright codegen 生成的 .js/.py 脚本
+         ③ 平台浏览器扩展推送的事件流（P4，同一套 IR）
+       ★ 两步式交互（解析 → 预览 → 导入）而不是一步到位：
+         录制里杂事很多（hover、滚动、内部跳转），直接落库会往用例里塞垃圾步骤。
+         先让用户看到「保留了 N 条动作 / 丢弃 M 条 / 需要人工确认 K 项」再决定，
+         比「导入成功了但用例有 80 个没用的步骤」体验好得多。 -->
+  <el-dialog v-model="recImportVisible" title="导入录制文件（自动生成步骤）" width="680" :z-index="1001" :append-to-body="true" destroy-on-close class="elegant-dialog">
+    <el-form label-width="110px">
+      <el-form-item label="录制文件">
+        <input
+          type="file"
+          ref="recFileRef"
+          accept=".json,.js,.ts,.mjs,.py,.txt,application/json"
+          @change="onRecFileChange"
+          style="width: 100%"
+        />
+        <div class="rec-import-hint">
+          支持 Chrome/Edge 开发者工具「Recorder」面板导出的 JSON，或 Playwright <code>codegen</code> 生成的脚本。
+        </div>
+      </el-form-item>
+      <el-form-item label="或粘贴内容">
+        <el-input
+          v-model="recImportForm.payload"
+          type="textarea"
+          :rows="4"
+          placeholder="也可以直接粘贴录制 JSON 或脚本内容（与上面的文件二选一）"
+        />
+      </el-form-item>
+      <el-form-item label="数据来源">
+        <el-select v-model="recImportForm.source" style="width: 100%">
+          <el-option label="自动识别（推荐）" value="" />
+          <el-option label="Chrome DevTools Recorder JSON" value="devtools_plugin" />
+          <el-option label="Playwright codegen 脚本" value="playwright_script" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="会话名称">
+        <el-input v-model="recImportForm.name" placeholder="可选，留空则按录制标题自动命名" />
+      </el-form-item>
+
+      <!-- 解析结果预览：只有解析成功后才展开。
+           ★ 这里刻意把「丢弃原因」也列出来 —— 用户最常问的是
+             「我明明点了 30 下，怎么只有 12 个步骤」，答案就在这张表里。 -->
+      <el-form-item v-if="recParseInfo" label="解析结果">
+        <div class="rec-parse-panel">
+          <div class="rec-parse-stats">
+            <span class="rec-stat"><b>{{ recParseInfo.kept_actions }}</b> 条动作</span>
+            <span class="rec-stat rec-stat-drop"><b>{{ recParseInfo.dropped }}</b> 条已忽略</span>
+            <span class="rec-stat"><b>{{ recParseInfo.elements_unique }}</b> 个元素</span>
+            <span class="rec-stat"><b>{{ recParseInfo.assertions }}</b> 条断言</span>
+          </div>
+          <div v-if="recParseInfo.start_url" class="rec-parse-url" :title="recParseInfo.start_url">
+            起始地址：{{ recParseInfo.start_url }}
+          </div>
+          <div v-if="recDropReasonText" class="rec-parse-drop">
+            忽略原因：{{ recDropReasonText }}
+          </div>
+          <div v-if="recNeedReviewText" class="rec-parse-review">
+            需要人工确认：{{ recNeedReviewText }}
+          </div>
+        </div>
+      </el-form-item>
+
+      <el-form-item label="导入方式">
+        <el-radio-group v-model="recImportForm.mode">
+          <el-radio label="append_steps">追加到当前用例</el-radio>
+          <el-radio label="new_case">新建一个用例</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="自动断言">
+        <el-checkbox v-model="recImportForm.importAssertions">把录制中隐含的断言（页面标题 / 元素可见等）一并落库</el-checkbox>
+      </el-form-item>
+
+      <el-alert
+        title="录制产物会落到本项目的「录制-日期」模块，元素按定位器自动去重复用；已在录制中被识别为账号/密码的输入不会明文入库，会提取成用例变量。"
+        type="info"
+        :closable="false"
+        show-icon
+      />
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="recImportVisible = false" class="dialog-cancel-btn">
+          <span class="button-text">取消</span>
+        </el-button>
+        <el-button @click="parseRecording" :loading="recImportParsing" class="dialog-cancel-btn">
+          <span class="button-text">仅解析预览</span>
+        </el-button>
+        <!-- ★ 「先去审阅台」而不是「直接导入」：录制天然是脏的，
+             直接落库会把 hover 链、误点、内部跳转一起写进用例。
+             先在审阅台挑动作/换定位器/补断言，再落库，出来的才是能维护的用例。 -->
+        <el-button
+          v-if="recSessionId"
+          @click="goRecReview"
+          class="dialog-cancel-btn"
+        >
+          <span class="button-text">先去审阅台调整</span>
+        </el-button>
+        <el-button @click="submitRecImport" :loading="recImportLoading" class="dialog-confirm-btn">
+          <span class="button-text">导入并生成步骤</span>
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!-- 录制履历 / 审阅台（P1）
+       ★ 与「脚本用例」列表页复用同一个组件：这里不新造轮子，只是换个入口。
+         打开时用 initial-session-id 直接落到刚解析完的那个会话上，用户不用再去列表里找。 -->
+  <RecordingHistory
+    v-model="recReviewVisible"
+    :initial-session-id="recReviewSessionId"
+    @imported="onRecReviewImported"
+  />
+
+  <!-- 各种选择抽屉 / 弹窗 -->
   <el-drawer v-model="chooseApiVisible" :with-header="false" direction="ttb" show-close :append-to-body="true" :z-index="1001" fullscreen="true" destroy-on-close size="97%">
     <ApiList :parentPermission="permission" :isCanChoose="true" v-model:chooseApiVisible="chooseApiVisible" @setApiData="setApiData" @setManyApiData="addManyApiSteps"></ApiList>
   </el-drawer>
@@ -1386,16 +1503,35 @@
             </el-dropdown>
 			
 			<!-- ★ 2026-09-22 新增：用例内直接导入 HAR，把抓到的请求一次性变成步骤。
-			     流程：解析 HAR → 落库为接口（按真实发起顺序）→ 自动批量建为用例步骤。 -->
+			     流程：解析 HAR → 落库为接口（按真实发起顺序）→ 自动批量建为用例步骤。
+			     ★ 2026-10-13 修复（P0-⑤）：补上类型门槛 —— HAR 是网络抓包，只对
+			       「接口自动化」(type=1) 有意义；此前缺少该判断，导致 Web 自动化用例里
+			       也显示「导入HAR」，用户自然会问「Web 自动化为什么要导入 HAR」。
+			       同文件 L1411 的「添加步骤→Web自动化」早就写了 type===2，此处是漏了。 -->
 			<el-button
-			  v-if="permission.has_add_permission"
+			  v-if="permission.has_add_permission && case_info.type === 1"
 			  type="primary"
 			  class="action-btn har-import-btn"
 			  :loading="harImportLoading"
 			  @click="openHarImport"
 			>
-			  <el-icon><UploadFilled /></el-icon>导入HAR
-			</el-button>
+		  <el-icon><UploadFilled /></el-icon>导入HAR
+		</el-button>
+		<!-- ★ 2026-10-13 新增（P0-④）：Web 自动化「导入录制文件」。
+		     与左边「导入HAR」严格互斥：HAR 是网络抓包（type=1 接口自动化），
+		     录制是浏览器操作（type=2 Web 自动化）。两个按钮各自带类型门槛，
+		     所以永远只会出现一个 —— 用户不会问「Web 自动化为什么要导 HAR」。
+		     流程：选录制文件（DevTools Recorder 导出 JSON / Playwright codegen 脚本）
+		           → 解析（建会话 + 归一化成 IR）→ 预览统计 → 落库为用例步骤。 -->
+		<el-button
+		  v-if="permission.has_add_permission && case_info.type === 2"
+		  type="primary"
+		  class="action-btn rec-import-btn"
+		  :loading="recImportLoading"
+		  @click="openRecImport"
+		>
+		  <el-icon><VideoCamera /></el-icon>导入录制
+		</el-button>
 			<el-dropdown @command="controlStepCommand" class="control-dropdown" v-if="permission.has_add_permission">
 			  <el-button type="primary" class="action-btn add-btn">
 			    <el-icon><Plus /></el-icon>添加步骤
@@ -1730,9 +1866,11 @@ import {
   Setting,
   Download,
   InfoFilled,
-  UploadFilled
+  UploadFilled,
+  VideoCamera
 } from '@element-plus/icons-vue'
 import ApiList from '../../components/ApiList.vue'
+import RecordingHistory from '../../components/recording/RecordingHistory.vue'
 import {v4 as uuidv4} from 'uuid'
 import PythonFunctionList from '../../components/PythonFunctionList.vue'
 import FuncAndParams from '../../components/FuncAndParams.vue'
@@ -1939,6 +2077,19 @@ export default {
       harImportForm: { service: null, matchMode: 'overwrite', uriPrefix: '', content: '' },
       harFile: null,
       serviceList: [],
+      // ★ 2026-10-13 新增（P0-④）：用例内「导入录制文件」
+      //   recParseInfo 为 null ⇒ 尚未解析，对话框里就不展开结果面板。
+      //   session_id 解析后拿到，导入时一并回传，让后端能把会话标成「已导入」。
+      recImportVisible: false,
+      recImportLoading: false,
+      recImportParsing: false,
+      recImportForm: { name: '', source: '', payload: '', mode: 'append_steps', importAssertions: true },
+      recFile: null,
+      recParseInfo: null,
+      recSessionId: null,
+      // ★ 2026-10-13 新增（P1）：解析成功后可直接跳到审阅台调整，再回来落库
+      recReviewVisible: false,
+      recReviewSessionId: null,
       choosePythonFuncVisible: false,
       chooseSeleniumVisible: false,
       chooseAppiumVisible: false,
@@ -2078,7 +2229,8 @@ export default {
     AppiumList,
     StepParams,
     CaseData,
-    SqlInsert
+    SqlInsert,
+    RecordingHistory
   },
   computed: {
     ...mapState(['projectInfo', 'env_id', 'userInfo', 'pathPermission']),
@@ -2106,6 +2258,20 @@ export default {
     },
     isAppUI() {
       return this.case_info.type?.includes?.('APP_UI') || false
+    },
+    // ★ 2026-10-13（P0-④）：把「解析结果」的两个字典翻译成一句人话。
+    //   用户问得最多的就是「我点了 30 次，怎么只有 12 个步骤」，
+    //   答案分别是 drop_reasons（被规则忽略）与 needs_review（拿不准，交人工）。
+    recDropReasonText() {
+      const d = (this.recParseInfo && this.recParseInfo.drop_reasons) || {}
+      const parts = Object.keys(d).map(k => `${k} ${d[k]} 条`)
+      return parts.length ? parts.join('、') : ''
+    },
+    recNeedReviewText() {
+      const arr = (this.recParseInfo && this.recParseInfo.needs_review) || []
+      if (!arr.length) return ''
+      return arr.slice(0, 3).map(it => (typeof it === 'string' ? it : (it && it.message) || JSON.stringify(it))).join('；')
+                + (arr.length > 3 ? ` 等 ${arr.length} 项` : '')
     },
   },
   methods: {
@@ -2624,6 +2790,12 @@ export default {
 			}
 			formData.append('service', this.harImportForm.service)
 			formData.append('matchMode', this.harImportForm.matchMode || 'overwrite')
+			// ★ 2026-10-13（P0-⑤）：把当前用例 id 一并带上，让后端的用例类型校验
+			//   真正生效（HAR 只允许 type=1 的接口自动化用例）。前端 v-if 只是显隐，
+			//   服务端才是拦截点；不传该参数也能跑，但那样就绕过了加固。
+			if (this.case_info && this.case_info.id) {
+				formData.append('case_id', this.case_info.id)
+			}
 			if (this.harImportForm.uriPrefix) {
 				formData.append('uriPrefix', this.harImportForm.uriPrefix)
 			}
@@ -2675,6 +2847,195 @@ export default {
 			ElMessage.error('HAR 导入失败：' + (e && e.message ? e.message : e))
 		} finally {
 			this.harImportLoading = false
+		}
+	},
+	/**
+	 * ★ 2026-10-13 新增（P0-④）：用例内「导入录制文件」。
+	 *
+	 * 与「导入 HAR」的关键差异（一并写在这里，避免后人又搞混）：
+	 *   HAR    = 网络请求抓包 → 落 Element？不，落 Api → 只对 type=1 接口自动化有意义。
+	 *   录制    = 人在浏览器上的操作（点击/输入/选择/等待/断言）→ 落 Element + Step
+	 *            → 只对 type=2 Web 自动化有意义。
+	 * 两者是平行的两条「数据来源」，不是互相替代。
+	 *
+	 * 两步式交互：先 parse（建会话 + 归一化成 IR + 回摘要），再 import（IR → 用例步骤）。
+	 * 之所以不在一次请求里做完 —— 录制数据里混着大量 hover / 滚动 / 内部跳转，
+	 * 用户需要先看见「保留 N 条、忽略 M 条、待确认 K 项」再决定是否落库。
+	 */
+	async openRecImport() {
+		this.recImportForm = { name: '', source: '', payload: '', mode: 'append_steps', importAssertions: true }
+		this.recFile = null
+		this.recParseInfo = null
+		this.recSessionId = null
+		if (this.$refs.recFileRef) {
+			this.$refs.recFileRef.value = ''
+		}
+		this.recImportVisible = true
+	},
+	onRecFileChange(event) {
+		const files = event.target && event.target.files
+		this.recFile = (files && files[0]) ? files[0] : null
+		// 换文件即失效：旧的解析结果不能留下来误导用户
+		this.recParseInfo = null
+		this.recSessionId = null
+	},
+	/** 把当前表单组装成 multipart（★ 录制包动辄几 MB，绝不能走 JSON body） */
+	_buildRecFormData() {
+		const formData = new FormData()
+		formData.append('project_id', this.projectInfo.id)
+		if (this.case_info && this.case_info.id) {
+			formData.append('case_id', this.case_info.id)
+		}
+		if (this.recImportForm.name && this.recImportForm.name.trim()) {
+			formData.append('name', this.recImportForm.name.trim())
+		}
+		if (this.recImportForm.source) {
+			formData.append('source', this.recImportForm.source)
+		}
+		if (this.recFile) {
+			formData.append('file', this.recFile)
+		} else {
+			formData.append('payload', this.recImportForm.payload)
+		}
+		return formData
+	},
+	/** 只解析，不落库。给用户一个「先看看会生成什么」的机会。 */
+	async parseRecording() {
+		const hasFile = !!this.recFile
+		const hasContent = !!(this.recImportForm.payload || '').trim()
+		if (!hasFile && !hasContent) {
+			ElMessage.warning('请选择录制文件，或把录制内容粘贴到数据框里')
+			return null
+		}
+		this.recImportParsing = true
+		try {
+			const response = await this.$api.recordingParse(this._buildRecFormData())
+			if (response.status !== 200) {
+				// ★ 400 时 DRF 的 detail 才是真正有用的信息（比如「没能解析出任何操作」），
+				//   直接吞掉会变成「点了没反应」。
+				const eb = (response.data || {})
+				ElMessage({ type: 'error', duration: 8000, showClose: true,
+					message: (eb.result || eb).detail || '录制解析失败' })
+				return null
+			}
+			// ★ 后端 CustomRender 会把返回体包成 {code,msg,result:{...}}，必须解一层
+			const rb = response.data || {}
+			const body = rb.result || rb
+			this.recParseInfo = body.summary || {}
+			this.recSessionId = body.session_id || null
+			if (!this.recImportForm.name && body.name) {
+				this.recImportForm.name = body.name
+			}
+			if (!this.recParseInfo.kept_actions) {
+				ElMessage.warning('这份录制里没有可回放的操作，请确认导出格式（DevTools Recorder JSON 或 Playwright 脚本）')
+				return null
+			}
+			ElMessage.success(`解析完成：${this.recParseInfo.kept_actions} 条动作、${this.recParseInfo.elements_unique || 0} 个元素`)
+			return body
+		} catch (e) {
+			console.error('录制解析失败:', e)
+			ElMessage.error('录制解析失败：' + (e && e.message ? e.message : e))
+			return null
+		} finally {
+			this.recImportParsing = false
+		}
+	},
+	/** 解析（若还没解析过）→ 落库成用例步骤。 */
+	async submitRecImport() {
+		this.recImportLoading = true
+		try {
+			// 没解析过就先解析（用户直接点「导入并生成步骤」的路径）
+			if (!this.recSessionId) {
+				const parsed = await this.parseRecording()
+				if (!parsed) return
+			}
+			const payload = {
+				project_id: this.projectInfo.id,
+				session_id: this.recSessionId,
+				mode: this.recImportForm.mode || 'append_steps',
+				import_assertions: this.recImportForm.importAssertions
+			}
+			if (payload.mode === 'append_steps') {
+				payload.case_id = this.case_info.id
+			} else if (this.recImportForm.name && this.recImportForm.name.trim()) {
+				payload.case_name = this.recImportForm.name.trim()
+			}
+			const response = await this.$api.recordingImport(payload)
+			if (response.status !== 200) {
+				const eb = (response.data || {})
+				ElMessage({ type: 'error', duration: 8000, showClose: true,
+					message: (eb.result || eb).detail || '录制导入失败' })
+				return
+			}
+			const rb = response.data || {}
+			const body = rb.result || rb
+			const created = body.elements || {}
+			// 一条消息说清「生成多少、复用多少、跳过多少、待补多少」——
+			// 只报「成功」而不说跳过，用户会以为录制内容全都进去了。
+			const bits = [`生成 ${body.step_count || 0} 个步骤（动作 ${body.action_step_count || 0} / 校验 ${body.verify_step_count || 0}）`]
+			bits.push(`断言 ${body.assertion_count || 0} 条`)
+			if (created.created || created.reused) {
+				bits.push(`元素 新增 ${created.created || 0} / 复用 ${created.reused || 0}`)
+			}
+			if ((body.skipped_actions || []).length) {
+				bits.push(`跳过 ${body.skipped_actions.length} 条`)
+			}
+			if ((body.deferred_assertions || []).length) {
+				bits.push(`待补断言 ${body.deferred_assertions.length} 条`)
+			}
+			ElMessage({ type: 'success', duration: 8000, showClose: true, message: bits.join('，') })
+			// 后端会在统计不自洽时主动写 warn note —— 这类提示绝不能静默丢弃
+			const warns = (body.notes || []).filter(n => n && n.level === 'warn')
+			if (warns.length) {
+				ElMessage({ type: 'warning', duration: 10000, showClose: true,
+					message: warns.map(n => n.message).join('；') })
+			}
+			if (body.case_created) {
+				ElMessage({ type: 'info', duration: 8000, showClose: true,
+					message: `已新建用例「${body.case_name}」（id=${body.case_id}），请到用例列表查看` })
+			}
+			this.recImportVisible = false
+			if (!body.case_created) {
+				this.getCase()
+			}
+		} catch (e) {
+			console.error('录制导入失败:', e)
+			ElMessage.error('录制导入失败：' + (e && e.message ? e.message : e))
+		} finally {
+			this.recImportLoading = false
+		}
+	},
+
+	/**
+	 * 解析成功后跳到录制审阅台（P1）。
+	 *
+	 * ★ 为什么用「同页内再开一个弹窗」而不是跳到脚本用例列表页：
+	 *   本页是步骤编辑页，用户往往已经在这个用例上改了半天步骤没保存。
+	 *   一旦路由跳走，这些改动就全丢了 —— 而且丢得毫无提示。
+	 *   所以这里只切换弹窗，不碰路由。审阅台与列表页复用同一个组件，零重复代码。
+	 */
+	goRecReview() {
+		if (!this.recSessionId) {
+			ElMessage.warning('请先解析录制文件，拿到会话后才能进入审阅台')
+			return
+		}
+		this.recReviewSessionId = this.recSessionId
+		this.recImportVisible = false
+		this.recReviewVisible = true
+	},
+	/**
+	 * 审阅台里落库完成后的回调。
+	 * 审阅台自己会新建用例（new_case）或追加到已有用例（append_steps）：
+	 *   · 追加到「当前这个用例」时，本页的步骤列表要刷新，否则用户看不到新步骤；
+	 *   · 新建了别的用例时不刷新（当前用例没变），只提示。
+	 */
+	onRecReviewImported(payload) {
+		const d = payload || {}
+		if (d.mode === 'append_steps' && d.case_id && this.case_info && d.case_id === this.case_info.id) {
+			this.getCase()
+		} else if (d.case_created) {
+			ElMessage({ type: 'info', duration: 8000, showClose: true,
+				message: `审阅台已新建用例「${d.case_name}」，请到脚本用例列表查看` })
 		}
 	},
     actionChange(value) {
@@ -4256,6 +4617,64 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+/* ★ 2026-10-13（P0-④）：录制导入对话框的提示与解析结果面板。
+   品牌色（--qm-warn-bg / --qm-info-bg）与主题变量已在前文定义，
+   深浅色两套主题下自动适配，不要再写死颜色。 */
+.rec-import-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--qm-text-3);
+}
+.rec-import-hint code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--qm-bg-3);
+  color: var(--qm-text-2);
+  font-size: 12px;
+}
+.rec-parse-panel {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--qm-line);
+  border-radius: 10px;
+  background: var(--qm-bg-2);
+}
+.rec-parse-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 13px;
+  color: var(--qm-text-2);
+}
+.rec-stat b {
+  font-size: 15px;
+  /* ★ 用 --qm-accent-strong 而非 --qm-accent：亮橙 #f59e0b 在白底只有 2.15:1，
+     不达 WCAG AA 4.5:1；theme.css 专门为「浅底上的强调文字」定义了
+     --qm-accent-strong（浅色 #b45309 / 深色 #fbbf24），两套主题都达标。
+     注意 --qm-primary 这个变量在本项目**并不存在**，写了会静默失效。 */
+  color: var(--qm-accent-strong);
+}
+.rec-stat-drop b {
+  color: var(--qm-text-3);
+}
+.rec-parse-url {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--qm-text-3);
+  word-break: break-all;
+}
+.rec-parse-drop,
+.rec-parse-review {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--qm-text-3);
+}
+.rec-parse-review {
+  color: var(--qm-accent-strong);
 }
 
 .dialog-cancel-btn,

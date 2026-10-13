@@ -73,3 +73,12 @@ backend/packages.zip
 _COMMIT_MSG*.txt
 _cm_v*.txt
 _gitprobe*.txt
+
+# 根目录下的「验证/探针输出」（如 _p0_3_verify.txt / _p1_e2e.txt / _p1_*_probe.txt）。
+# 这些是本地闸门与取证的运行日志，属于过程证据而非源码 —— 体积不大但会迅速堆积，
+# 且每条都带时间戳与本机路径，入库只会给 review 添噪声。
+# ★ 注意写的是 `/` 开头的**根锚定**模式：不锚定的话会命中 backend/apps/... 下的同名文件。
+/_*_verify.txt
+/_p[0-9]*_*.txt
+/_*_probe.txt
+/_*_console*.txt
