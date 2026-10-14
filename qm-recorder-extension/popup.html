@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Q·M 录制器</title>
   <style>
-    :root { --bd:#e4e7ed; --tx:#303133; --sub:#909399; --pri:#409eff; --ok:#67c23a; --dg:#f56c6c; }
+    :root { --bd:#e4e7ed; --tx:#303133; --sub:#909399; --pri:#409eff; --ok:#67c23a; --dg:#f56c6c; --warn:#e6a23c; }
     * { box-sizing: border-box; }
     body { width: 340px; margin:0; padding:14px; font:13px/1.5 -apple-system,"Microsoft YaHei",sans-serif; color:var(--tx); }
     h1 { margin:0 0 12px; font-size:15px; display:flex; align-items:center; gap:6px; }
@@ -17,9 +17,7 @@
       font-size:12px; color:var(--tx); outline:none; background:#fff;
     }
     input:focus, select:focus, textarea:focus { border-color:var(--pri); }
-    textarea { resize:vertical; min-height:52px; font-family:Consolas,monospace; }
-    .row { display:flex; gap:8px; }
-    .row > * { flex:1; }
+    textarea { resize:vertical; min-height:48px; font-family:Consolas,monospace; }
     button {
       width:100%; padding:8px; border:none; border-radius:4px; cursor:pointer;
       font-size:13px; color:#fff; background:var(--pri);
@@ -37,31 +35,46 @@
     .err { margin-top:8px; color:var(--dg); font-size:12px; word-break:break-all; }
     .hint { color:var(--sub); font-size:11px; margin-top:4px; }
     .ok { color:var(--ok); }
+    .link { color:var(--pri); cursor:pointer; text-decoration:underline; font-size:12px; }
+    /* 连接状态卡：自动识别结果一目了然 */
+    .conn {
+      display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px;
+      font-size:12px; margin-bottom:12px; border:1px solid var(--bd); background:#f5f7fa;
+    }
+    .conn .ic { font-size:15px; line-height:1; }
+    .conn.on  { border-color:#d1edc4; background:#f0f9eb; }
+    .conn.off { border-color:#faecd8; background:#fdf6ec; }
+    .conn .tx { flex:1; min-width:0; }
+    .conn .t1 { color:var(--tx); font-weight:600; }
+    .conn .t2 { color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .conn .re { color:var(--pri); cursor:pointer; text-decoration:underline; white-space:nowrap; }
+    /* 折叠设置区 */
     .cfg { display:none; }
     .cfg.show { display:block; }
-    .link { color:var(--pri); cursor:pointer; text-decoration:underline; font-size:12px; }
+    .cfg .divider { margin-top:6px; }
+    .foot { margin-top:12px; display:flex; align-items:center; gap:8px; }
   </style>
 </head>
 <body>
   <h1 id="title"><span class="dot"></span>Q·M 录制器</h1>
 
-  <div id="cfgBox" class="cfg">
-    <label>平台地址</label>
-    <input id="base" placeholder="http://172.16.21.161:8000">
-
-    <label>访问令牌（登录平台后从浏览器取得）</label>
-    <textarea id="token" placeholder="在平台页面按 F12 → Console 粘贴：JSON.parse(localStorage.token)"></textarea>
-    <div class="hint">获取方式：登录平台 → F12 → Console 输入 <code>JSON.parse(localStorage.token)</code> → 回车，复制输出的字符串。</div>
-
-    <label>项目 ID（可从「项目概览」页地址栏 project= 后看到）</label>
-    <input id="projectId" type="number" min="1" placeholder="例如 2">
-
-    <div class="acts">
-      <button id="saveCfg" class="ghost">保存配置</button>
-    </div>
+  <!-- ★ 自动连接状态卡：登录态与当前项目由插件自动识别（零配置） -->
+  <div id="conn" class="conn off">
+    <span class="ic" id="connIc">⏳</span>
+    <span class="tx">
+      <div class="t1" id="connT1">正在识别平台登录态…</div>
+      <div class="t2" id="connT2"></div>
+    </span>
+    <span class="re" id="reSync">重新识别</span>
   </div>
 
   <div id="main">
+    <label>项目（自动带出，可切换）</label>
+    <select id="projectId">
+      <option value="">-- 选择项目 --</option>
+    </select>
+    <div class="hint" id="projHint">打开过「我的项目」页面后会自动选中当前项目。</div>
+
     <label>录制名称（可留空，自动生成）</label>
     <input id="name" placeholder="例如：登录-正常流程">
 
@@ -73,10 +86,27 @@
     <div class="stat" id="stat">状态：待开始</div>
     <div class="err" id="err" style="display:none"></div>
 
-    <div style="margin-top:10px">
-      <span class="link" id="toggleCfg">⚙ 配置</span>
+    <div class="foot">
+      <span class="link" id="toggleCfg">⚙ 设置</span>
       <span style="color:#dcdfe6">|</span>
       <span class="link" id="openPlatform">打开平台录制履历</span>
+    </div>
+  </div>
+
+  <!-- 折叠设置：正常情况什么都不用填，这里只是兜底 -->
+  <div id="cfgBox" class="cfg">
+    <div class="divider"></div>
+    <label>平台 API 地址（自动识别，一般不用改）</label>
+    <input id="base" placeholder="http://172.16.21.161:8000">
+
+    <label>平台页面地址（自动识别，用于打开录制履历）</label>
+    <input id="site" placeholder="http://172.16.21.161:8080">
+
+    <label>访问令牌（仅自动识别失败时的兜底，一般无需填写）</label>
+    <textarea id="token" placeholder="留空即可 —— 插件会自动读取平台登录态"></textarea>
+
+    <div class="acts">
+      <button id="saveCfg" class="ghost">保存设置</button>
     </div>
   </div>
 

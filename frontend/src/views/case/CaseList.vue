@@ -464,17 +464,19 @@
                     <el-icon class="rec-plugin-pop-ico" :size="18"><VideoCamera /></el-icon>
                     <div class="rec-plugin-pop-head-text">
                       <div class="rec-plugin-pop-title">实时录制需要浏览器插件</div>
-                      <div class="rec-plugin-pop-sub">Q·M 录制器 v0.1.0 · Chrome / Edge</div>
+                      <div class="rec-plugin-pop-sub">Q·M 录制器 v0.2.0 · Chrome / Edge · 零配置</div>
                     </div>
                   </div>
                   <div class="rec-plugin-pop-desc">
                     安装后在任意网页正常操作，即可自动记录点击、输入与页面跳转；录制结果回到
                     「录制履历」审阅并一键转成用例。断网不丢事件，恢复后自动补传。
+                    <b>登录态与项目全自动识别，无需手工填令牌或项目 ID。</b>
                   </div>
                   <ol class="rec-plugin-pop-steps">
                     <li>点下方「下载插件」，解压得到 <code>qm-recorder-extension</code> 文件夹</li>
                     <li>浏览器打开 <code>chrome://extensions</code>，右上角开启「开发者模式」</li>
                     <li>点「加载已解压的扩展程序」，选中上一步的文件夹</li>
+                    <li>打开过平台页面后，点插件图标确认顶部是绿色「✅ 已自动连接平台」</li>
                   </ol>
                   <div class="rec-plugin-pop-actions">
                     <el-button
@@ -1119,7 +1121,7 @@ export default{
     pluginDownloadUrl() {
       const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
         ? window.location.origin : ''
-      return origin + '/downloads/qm-recorder-extension-v0.1.0.zip'
+      return origin + '/downloads/qm-recorder-extension.zip'
     },
     /**
      * ★ 供模板渲染的自动化类型列表（2026-09-17 新增）
@@ -1964,7 +1966,7 @@ export default{
       const url = this.pluginDownloadUrl
       const a = document.createElement('a')
       a.href = url
-      a.download = 'qm-recorder-extension-v0.1.0.zip'
+      a.download = 'qm-recorder-extension.zip'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

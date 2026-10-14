@@ -1,23 +1,33 @@
 {
   "manifest_version": 3,
   "name": "Q·M 录制器",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "录制 Web 页面操作，回传到 Q·M 测试平台生成脚本用例步骤",
   "permissions": [
     "activeTab",
+    "alarms",
     "scripting",
     "storage",
     "tabs"
   ],
   "host_permissions": [
     "http://172.16.21.161:8000/*",
-    "http://localhost:8000/*"
+    "http://172.16.21.161:8080/*",
+    "http://localhost:8000/*",
+    "http://localhost:8080/*"
   ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Q·M 录制器",
     "default_icon": {
-      "128": "icon.svg"
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
     }
   },
   "background": {

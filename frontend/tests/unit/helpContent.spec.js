@@ -51,8 +51,9 @@ describe('帮助文档内容装配', () => {
     expect(html).toContain('录制履历')
     expect(html).toContain('导入录制')
     expect(html).toContain('Q·M 录制器')
-    // 下载位置必须写清楚，否则用户仍然找不到插件
-    expect(html).toContain('qm-recorder-extension-v0.1.0.zip')
+    // 下载位置必须写清楚，否则用户仍然找不到插件（zip 用固定名，升级插件不再改前端）
+    expect(html).toContain('qm-recorder-extension.zip')
+    expect(html).not.toContain('qm-recorder-extension-v0.1.0.zip')
     expect(html).toContain('chrome://extensions')
   })
 
@@ -103,6 +104,18 @@ describe('帮助文档内容装配', () => {
 
   it('快速开始提到录制插件入口', () => {
     expect(quickStartContent.content).toContain('Q·M 录制器')
+  })
+
+  it('录制文档必须是零配置口径（v0.2.0 插件自动识别登录态与项目）', () => {
+    // ★ 背景：v0.1.0 的插件要求用户 F12 手工抠 token、手填「项目 ID」，
+    //   用户反馈「找了半天也没找到」。v0.2.0 起全自动识别，文档必须同步：
+    //   ①必须讲清「自动识别/自动连接」；②不允许再出现引导用户手工取 token 的描述。
+    const rec = subMenuContentMap['guide-recording'].content
+    expect(rec).toContain('全自动识别')
+    expect(rec).toContain('已自动连接平台')
+    // 反向闸门：录制章节不允许再教用户去 Console 抠 token（变量章节的 token 是另一回事）
+    expect(rec).not.toMatch(/JSON\.parse\(localStorage/)
+    expect(rec).not.toContain('访问令牌（登录平台后从浏览器取得）')
   })
 
   it('内容模板字符串中不存在 ${...} 表达式（历史踩坑：整段示例被 JS 吃掉）', () => {

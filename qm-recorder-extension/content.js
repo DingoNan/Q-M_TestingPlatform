@@ -254,4 +254,53 @@
     if (!d || d.__qm !== 'recorder') return
     if (d.action === 'stop') flushPending()
   })
+
+  // -------------------------------------------------------------------------
+  // ★ 零配置：在平台上自动上报登录态与当前项目（v0.2.0）
+  // -------------------------------------------------------------------------
+  // 背景：旧版要求用户在弹窗里手工粘贴 token（F12 → Console 敲
+  //   JSON.parse(localStorage.token)），再手填「项目 ID」—— 用户反馈根本找不到。
+  // 事实：这两样东西本来就躺在平台页面的 localStorage 里：
+  //   token           —— 登录后写入（JSON 字符串）
+  //   qm-projectInfo  —— 「我的项目」点卡片后写入，形如 {id, name, ...}
+  // content script 与页面共享 localStorage（isolated world 只隔离 JS 对象，
+  // 不隔离 storage），所以这里直接读出来交给 background 保存即可，
+  // 用户什么都不用填。
+  // 识别「这是平台页」的标志：同时存在 token 与 qm-projectInfo/qm-userInfo
+  //（都是平台专有键，别的网站撞名的概率可忽略）。
+  function readPlatformCreds() {
+    function ls(k) {
+      let v = null
+      try { v = localStorage.getItem(k) } catch (e) { return null }
+      if (v === null || v === undefined) return null
+      const s = String(v).trim()
+      if (!s || s === 'null' || s === 'undefined' || s === '""') return null
+      try { return JSON.parse(s) } catch (e) { return s }
+    }
+    const tk = ls('token')
+    const proj = ls('qm-projectInfo')
+    const ui = ls('qm-userInfo')
+    if (!tk || typeof tk !== 'string') return null
+    if (!proj || !proj.id) return null   // 没进过项目 ⇒ 至少知道登录了，但项目要等选
+    return {
+      token: tk,
+      projectId: String(proj.id),
+      projectName: proj.name ? String(proj.name) : '',
+      userName: String((ui && (ui.user_name || ui.username || ui.name)) || ''),
+      siteOrigin: location.origin,
+      // 与平台前端 api/index.js 的 base_url 拼法保持一致（hostname:8000）
+      apiBase: location.protocol + '//' + location.hostname + ':8000',
+    }
+  }
+
+  function reportCreds() {
+    const c = readPlatformCreds()
+    if (!c) return
+    try {
+      chrome.runtime.sendMessage({ type: 'qm-credentials', creds: c }, function () {
+        void chrome.runtime.lastError   // 扩展上下文失效时静默
+      })
+    } catch (e) { /* ignore */ }
+  }
+  reportCreds()
 })()
