@@ -75,6 +75,23 @@ def _to_int(v, default=None):
         return default
 
 
+def _frame_path_from(v):
+    """Recorder 的 `frame` 是 FrameSelector = number[]（逐层 iframe 的序号）。
+
+    转成内部的 frame_path（int 列表）；形状不合法时一律退化成「主文档」([])，
+    绝不让它污染下游。
+    """
+    if not isinstance(v, (list, tuple)):
+        return []
+    out = []
+    for x in v:
+        try:
+            out.append(int(x))
+        except (TypeError, ValueError):
+            return []
+    return out
+
+
 def _first_quoted(text):
     """从 `'role', { name: '用户名' }` 这类片段里取第一个引号字符串。"""
     if not text:
@@ -228,27 +245,26 @@ def from_devtools_recorder(payload):
 
         target = None
         selectors = raw_step.get('selectors')
-        if selectors or raw_step.get('target'):
-            # `target` 是 Recorder 给的可读描述（往往等于无障碍名）
-            label_hint = raw_step.get('target')
+        if selectors:
+            # ★ 2026-10-14 修（真接口实测取证，见 _verify_devtools_recorder_parse.py）
+            #   schema（puppeteer-replay —— Chrome DevTools Recorder 的导出格式就是它）里
+            #   `BaseStep.target` 是 **frame 名**（`Target = string`，默认字面量 `'main'`），
+            #   **不是**元素的可读描述。曾把它当 label_hint，造成两个真实后果：
+            #     · Chrome Recorder 真实导出必带 `target:'main'` ⇒ 所有元素的身份键
+            #       都变成 `'main'`，元素列表里全是 "main"，完全无法辨认是哪个元素；
+            #     · 无 selectors 但带 target 的步骤（keyDown/keyUp）会凭空造出一个
+            #       用 `text=main` 定位的垃圾元素。
+            #   元素描述**只**从 selectors 推导（_target_key_from 的后续分支已覆盖）。
             cands = _candidates_from_selectors(selectors, etype)
-            if not cands and label_hint:
-                cands.append({'by': 'text', 'value': label_hint,
-                              'opts': {'exact': False}, 'source': 'devtools'})
             target = {
                 'node_name': None,
                 'attrs': {},
-                'text': label_hint if isinstance(label_hint, str) else None,
+                'text': None,
                 'aria_label': None,
                 'selectors': cands,
                 'bbox': None,
                 'in_shadow': False,
-                # 身份键优先用 Recorder 给的原始 target 描述（如 'aria/用户名'）——
-                # 它天然区分不同元素；若无则退回第一条原始 selector 字符串
-                'key': _target_key_from(
-                    selectors=selectors,
-                    explicit=label_hint if isinstance(label_hint, str) and label_hint else None,
-                ),
+                'key': _target_key_from(selectors=selectors),
             }
 
         ev = {
@@ -261,7 +277,8 @@ def from_devtools_recorder(payload):
             'value': None,
             'url': raw_step.get('url'),
             'key': raw_step.get('key'),
-            'frame_path': [],
+            # ★ frame 才是 iframe 信息（FrameSelector = number[]），别丢
+            'frame_path': _frame_path_from(raw_step.get('frame')),
             'raw': raw_step,
         }
 

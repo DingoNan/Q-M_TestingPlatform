@@ -860,6 +860,84 @@ def t43():
        '合并后应保留最后一次选择的值')
 
 
+@case("44 DevTools Recorder：target 是 frame 名（'main'），不得污染元素身份键")
+def t44():
+    """真接口实测取证（_verify_devtools_recorder_parse.py）。
+
+    schema 出处：puppeteer-replay 的 Schema.ts（Chrome DevTools Recorder 的导出格式
+    就是它）—— `BaseStep.target` 是 **frame 名**（`Target = string`，注释
+    「Defaults to main」），**不是**元素的可读描述。Chrome Recorder 真实导出
+    **必带** `target:'main'`。
+
+    曾把它当 label_hint（元素描述），造成两个真实后果：
+      ① 所有元素的身份键都变成 'main' ⇒ 元素列表里全是 "main"，无法辨认；
+      ② 无 selectors 却带 target 的步骤（keyDown/keyUp）会凭空造出一个
+         用 `text=main` 定位的垃圾元素。
+    """
+    payload = {'title': 'rec', 'steps': [
+        {'type': 'navigate', 'url': 'http://x.example/login'},
+        {'type': 'click', 'target': 'main',
+         'selectors': [['#username'], ['aria/用户名']], 'offsetX': 1, 'offsetY': 1},
+        {'type': 'change', 'target': 'main',
+         'selectors': [['#username'], ['aria/用户名']], 'value': 'admin'},
+        {'type': 'change', 'target': 'main',
+         'selectors': [['#password'], ['aria/密码']], 'value': 'p'},
+        {'type': 'keydown', 'target': 'main', 'key': 'Enter'},
+    ]}
+    events, meta = SRC.normalize_source(payload, 'devtools_plugin')
+    ir = NZ.build_ir(events, meta)
+
+    names = [e.get('name') for e in ir['elements']]
+    st = ir['stats']
+
+    # ★ 非空转自证：先证明这个用例真的产出了元素。
+    #   （首次写这条用例时漏了它，导致变异反证「不变红」才发现断言全是空转。）
+    check(len(names) >= 2,
+          '前置自证：本用例必须真的产出 >=2 个元素，否则后续断言全是空转；实际 %r'
+          % (names,))
+
+    # ① text 字段不得被 frame 名污染（修复前：所有元素 name 都变成 'main'）
+    check('main' not in names,
+          "target(frame 名) 不得成为元素描述，实际元素名 %r" % (names,))
+    eq(len(names), len(set(names)),
+       "不同元素的展示名不应重复，实际 %r" % (names,))
+
+    # ② key 字段不得被 frame 名污染 —— 后果是**不同元素被误判成同一个而合并**
+    #    （实测：2 个元素塌成 1 个，输入防抖合并/去重随之全部错乱）
+    check(st['elements_unique'] >= 2,
+          '不同元素不得因身份键相同而被合并，实际 elements_unique=%r'
+          % (st.get('elements_unique'),))
+
+    # ③ 无 selectors 的步骤（keyDown/keyUp）不得凭空造出定位候选
+    loc_vals = [l.get('value')
+                for e in ir['elements'] for l in (e.get('locators') or [])]
+    check('main' not in loc_vals,
+          "不得出现用 text='main' 定位的垃圾候选，实际 %r" % (loc_vals,))
+
+
+@case('45 DevTools Recorder：frame（FrameSelector=number[]）必须落到 frame_path')
+def t45():
+    """schema：`StepWithFrame.frame?: FrameSelector`，`FrameSelector = number[]`。
+
+    若把它丢掉（原实现硬编码 `frame_path: []`），**跨 iframe 录制的每一步都会
+    被记到主文档上**，回放时定位必然失败，而且失败点远在回放期、排查成本极高。
+    """
+    payload = {'title': 'rec', 'steps': [
+        {'type': 'click', 'target': 'main', 'frame': [0, 1],
+         'selectors': [['#deep']], 'offsetX': 1, 'offsetY': 1},
+    ]}
+    events, _ = SRC.normalize_source(payload, 'devtools_plugin')
+    eq(events[0]['frame_path'], [0, 1], 'frame 必须转成 frame_path')
+
+    # 反证：非法形状退化成主文档，而不是抛异常或留下脏值
+    payload2 = {'title': 'rec', 'steps': [
+        {'type': 'click', 'target': 'main', 'frame': 'oops',
+         'selectors': [['#deep']], 'offsetX': 1, 'offsetY': 1},
+    ]}
+    events2, _ = SRC.normalize_source(payload2, 'devtools_plugin')
+    eq(events2[0]['frame_path'], [], '非法 frame 应退化成主文档')
+
+
 # ---------------------------------------------------------------------------
 # 运行
 # ---------------------------------------------------------------------------
