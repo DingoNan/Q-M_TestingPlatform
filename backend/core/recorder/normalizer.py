@@ -37,6 +37,10 @@ from core.recorder import locator_score as LS
 # 需要可定位目标的事件类型：没有目标 = 无意义动作（噪声过滤规则 7）
 ELEMENT_EVENT_TYPES = {
     'click', 'change', 'input', 'check', 'uncheck', 'hover', 'assert', 'wait',
+    # ★ 'select' 必须在这里：它是浏览器扩展对 <select> 变更的显式声明
+    #   （content.js 发 `kind:'select'`）。漏掉它 → 规则 7「无目标剔除」不生效，
+    #   select 事件会带着空目标一路走到 map_to_actions 才被丢，且原因难懂。
+    'select',
 }
 
 # 平台不支持 / 不需要的事件类型，直接丢弃并给出可读原因
@@ -47,7 +51,9 @@ DROP_EVENT_TYPES = {
 }
 
 # 会被当作「值写入」的事件类型（用于输入防抖合并）
-VALUE_EVENT_TYPES = ('input', 'change')
+# ★ 'select' 同属值写入：同一 <select> 800ms 内的连续变更应合并为最后一次选择，
+#   否则一次「下拉选值」会被拆成多步 select_option。
+VALUE_EVENT_TYPES = ('input', 'change', 'select')
 
 # 参数化只作用于这些「承载用户数据」的参数名（结构性参数保持字面量）
 VALUE_ARG_KEYS = ('value', 'file_path')
@@ -585,8 +591,17 @@ def map_to_actions(events, options=None):
             else:
                 keyword = 'click'
 
-        elif etype in ('change', 'input'):
-            kind = _input_kind(ev)
+        elif etype in ('change', 'input', 'select'):
+            # ★★ 'select' 是浏览器扩展对 <select> 变更的**显式声明**（kind:'select'）。
+            #   历史缺陷：这里原来只认 ('change', 'input')，而 sources.from_native 里
+            #   `kind` 优先于 `type`（见其第 750 行），于是 <select> 事件的 etype 成了
+            #   'select' ⇒ 一路掉到本函数末尾的「不支持的事件类型：select」被**静默丢弃**
+            #   ⇒ 录制下拉框选择时整步消失（P0 明明补了 select_option 关键字）。
+            #   更隐蔽的是：甘肃 242 站点用的是 easyui 自定义下拉（非原生 select），
+            #   所以真机验收 16/16 也没能覆盖到这条路径。
+            #   修法：显式声明优先 —— 不再依赖 _input_kind 能从 DOM 线索反推出 select
+            #   （Chrome Recorder 导出的数据不带 node_name，反推会失败并退化成 fill）。
+            kind = 'select' if etype == 'select' else _input_kind(ev)
             if kind == 'file':
                 keyword = 'upload_file'
                 args = {'file_path': None}   # 本地路径无法录制，落库时生成变量占位

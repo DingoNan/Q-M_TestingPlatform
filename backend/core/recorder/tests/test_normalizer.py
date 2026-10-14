@@ -791,6 +791,75 @@ def t40():
        {'name': '登录'}, 'dict 候选原样保留 opts')
 
 
+@case('41 native 来源：kind:select 必须映射为 select_option（曾有整步静默丢弃）')
+def t41():
+    """回归：浏览器扩展对 <select> 的变更发的是 `kind:'select'`。
+
+    而 `sources.from_native` 里 **kind 优先于 type** ⇒ etype 成了 'select'，
+    但 map_to_actions 只认 ('change','input') ⇒ 掉进末尾的
+    「不支持的事件类型：select」被**静默丢弃**（下拉框选择整步消失），
+    尽管平台早有 select_option 关键字。
+
+    甘肃 242 站点用的是 easyui 自定义下拉（非原生 select），
+    所以真机验收 16/16 也覆盖不到这条路径 —— 必须由本用例兜住。
+    """
+    payload = {'events': [
+        {'seq': 1, 'kind': 'navigate', 'url': 'http://x.example/form'},
+        {'seq': 2, 'kind': 'select', 't': 100, 'url': 'http://x.example/form',
+         'value': 'bj',
+         'target': {'node_name': 'select', 'attrs': {'name': 'city'},
+                    'selectors': [{'by': 'css', 'value': 'select#city'}]}},
+    ]}
+    events, meta = SRC.normalize_source(payload, 'native')
+    eq(events[1]['type'], 'select', 'kind 应优先于 type，etype 应为 select')
+
+    _kept, dropc, _merged = NZ.filter_noise(events)
+    eq('不支持的事件类型：select' in dict(dropc), False,
+       'select 不应再被 filter_noise 当作不支持类型丢弃，实际丢弃项 %r' % dict(dropc))
+
+    ir = NZ.build_ir(events, meta)
+    eq(kws(ir), ['goto', 'select_option'],
+       'select 变更必须产出 select_option，实际 %r' % kws(ir))
+    eq(by_kw(ir, 'select_option')[0]['args']['value']['value'], 'bj',
+       'select_option 的取值应取事件里的 value')
+
+
+@case('42 native 来源：select 的显式声明优先于 DOM 反推（缺 node_name 也不能退化成 fill）')
+def t42():
+    """反证：Chrome DevTools Recorder 导出的数据**不带 DOM 属性**。
+
+    若实现改成「靠 _input_kind 从选择器反推 select」，缺 node_name 时就会
+    退化成 fill（对下拉框执行填值必然失败，且失败点远在回放期）。
+    所以 etype == 'select' 必须**直接**决定关键字，不走反推。
+    """
+    payload = {'events': [
+        {'seq': 1, 'kind': 'select', 't': 100, 'url': 'http://x.example/form',
+         'value': 'opt-1',
+         'target': {'selectors': [{'by': 'css', 'value': '#city'}]}},
+    ]}
+    events, meta = SRC.normalize_source(payload, 'native')
+    ir = NZ.build_ir(events, meta)
+    eq(kws(ir), ['select_option'],
+       '缺 node_name 时仍应为 select_option 而不是 fill，实际 %r' % kws(ir))
+
+
+@case('43 native 来源：同一 select 的连续变更应合并为一步（不拆成多步）')
+def t43():
+    payload = {'events': [
+        {'seq': 1, 'kind': 'select', 't': 0, 'url': 'u', 'value': 'a',
+         'target': {'node_name': 'select', 'attrs': {'name': 'city'},
+                    'selectors': [{'by': 'css', 'value': 'select#city'}]}},
+        {'seq': 2, 'kind': 'select', 't': 200, 'url': 'u', 'value': 'bj',
+         'target': {'node_name': 'select', 'attrs': {'name': 'city'},
+                    'selectors': [{'by': 'css', 'value': 'select#city'}]}},
+    ]}
+    events, meta = SRC.normalize_source(payload, 'native')
+    ir = NZ.build_ir(events, meta)
+    eq(kws(ir), ['select_option'], '200ms 内的两次选择应合并为 1 步，实际 %r' % kws(ir))
+    eq(by_kw(ir, 'select_option')[0]['args']['value']['value'], 'bj',
+       '合并后应保留最后一次选择的值')
+
+
 # ---------------------------------------------------------------------------
 # 运行
 # ---------------------------------------------------------------------------
