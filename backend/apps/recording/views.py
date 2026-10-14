@@ -69,11 +69,45 @@ def _user_id(request):
     return getattr(request.user, 'id', None)
 
 
+def _try_parse_ndjson(text):
+    """把 NDJSON（每行一个 JSON 对象）解析成 list；不是 NDJSON 就返回 None。
+
+    ★ 为什么必须支持（v0.20.3 修复的真缺陷）
+      扩展早期版本用 **NDJSON** 上传事件批（`file=events.ndjson`，
+      Content-Type: application/x-ndjson）。而 `_read_upload` 只做
+      `json.loads(text)` —— 多行 NDJSON 会抛
+      `Extra data: line 2 column 1 (char N)`，视图把这句话原样当 400 detail 返回，
+      扩展侧只能显示「最近错误：Extra data: ...」。
+      实测：录制事件**一条都传不上来**，用户看到的却是"项目识别成功 + 录制报错"。
+      在这里兼容 NDJSON，可以让**已经装了旧插件的用户不必重新安装**。
+
+    ★ 判定必须严格：**每一行**都要能解析成对象/数组才算 NDJSON。
+      Playwright 脚本、普通文本里夹一行 JSON 的都不会被误判成事件流。
+    """
+    lines = [ln.strip() for ln in str(text or '').splitlines()]
+    lines = [ln for ln in lines if ln]
+    if len(lines) < 2:
+        # 单行的情况 json.loads 已经处理过了，这里不再重复
+        return None
+    out = []
+    for ln in lines:
+        if ln[0] not in '{[':
+            return None
+        try:
+            obj = json.loads(ln)
+        except ValueError:
+            return None
+        if not isinstance(obj, (dict, list)):
+            return None
+        out.append(obj)
+    return out
+
+
 def _read_upload(request):
     """从 multipart / JSON 里取出「一份录制数据」。
 
     返回 (data, file_name)：
-      · 上传文件 → 按 UTF-8 解码后尝试 JSON 解析，失败则当脚本文本
+      · 上传文件 → 按 UTF-8 解码后尝试 JSON 解析（含 NDJSON），失败则当脚本文本
       · `events` / `payload` 文本字段 → 同样处理
       · JSON body（仅适合小包）→ 原样返回
     """
@@ -85,6 +119,9 @@ def _read_upload(request):
         try:
             return json.loads(text), name
         except ValueError:
+            nd = _try_parse_ndjson(text)
+            if nd is not None:
+                return nd, name
             return text, name
 
     for key in ('payload', 'events', 'content'):
@@ -97,6 +134,9 @@ def _read_upload(request):
         try:
             return json.loads(text), ''
         except ValueError:
+            nd = _try_parse_ndjson(text)
+            if nd is not None:
+                return nd, ''
             return text, ''
 
     # 纯 JSON body（Django 的 2.5MB 限制在这里生效，大包会被框架层挡掉）
@@ -606,6 +646,22 @@ def recording_session_finish(request, session_id):
     if not payload:
         return Response(data={'detail': '该会话没有可用的录制数据（raw_payload 为空或已截断）'},
                         status=400)
+
+    # ★ 零事件必须**报错**，不能静默生成一个空 IR（v0.20.3 修复）
+    #   原行为：扩展传不上事件时（见 _try_parse_ndjson 的说明），
+    #   raw_payload.payload 仍是建会话时写的 {'events': []} —— 它是 truthy，
+    #   于是一路走到 build_ir([]) 返回一个 0 步的 IR + HTTP 200。
+    #   用户看到「已生成 IR：步骤 0 条」，会以为"生成失败但没提示"，
+    #   而真正的错误（上传 400）早就被 popup 当成"最近错误"一闪而过了。
+    #   语义上「一个事件都没收到」不是成功，必须显式说出来。
+    if isinstance(payload, dict) and not (
+            payload.get('events') or payload.get('actions') or payload.get('steps')
+            or payload.get('kind') or payload.get('type')):
+        return Response(data={
+            'detail': '该会话还没有收到任何录制事件，无法生成步骤。'
+                      '①请在页面上正常操作几下（点击/输入）后再点「结束并生成」；'
+                      '②若插件面板显示「最近错误」，说明事件上传失败，请把该错误反馈给开发。',
+        }, status=400)
 
     options = request.data.get('options') or {}
     if not isinstance(options, dict):

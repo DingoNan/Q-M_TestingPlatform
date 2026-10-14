@@ -732,6 +732,65 @@ def t37():
     eq(v.get('value'), '备注内容')
 
 
+@case('38 native 来源：字符串 selectors 必须能归一化（曾经整条链路崩溃）')
+def t38():
+    """回归：扩展上报的 selectors 是**字符串数组**（content.js 的 describe()）。
+
+    下游 normalizer/_is_extension_self 与 locator_score/dedupe_candidates
+    都按 dict 取值（cand.get('value') / cand.get('by')），字符串会在
+    **过滤阶段**抛 `'str' object has no attribute 'get'` —— 表现为
+    finish 返 400「归一化失败：'str' object has no attribute 'get'」，
+    且报错信息与"选择器格式"毫无关联。修法是在 sources 层收敛。
+    """
+    payload = [
+        {'seq': 1, 'kind': 'navigate', 'url': 'http://x.example/login'},
+        {'seq': 2, 'kind': 'input', 'value': 'admin',
+         'target': {'node_name': 'input', 'attrs': {'name': 'username'},
+                    'selectors': ['#username', '[name="username"]', 'div > input']}},
+        {'seq': 3, 'kind': 'click',
+         'target': {'node_name': 'button', 'text': '登录',
+                    'selectors': ['.login-btn', 'xpath=//button[1]']}},
+    ]
+    events, meta = SRC.normalize_source(payload, 'native')
+    ir = NZ.build_ir(events, meta)
+    eq(len(ir['actions']), 3, '三个动作都应保留（不得整条链路崩掉）')
+    locs = ir['actions'][1]['element']['locators']
+    bys = [c['by'] for c in locs]
+    eq('id' in bys, True, '`#username` 应收敛成 by=id 的候选，实际 %s' % bys)
+    idc = [c for c in locs if c['by'] == 'id'][0]
+    eq(idc['value'], 'username', 'id 候选的 value 不能带 # ')
+    eq('xpath' in [c['by'] for c in ir['actions'][2]['element']['locators']], True,
+       '`xpath=...` 应收敛成 by=xpath')
+
+
+@case('39 native 来源：单条裸事件不能被静默丢光')
+def t39():
+    """回归：NDJSON 只传 1 条时，from_native 会落到 `actions=[]` 分支。
+
+    那会让视图返 200 + received:0 —— 看起来"成功了"，实际一个事件都没入库，
+    用户看到的却是「已生成 IR：步骤 0 条」。带 kind/type 的裸 dict 必须当单条事件。
+    """
+    events, meta = SRC.normalize_source(
+        {'seq': 1, 'kind': 'navigate', 'url': 'http://x.example/a'}, 'native')
+    eq(len(events), 1, '单条裸事件应被识别为 1 条')
+    ir = NZ.build_ir(events, meta)
+    eq(len(ir['actions']), 1, '应产出 1 个 goto 动作')
+    eq(ir['actions'][0]['keyword'], 'goto')
+
+
+@case('40 native 来源：字符串选择器的分类规则')
+def t40():
+    eq(SRC._canon_one_selector('#user-name')['by'], 'id', '纯 id 选择器')
+    eq(SRC._canon_one_selector('xpath=//div[2]')['by'], 'xpath', 'xpath= 前缀')
+    eq(SRC._canon_one_selector('//div[2]')['by'], 'xpath', '裸 // 前缀')
+    eq(SRC._canon_one_selector('text=登录')['value'], '登录', 'text= 前缀')
+    eq(SRC._canon_one_selector('div > input')['by'], 'css', '普通 css 路径')
+    eq(SRC._canon_one_selector('#a.b')['by'], 'css', '复合选择器不能当 id')
+    eq(SRC._canon_one_selector({'by': 'role', 'value': 'button',
+                                'opts': {'name': '登录'}})['opts'],
+       {'name': '登录'}, 'dict 候选原样保留 opts')
+
+
 # ---------------------------------------------------------------------------
 # 运行
 # ---------------------------------------------------------------------------

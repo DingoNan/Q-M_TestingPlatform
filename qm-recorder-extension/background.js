@@ -34,6 +34,7 @@ let STATE = {
   buffer: [],
   sending: false,
   backoff: 0,
+  nextTryAt: 0,        // 退避窗口的到期时间戳（0 = 立即可试）
   lastError: '',
   uploaded: 0,
   dropped: 0,
@@ -178,11 +179,18 @@ async function createSession(projectId, name, startUrl) {
 
 async function postEvents(batch) {
   const body = new FormData();
-  // ★ 用 file 字段而不是 JSON body：DATA_UPLOAD_MAX_MEMORY_SIZE(2.5MB) 只卡 JSON
-  const ndjson = batch.map((x) => JSON.stringify(x)).join('\n');
-  body.append('file', new Blob([ndjson], { type: 'application/x-ndjson' }), 'events.ndjson');
+  // ★★ 必须是**一个合法 JSON**（数组），不能是 NDJSON（v0.2.1 修复的真缺陷）
+  //    旧实现把每批事件拼成「每行一个 JSON 对象」的 NDJSON 文本，
+  //    而后端 `_read_upload` 只做 `json.loads(text)` ⇒ 抛
+  //    `Extra data: line 2 column 1 (char N)` ⇒ HTTP 400 ⇒ 视图把这句话
+  //    原样当 detail 返回 ⇒ 弹窗显示「最近错误：Extra data: line 2 column 1」。
+  //    实测后果：**事件一条都传不上来**，录制完 finish 只能生成 0 步的 IR。
+  //    用 file 字段而不是 JSON body：DATA_UPLOAD_MAX_MEMORY_SIZE(2.5MB) 只卡 JSON body。
+  body.append('file',
+    new Blob([JSON.stringify(batch)], { type: 'application/json' }),
+    'events.json');
   body.append('append', 'true');
-  // ★ 与上面的 session source 不同：这里是**解析器**字母表
+  // ★ 与创建会话的 source 不同：这里是**解析器**字母表
   //   （core/recorder/sources.py 的 SOURCE_NATIVE='native'），别改。
   body.append('source', 'native');
   const r = await fetch(api('/recording/session/' + STATE.sessionId + '/events/'), {
@@ -191,7 +199,13 @@ async function postEvents(batch) {
     body,
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((j && (j.detail || j.msg || j.error)) || ('HTTP ' + r.status));
+  if (!r.ok) {
+    const e = new Error((j && (j.detail || j.msg || j.error)) || ('HTTP ' + r.status));
+    // 4xx 是「这批数据后端不要」—— 重试一万次也一样，必须让上层区别对待
+    e.permanent = r.status >= 400 && r.status < 500;
+    e.status = r.status;
+    throw e;
+  }
   return (j && j.result) || j || {};
 }
 
@@ -222,30 +236,49 @@ function enqueue(evt) {
   }
 }
 
+// 上传一批事件。返回状态字符串（**别再返回 boolean**，
+// 因为「正在发送」与「发送失败」在上层要做完全不同的事）：
+//   'busy'  已有一批在飞 —— 等它落地即可
+//   'empty' 没东西可传
+//   'ok'    这一批成功写进后端
+//   'fail'  失败（缓冲原样保留，退避后重试）
 async function flush() {
-  if (STATE.sending) return
-  if (!STATE.recording || !STATE.sessionId) return
-  if (!STATE.buffer.length) return
-  STATE.sending = true
-  const batch = STATE.buffer.slice()
+  if (STATE.sending) return 'busy';
+  if (!STATE.recording || !STATE.sessionId) return 'empty';
+  if (!STATE.buffer.length) return 'empty';
+  // ★ 退避窗口内不再尝试：否则 alarm（每 6 秒）+ setTimeout 会形成
+  //   「失败后立刻再打一发」的循环，把后端打得更惨
+  if (STATE.nextTryAt && Date.now() < STATE.nextTryAt) return 'fail';
+  STATE.sending = true;
+  const batch = STATE.buffer.slice();
   try {
-    const res = await postEvents(batch)
+    await postEvents(batch);
     // ★ 关键：只有真的写进去了才清缓冲
-    STATE.buffer = STATE.buffer.slice(batch.length)
-    STATE.uploaded += batch.length
-    STATE.backoff = 0
-    STATE.lastError = ''
+    STATE.buffer = STATE.buffer.slice(batch.length);
+    STATE.uploaded += batch.length;
+    STATE.backoff = 0;
+    STATE.nextTryAt = 0;
+    STATE.lastError = '';
     if (STATE.buffer.length) {
       // 还有剩的（边录边传），立刻续上
-      setTimeout(flush, 0)
+      setTimeout(flush, 0);
     }
+    return 'ok';
   } catch (e) {
     // 失败：缓冲原样保留，退避后重试
-    STATE.lastError = String((e && e.message) || e)
-    STATE.backoff = Math.min(MAX_BACKOFF_MS, (STATE.backoff || 500) * 2)
-    setTimeout(flush, STATE.backoff)
+    STATE.lastError = String((e && e.message) || e);
+    if (e && e.permanent) {
+      // 4xx：这批数据后端根本不要（格式错/会话已丢弃/超上限）。
+      // 无限重试没有意义，退到最长间隔并让用户在面板上看到原因。
+      STATE.backoff = MAX_BACKOFF_MS;
+    } else {
+      STATE.backoff = Math.min(MAX_BACKOFF_MS, (STATE.backoff || 500) * 2);
+    }
+    STATE.nextTryAt = Date.now() + STATE.backoff;
+    setTimeout(flush, STATE.backoff);
+    return 'fail';
   } finally {
-    STATE.sending = false
+    STATE.sending = false;
   }
 }
 
@@ -307,6 +340,37 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return true
   }
 
+  if (type === 'qm-list-projects') {
+    // 项目列表由 **service worker** 来拉（v0.2.1）
+    //   旧版在弹窗里直接 fetch：弹窗是短命页面，fetch 一旦不返回（被环境拦、
+    //   代理黑洞、SW 唤醒竞态），下拉框就永远停在初始态 —— 连「自动识别到的
+    //   当前项目」都放不进去，用户被「请先选择项目」卡死，录制根本开始不了。
+    //   本文件开头就写了「所有网络逻辑都不放在弹窗」，这条是漏网的。
+    ;(async () => {
+      try {
+        if (!STATE.token) {
+          const c = await readCredsFromActiveTab()
+          if (c) applyCreds(c, { force: true })
+        }
+        if (!STATE.token) { reply({ ok: false, error: '未识别到平台登录态' }); return }
+        const r = await fetch(api('/projects/?size=200'), {
+          headers: authHeaders(),
+        })
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error('HTTP ' + r.status + ' ' + ((j && (j.detail || j.msg)) || ''))
+        }
+        // CustomRender 契约：列表被包进 result（{count, results} 或直接数组）
+        const payload = (j && j.result) || j || {}
+        const rows = payload.results || payload.data || (Array.isArray(payload) ? payload : [])
+        reply({ ok: true, projects: rows.filter((x) => x && x.id) })
+      } catch (e) {
+        reply({ ok: false, error: String((e && e.message) || e) })
+      }
+    })()
+    return true
+  }
+
   if (type === 'qm-start') {
     ;(async () => {
       try {
@@ -362,17 +426,28 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (type === 'qm-finish') {
     ;(async () => {
       try {
-        // 先把残余事件全部传完
-        while (STATE.buffer.length) {
-          await flush()
-          await new Promise((r) => setTimeout(r, 300))
+        // ★★ drain 循环**必须有上限**（v0.2.1 修复的真缺陷）
+        //   旧写法 `while (STATE.buffer.length) { await flush(); sleep 300 }`：
+        //   flush() 内部吞掉异常、缓冲原样保留 ⇒ 上传只要失败一次，
+        //   这个循环就**永远不退出** ⇒ 弹窗按钮一直卡在「正在上传并生成…」，
+        //   用户看到的就是「点了结束并生成，没反应/没正确生成」。
+        //   现在最多 20 轮×250ms（≈5 秒 + 网络耗时），传不完就如实上报条数。
+        let tries = 0;
+        while (STATE.buffer.length && tries < 20) {
+          tries += 1;
+          const r = await flush();
+          if (r === 'fail' && STATE.buffer.length) break;
+          await new Promise((res) => setTimeout(res, 250));
         }
-        const ir = await finishSession()
-        STATE.recording = false
-        reply({ ok: true, sessionId: STATE.sessionId, ir: ir })
+        const unsent = STATE.buffer.length;
+        const ir = await finishSession();
+        STATE.recording = false;
+        reply({ ok: true, sessionId: STATE.sessionId, ir: ir,
+                unsent: unsent, uploaded: STATE.uploaded });
       } catch (e) {
-        STATE.recording = false
-        reply({ ok: false, error: String((e && e.message) || e) })
+        STATE.recording = false;
+        reply({ ok: false, error: String((e && e.message) || e),
+                unsent: STATE.buffer.length });
       }
     })()
     return true

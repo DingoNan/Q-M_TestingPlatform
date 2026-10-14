@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Q·M 录制器",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "录制 Web 页面操作，回传到 Q·M 测试平台生成脚本用例步骤",
   "permissions": [
     "activeTab",

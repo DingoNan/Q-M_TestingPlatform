@@ -629,6 +629,77 @@ def _target_from_candidates(cands, explicit_key=None):
 # ---------------------------------------------------------------------------
 # ③ 平台扩展上报的原生事件流 / 裸事件流
 # ---------------------------------------------------------------------------
+# ★★ selectors 的形状必须在这里收敛（v0.20.3 修复的真缺陷）
+#
+# 规范形状（devtools / playwright 两个适配器产出的都是它）：
+#     selectors = [{'by': 'css', 'value': '#username', 'opts': {...}}, ...]
+#
+# 但扩展早期版本（以及「裸事件流」导入）上传的是**纯字符串数组**
+# —— content.js 的 describe() 直接给 '#id' / '[name="x"]' / 'div > input'。
+# 下游 normalizer / locator_score 全程按 dict 处理：
+#     normalizer._is_extension_self   → cand.get('value')  ⇒ AttributeError
+#     locator_score.dedupe_candidates → cand.get('by')     ⇒ AttributeError
+# 后果：**native 来源的录制永远归一化失败** —— finish 返 400
+# 「归一化失败：'str' object has no attribute 'get'」，且崩溃发生在
+# "扩展自身事件过滤"这一步，报错信息与"选择器格式"毫无关联，极难定位。
+#
+# 修法：在**适配层**（本文件，职责就是"形状转换"）统一收敛，而不是给下游
+# 每个消费点补 isinstance —— 那样等于把同一个坑留给下一种新来源。
+_ID_ONLY_RE = re.compile(r'^#([A-Za-z_][\w-]*)$')
+
+
+def _canon_one_selector(item):
+    """把一条选择器（字符串或 dict）收敛成规范候选 dict；认不出返回 None。"""
+    if isinstance(item, dict):
+        by = item.get('by')
+        value = item.get('value')
+        if not by or value in (None, ''):
+            return None
+        out = {'by': by, 'value': value,
+               'source': item.get('source') or SOURCE_NATIVE}
+        # 只搬运**下游会用到**的键，避免把杂质带进去
+        for k in ('opts', 'match_count', 'in_shadow', 'origin', 'pinned', 'score'):
+            if item.get(k) is not None:
+                out[k] = item[k]
+        return out
+    if item is None:
+        return None
+    s = str(item).strip()
+    if not s:
+        return None
+    low = s.lower()
+    if s.startswith('xpath='):
+        return {'by': 'xpath', 'value': s[len('xpath='):],
+                'source': SOURCE_NATIVE, 'origin': s}
+    if low.startswith('xpath:'):
+        return {'by': 'xpath', 'value': s[len('xpath:'):],
+                'source': SOURCE_NATIVE, 'origin': s}
+    if s.startswith('//') or s.startswith('(/'):
+        return {'by': 'xpath', 'value': s, 'source': SOURCE_NATIVE, 'origin': s}
+    if s.startswith('text='):
+        return {'by': 'text', 'value': s[len('text='):],
+                'source': SOURCE_NATIVE, 'origin': s}
+    m = _ID_ONLY_RE.match(s)
+    if m:
+        # `#username` ⇒ 语义化 id：比裸 css 稳（打分 0.70 vs 0.52），
+        # 且是平台 ByChoice 支持的合法值
+        return {'by': 'id', 'value': m.group(1),
+                'source': SOURCE_NATIVE, 'origin': s}
+    return {'by': 'css', 'value': s, 'source': SOURCE_NATIVE, 'origin': s}
+
+
+def _canon_selectors(selectors):
+    """选择器数组 → 规范候选数组（字符串与 dict 混排也能吃）。"""
+    if isinstance(selectors, str):
+        selectors = [selectors]
+    out = []
+    for item in (selectors or []):
+        c = _canon_one_selector(item)
+        if c:
+            out.append(c)
+    return out
+
+
 def from_native(payload):
     """平台自有扩展的事件流。已是规范形状，主要做字段兜底与 seq 补齐。"""
     if isinstance(payload, str):
@@ -639,6 +710,13 @@ def from_native(payload):
     elif isinstance(payload, dict):
         actions = payload.get('actions') or payload.get('events') or []
         meta = payload.get('meta') or {}
+        # ★ 单条事件的兜底：既没有 actions/events 数组，本身又长得像一条事件
+        #   （带 kind/type）⇒ 当成只有一个元素的数组。
+        #   不这么做的话，NDJSON 只传了 1 条时会走 `[]` 分支被**静默丢光**
+        #   （视图返 200 + received:0，看起来"成功了"，实际什么都没录到）。
+        if not actions and (payload.get('kind') or payload.get('type')):
+            actions = [payload]
+            meta = {}
     else:
         raise ValueError('原生事件流必须是对象或数组')
 
@@ -650,19 +728,21 @@ def from_native(payload):
         target = None
         if isinstance(tgt, dict):
             attrs = tgt.get('attrs') or {}
+            # ★ 必须先收敛成 dict 候选，下游才可用（见上方 _canon_selectors 说明）
+            cands = _canon_selectors(tgt.get('selectors'))
             target = {
                 'node_name': tgt.get('node_name') or tgt.get('tag'),
                 'attrs': attrs,
                 'text': tgt.get('text'),
                 'aria_label': tgt.get('aria_label') or tgt.get('ariaLabel'),
-                'selectors': tgt.get('selectors') or [],
+                'selectors': cands,
                 'bbox': tgt.get('bbox'),
                 'in_shadow': bool(tgt.get('in_shadow')),
                 'key': tgt.get('key') or _target_key_from(
                     attrs=attrs,
                     aria_label=tgt.get('aria_label') or tgt.get('ariaLabel'),
                     text=tgt.get('text'),
-                    selectors=tgt.get('selectors') or [],
+                    selectors=cands,
                 ),
             }
         events.append({

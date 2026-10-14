@@ -103,41 +103,59 @@ function fillProjectSelect(list) {
     opt.textContent = p.name ? p.name + ' (ID ' + p.id + ')' : '项目 #' + p.id
     sel.appendChild(opt)
   })
-  // 默认选中：自动识别到的当前项目；不在列表里也保留（append 一条兜底）
+  // 默认选中：自动识别到的当前项目；不在列表里也保留（append 一条兜底）。
+  // ★ 这一条是「开始录制」的底线 —— 就算项目列表拉不到，
+  //   自动识别到的项目也必须可选（fail-open）。
   if (CFG.projectId) {
     let hit = null
     for (const opt of sel.options) {
       if (opt.value === String(CFG.projectId)) { hit = opt; break }
     }
-    if (!hit && CFG.projectName) {
+    if (!hit) {
       const opt = document.createElement('option')
       opt.value = String(CFG.projectId)
-      opt.textContent = CFG.projectName + ' (ID ' + CFG.projectId + ')'
+      opt.textContent = CFG.projectName
+        ? CFG.projectName + ' (ID ' + CFG.projectId + ')'
+        : '当前项目 (ID ' + CFG.projectId + ')'
       sel.appendChild(opt)
       hit = opt
     }
-    if (hit) sel.value = String(CFG.projectId)
+    sel.value = String(CFG.projectId)
   }
 }
 
-async function loadProjects() {
-  if (!CFG.token) { fillProjectSelect([]); return }
-  try {
-    const r = await fetch(CFG.base + '/projects/?size=200', {
-      headers: { 'Authorization': 'Bearer ' + CFG.token, 'Accept': 'application/json' },
-    })
-    const j = await r.json().catch(() => ({}))
-    // CustomRender 契约：列表被包进 result（{count, results} 或直接数组）
-    const payload = (j && j.result) || j || {}
-    const rows = payload.results || payload.data || (Array.isArray(payload) ? payload : [])
-    fillProjectSelect(rows.filter((x) => x && x.id))
-    $('projHint').textContent = rows.length
-      ? '共 ' + rows.length + ' 个项目；默认选中平台当前项目。'
-      : '未取到项目列表（可能没有项目权限）。'
-  } catch (e) {
-    fillProjectSelect([])
-    $('projHint').textContent = '项目列表拉取失败（' + String((e && e.message) || e).slice(0, 60) + '），可先用自动识别的项目。'
+// ---------------------------------------------------------------------------
+// 项目下拉（v0.2.1：fail-open，两段式）
+//   第一段（本地、零网络）：立刻把「自动识别到的当前项目」放进下拉并选中
+//     —— 就算平台接口挂了，用户也能直接开始录制（默认项目就是对的）。
+//   第二段（后台拉全量）：由 service worker 拉 /projects/ 补齐其他项目；
+//     后台消息 8 秒不回就放弃，绝不让「开始录制」被一个网络请求卡死。
+//   旧版在弹窗里直接 fetch 且没有任何超时：一旦请求不返回，下拉框永远
+//   停在初始态，用户被「请先选择项目」卡死 —— 真机复现过。
+// ---------------------------------------------------------------------------
+function renderAutoProject() {
+  fillProjectSelect([])
+  $('projHint').textContent = CFG.projectId
+    ? '已自动选中平台当前项目' + (CFG.projectName ? '：' + CFG.projectName : '') + '。'
+    : '打开过「我的项目」页面后会自动选中当前项目。'
+}
+
+function refreshProjects() {
+  let settled = false
+  const done = (r) => {
+    if (settled) return
+    settled = true
+    if (r && r.ok && r.projects && r.projects.length) {
+      fillProjectSelect(r.projects)
+      $('projHint').textContent = '共 ' + r.projects.length +
+        ' 个项目；默认选中平台当前项目。'
+    }
+    // 拉不到就维持第一段的自动识别结果（不报错、不清空）
   }
+  try {
+    chrome.runtime.sendMessage({ type: 'qm-list-projects' }, done)
+    setTimeout(() => done(null), 8000)
+  } catch (e) { done(null) }
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +166,8 @@ function syncCreds() {
     if (chrome.runtime.lastError) { renderConn(); return }
     loadCfg(() => {
       renderConn({ justSynced: true })
-      loadProjects()
+      renderAutoProject()
+      refreshProjects()
     })
   })
 }
@@ -204,8 +223,9 @@ function refresh() {
 document.addEventListener('DOMContentLoaded', () => {
   loadCfg(() => {
     renderConn()
-    loadProjects()
+    renderAutoProject()   // ★ 先落「自动识别的项目」，网络没回来也能开始录制
     refresh()
+    refreshProjects()
     // 打开弹窗即同步一次最新登录态（activeTab 权限此时已授予）
     syncCreds()
   })
@@ -273,9 +293,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!r || !r.ok) {
         flash('结束失败：' + ((r && r.error) || '未知错误'), false)
       } else {
-        const sum = (r.ir && r.ir.stats) || {}
-        flash('已生成 IR：步骤 ' + (sum.step_count || sum.steps || 0) +
-              ' 条，可到平台「录制履历」审阅后导入。', true)
+        // ★ 真源是 finish 响应里的 `summary`（NZ.summarize 的产物）：
+        //     {kept_actions, dropped, elements_unique, assertions, ...}
+        //   旧代码读 `r.ir.stats.step_count` —— 三处都错
+        //   （嵌套少了一层 + 统计块里根本没有 step_count/steps 这两个键），
+        //   结果**永远显示「步骤 0 条」**，用户以为没生成成功。
+        const sum = (r.ir && r.ir.summary) || {}
+        let msg = '已生成：步骤 ' + (sum.kept_actions || 0) + ' 条'
+        if (sum.elements_unique) msg += '、元素 ' + sum.elements_unique + ' 个'
+        if (sum.assertions) msg += '、断言 ' + sum.assertions + ' 条'
+        if (r.unsent) msg += '（注意：仍有 ' + r.unsent + ' 条事件未上传成功）'
+        msg += '。可到平台「录制履历」审阅后导入。'
+        flash(msg, true)
       }
       refresh()
     })

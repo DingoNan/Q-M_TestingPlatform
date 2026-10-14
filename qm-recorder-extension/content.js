@@ -19,10 +19,8 @@
   window.__QM_RECORDER_READY__ = true
 
   const DEBOUNCE_MS = 500
-  const ATTR_PRIORITY = [
-    'data-testid', 'data-test', 'data-cy', 'data-qa',
-    'id', 'name', 'placeholder', 'title', 'aria-label', 'alt', 'type',
-  ]
+  // 元素属性白名单的判定已收敛到 buildSelectors()（见下），
+  // 这里不再维护「属性优先级数组」—— 它与后端打分模型有两份就容易漂移。
 
   // ★ seq 由**采集端**统一自增：这是后端幂等去重的锚点。
   //   若留空让后端自动补，重传的批次会被当成新事件重复入库。
@@ -112,18 +110,6 @@
       if (a.value && a.value.length <= 200) attrs[a.name] = a.value
     }
 
-    const selectors = []
-    for (let i = 0; i < ATTR_PRIORITY.length; i++) {
-      const k = ATTR_PRIORITY[i]
-      const v = attrs[k]
-      if (!v) continue
-      if (k === 'id') selectors.push('#' + v)
-      else if (k === 'href') selectors.push('a[href="' + v + '"]')
-      else selectors.push('[' + k + '="' + v + '"]')
-    }
-    selectors.push(cssPath(el))
-    selectors.push('xpath=' + xpathOf(el))
-
     let text = (el.innerText || el.textContent || '').trim()
     if (text.length > 80) text = text.slice(0, 80)
 
@@ -132,7 +118,13 @@
       attrs: attrs,
       text: text || undefined,
       aria_label: attrs['aria-label'],
-      selectors: selectors.filter(Boolean),
+      // ★★ 必须是**结构化候选**：[{by, value, opts}, ...]
+      //   早期版本发的是字符串数组（'#id' / '[name="x"]' / 'div > input'），
+      //   而后端归一化层全程按 dict 取值（cand.get('by') / cand.get('value')）⇒
+      //   `'str' object has no attribute 'get'` ⇒ 整个会话归零、finish 返 400。
+      //   平台 by 的合法值只有：id / xpath / css / text / placeholder /
+      //   role / label / alt text —— 别自创（如 name=）会被降级成裸 css。
+      selectors: buildSelectors(el, attrs, text),
       bbox: (function () {
       try {
         const r = el.getBoundingClientRect()
@@ -147,12 +139,57 @@
     }
   }
 
+  // -------------------------------------------------------------------------
+  // 候选定位器（按「稳定度」从高到低），与后端 locator_score 的打分模型同序
+  // -------------------------------------------------------------------------
+  const ID_ONLY_RE = /^[A-Za-z_][\w-]*$/
+
+  function buildSelectors(el, attrs, text) {
+    const out = []
+    const push = function (by, value, opts) {
+      if (value === undefined || value === null || value === '') return
+      const c = { by: by, value: String(value) }
+      if (opts) c.opts = opts
+      out.push(c)
+    }
+    // ① 语义化 id（打分 0.70，比裸 css 的 0.52 稳）
+    if (attrs.id && ID_ONLY_RE.test(attrs.id)) push('id', attrs.id)
+    // ② 无障碍名：label 与 text 两条都要 —— 表单控件命中 label，按钮命中 text
+    if (attrs['aria-label']) {
+      push('label', attrs['aria-label'], { exact: false })
+      push('text', attrs['aria-label'], { exact: false })
+    }
+    if (attrs.placeholder) push('placeholder', attrs.placeholder)
+    if (attrs.alt) push('alt text', attrs.alt)
+    // ③ 测试专用属性：跨构建最稳，但只在页面确实写了才有
+    const testAttrs = ['data-testid', 'data-test', 'data-cy', 'data-qa']
+    for (let i = 0; i < testAttrs.length; i++) {
+      const k = testAttrs[i]
+      if (attrs[k]) push('css', '[' + k + '="' + attrs[k] + '"]')
+    }
+    // ④ 表单 name（语义稳定，且天然唯一）
+    if (attrs.name) push('css', '[name="' + attrs.name + '"]')
+    // ⑤ 可见文本：登录/查询这类按钮最有效的定位方式
+    if (text && text.length <= 40) push('text', text, { exact: false })
+    // ⑥ 兜底：结构路径（脆弱但几乎不会失效成"找不到"）
+    const css = cssPath(el)
+    if (css) push('css', css)
+    const xp = xpathOf(el)
+    if (xp) push('xpath', xp)
+    return out
+  }
+
   const T0 = Date.now()
   function relT() { return Date.now() - T0 }
 
   function flushPending() {
     if (pending.handle) { clearTimeout(pending.handle); pending.handle = null }
-    if (pending.evt) { send(pending.evt); pending.evt = null }
+    // ★★ seq 必须在**发送这一刻**才分配（v0.2.1 修复）
+    //   旧实现里防抖中的输入事件没有 seq ⇒ 后端幂等闸门要求
+    //   「原始入参里每条事件都带 seq」，一条 input 混进来就把**整批**的
+    //   去重关掉（响应里 last_seq 恒为 0）⇒ 断网重传会重复入库；
+    //   而且排序时这些事件的 seq 被当成 0，动作顺序会乱。
+    if (pending.evt) { send(bump(pending.evt)); pending.evt = null }
     pending.key = null
   }
 
@@ -186,6 +223,12 @@
   document.addEventListener('click', function (e) {
     const el = e.target
     if (!el || el.nodeType !== 1) return
+    // ★ 文本类输入框上的点击**不记录**（v0.2.1）
+    //   在输入框里点一下只是"把光标放进去"，真正的动作由紧随其后的
+    //   input/change 表达。录下来会让每个输入框前面多出一个 click 步骤
+    //   （登录流程 4 步被录成 7 步），回放时那一步点击也是多余的。
+    //   checkbox / radio 例外：点击即状态变化，必须保留（后端映射成 check）。
+    if (!clickWorthRecording(el)) return
     const key = 'click|' + xpathOf(el)
     if (pending.key === key) return   // 连续点同一元素 → 合并，避免误触产生两条
     flushPending()
@@ -193,6 +236,16 @@
     pending.key = key
     setTimeout(function () { if (pending.key === key) pending.key = null }, 300)
   }, true)
+
+  function clickWorthRecording(el) {
+    const n = String(el.nodeName || '').toUpperCase()
+    if (n === 'INPUT') {
+      const t = String(el.type || 'text').toLowerCase()
+      return t === 'checkbox' || t === 'radio'
+    }
+    if (n === 'TEXTAREA' || n === 'SELECT') return false
+    return true
+  }
 
   document.addEventListener('input', function (e) {
     const el = e.target
@@ -205,15 +258,20 @@
     const el = e.target
     if (!el || el.nodeType !== 1) return
     if (el.nodeName === 'INPUT' || el.nodeName === 'SELECT') {
+      const itype = String(el.type || '').toLowerCase()
+      const isToggle = itype === 'checkbox' || itype === 'radio'
+      // ★★ 文本框的 change 绝不能写成 'check'（v0.2.1 修复）
+      //   旧实现一律 `kind:'check'`，而后端把 check 映射成**勾选**关键字
+      //   （click checkbox 的语义）⇒ 登录录制里凭空多出 3 个 "check"
+      //   步骤（用户名/密码/验证码各一个），回放时对文本框执行勾选必然报错。
+      //   'change' 是后端的「值写入」类型，会与紧邻的 input 合并成一步 fill。
       flushPending()
       send(bump({
-        kind: el.nodeName === 'SELECT' ? 'select' : 'check',
+        kind: el.nodeName === 'SELECT' ? 'select' : (isToggle ? 'check' : 'change'),
         t: relT(),
         url: location.href,
         target: describe(el),
-        value: el.type === 'checkbox' || el.type === 'radio'
-          ? String(!!el.checked)
-          : String(el.value ?? ''),
+        value: isToggle ? String(!!el.checked) : String(el.value ?? ''),
       }))
     }
   }, true)

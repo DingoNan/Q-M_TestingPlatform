@@ -212,10 +212,17 @@ def rank_candidates(candidates):
 
 
 def dedupe_candidates(candidates):
-    """按 (by, value) 去重，保留首个（即来源优先级更高的那个）。"""
+    """按 (by, value) 去重，保留首个（即来源优先级更高的那个）。
+
+    ★ 非 dict 项直接跳过：本函数可能在候选**尚未收敛**时被调用
+      （历史上扩展上报的裸字符串选择器就在这里 AttributeError 崩过）。
+      候选的规范化是 sources 层的职责，这里只做「多一道保险」。
+    """
     seen = set()
     out = []
     for cand in candidates or []:
+        if not isinstance(cand, dict):
+            continue
         key = (cand.get('by'), str(cand.get('value')))
         if key in seen:
             continue

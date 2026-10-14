@@ -288,14 +288,24 @@ def _is_sensitive(ev):
 
 
 def _is_extension_self(ev):
-    """规则 5：扩展自身面板 / DevTools 产生的事件。"""
+    """规则 5：扩展自身面板 / DevTools 产生的事件。
+
+    ★ selectors 可能是**字符串**（扩展早期上报 / 裸事件流）—— 这里必须容错。
+      本函数是 filter_noise 的第一道判定，跑在**所有**事件上，一旦抛
+      AttributeError 就是「整个会话归零」（finish 返 400）。规范化虽已前移到
+      sources 层，这里仍保留 isinstance 判定作为最后一道保险。
+    """
     tgt = ev.get('target') or {}
     blob = []
     blob.append(str(tgt.get('node_name') or ''))
     blob.append(str(tgt.get('text') or ''))
     blob.append(json_dumps_safe(tgt.get('attrs')))
     for cand in (tgt.get('selectors') or []):
-        blob.append(str(cand.get('value') or ''))
+        if isinstance(cand, dict):
+            blob.append(str(cand.get('value') or ''))
+            blob.append(json_dumps_safe(cand.get('opts') or {}))
+        elif cand:
+            blob.append(str(cand))
     hay = ' '.join(blob).lower()
     return any(m in hay for m in SELF_MARKERS)
 
