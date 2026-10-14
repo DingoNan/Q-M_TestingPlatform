@@ -373,33 +373,8 @@
         </div>
       </el-card>
 
-      <!-- ===== Web 自动化 · 录制插件提示条（2026-10-14 新增）=====
-           只在 Web 自动化页签显示：录制的实时采集靠 Chrome 扩展完成，
-           没有插件就只剩「导入录制」（传文件）这一条路，用户容易以为
-           「录制功能不存在」。这里把入口、下载、手册一次讲清。 -->
-      <div v-if="isWebType && !isCanChoose" class="rec-plugin-banner">
-        <div class="rec-plugin-banner-icon">
-          <el-icon :size="26"><VideoCamera /></el-icon>
-        </div>
-        <div class="rec-plugin-banner-body">
-          <div class="rec-plugin-banner-title">
-            实时录制需要浏览器插件
-            <span class="rec-plugin-banner-ver">v0.1.0 · Chrome / Edge</span>
-          </div>
-          <div class="rec-plugin-banner-desc">
-            下载并加载「Q·M 录制器」扩展后，在任意网页正常操作即可自动记录点击、输入与页面跳转，
-            录制结果回到本页「录制履历」审阅并一键转成用例（断网不丢事件，恢复后自动补传）。
-          </div>
-        </div>
-        <div class="rec-plugin-banner-actions">
-          <el-button type="primary" class="rec-plugin-dl-btn" @click="downloadRecPlugin">
-            <el-icon><Download /></el-icon>下载录制插件
-          </el-button>
-          <el-button class="rec-plugin-help-btn" @click="openRecGuide">
-            <el-icon><Reading /></el-icon>查看使用手册
-          </el-button>
-        </div>
-      </div>
+      <!-- ★ 录制插件入口已从「整条横幅」收缩为工具条按钮 + hover 浮层（见用例列表头部），
+           横幅虽醒目但要独占一整行，挤压表格可视高度，日常使用时性价比太低。 -->
 
       <!-- 用例列表区域 -->
       <el-card class="content-card elegant-shadow">
@@ -464,6 +439,58 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
+              <!-- ===== Web 自动化 · 录制插件入口（v0.20.1：整条横幅 → 悬浮按钮）=====
+                   录制靠 Chrome 扩展采集，没有插件就只剩「导入录制」传文件一条路，
+                   用户容易以为「录制功能不存在」。但横幅要独占一整行、挤压表格高度，
+                   故收缩成工具条按钮：说明 + 安装三步 + 下载/手册都放进 hover 浮层。
+                   未确认过（没点过下载/手册）时按钮带一个小红点提示，看过即消失。 -->
+              <el-popover
+                v-if="isWebType && !isCanChoose"
+                placement="bottom-end"
+                :width="392"
+                trigger="hover"
+                :show-after="120"
+                :hide-after="60"
+                popper-class="rec-plugin-popper"
+              >
+                <template #reference>
+                  <el-button class="toolbar-btn rec-plugin-btn" type="primary" plain>
+                    <el-icon><Download /></el-icon>录制插件
+                    <span v-if="!recPluginSeen" class="rec-plugin-dot"></span>
+                  </el-button>
+                </template>
+                <div class="rec-plugin-pop">
+                  <div class="rec-plugin-pop-head">
+                    <el-icon class="rec-plugin-pop-ico" :size="18"><VideoCamera /></el-icon>
+                    <div class="rec-plugin-pop-head-text">
+                      <div class="rec-plugin-pop-title">实时录制需要浏览器插件</div>
+                      <div class="rec-plugin-pop-sub">Q·M 录制器 v0.1.0 · Chrome / Edge</div>
+                    </div>
+                  </div>
+                  <div class="rec-plugin-pop-desc">
+                    安装后在任意网页正常操作，即可自动记录点击、输入与页面跳转；录制结果回到
+                    「录制履历」审阅并一键转成用例。断网不丢事件，恢复后自动补传。
+                  </div>
+                  <ol class="rec-plugin-pop-steps">
+                    <li>点下方「下载插件」，解压得到 <code>qm-recorder-extension</code> 文件夹</li>
+                    <li>浏览器打开 <code>chrome://extensions</code>，右上角开启「开发者模式」</li>
+                    <li>点「加载已解压的扩展程序」，选中上一步的文件夹</li>
+                  </ol>
+                  <div class="rec-plugin-pop-actions">
+                    <el-button
+                      type="primary"
+                      size="small"
+                      class="rec-plugin-dl-btn"
+                      @click="downloadRecPlugin"
+                    >
+                      <el-icon><Download /></el-icon>下载插件
+                    </el-button>
+                    <el-button size="small" class="rec-plugin-help-btn" @click="openRecGuide">
+                      <el-icon><Reading /></el-icon>使用手册
+                    </el-button>
+                  </div>
+                </div>
+              </el-popover>
               <el-button
                 v-if="isWebType && !isCanChoose"
                 @click="openRecHistory"
@@ -915,6 +942,9 @@ export default{
       // 就地新建标签的输入与状态
       newTagName: '',
       tagCreating: false,
+      // ★ 「录制插件」按钮上的小红点：用户点过下载/手册后就不再提示。
+      //   纯本地记忆（localStorage），不落库、不影响业务数据。
+      recPluginSeen: false,
       caseForm:{
         project: '',
         id: '',
@@ -1024,6 +1054,12 @@ export default{
     this.setupTableObserver()
     // 项目级「标签是否必填」开关，决定新增/编辑用例时 tag 的校验规则
     this.loadTagRequired()
+    // 「录制插件」按钮小红点：只在用户从未点过下载/手册时显示
+    try {
+      this.recPluginSeen = localStorage.getItem('qm_rec_plugin_seen') === '1'
+    } catch (e) {
+      this.recPluginSeen = false
+    }
   },
   beforeUnmount() {
     this.teardownTableObserver()
@@ -1913,6 +1949,16 @@ export default{
     onRecImported() {
       this.getCases()
     },
+    /** 标记「录制插件」入口已被用户注意过（消掉按钮上的小红点） */
+    markRecPluginSeen() {
+      if (this.recPluginSeen) return
+      this.recPluginSeen = true
+      try {
+        localStorage.setItem('qm_rec_plugin_seen', '1')
+      } catch (e) {
+        /* 隐私模式下 localStorage 可能不可写，忽略即可 */
+      }
+    },
     /** 下载浏览器录制插件（Chrome / Edge MV3 扩展，zip 内含安装说明） */
     downloadRecPlugin() {
       const url = this.pluginDownloadUrl
@@ -1922,10 +1968,12 @@ export default{
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
+      this.markRecPluginSeen()
       this.$message.success('插件包已开始下载：解压后按「加载已解压的扩展程序」装入浏览器')
     },
     /** 跳帮助文档的「Web 自动化录制」章节（section 深链由 Help.vue 解析） */
     openRecGuide() {
+      this.markRecPluginSeen()
       this.$router.push({ path: '/user/help', query: { section: 'guide-recording' } })
     },
   },
@@ -3835,66 +3883,97 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   flex: 0 0 auto;
 }
 
-/* ===== Web 自动化 · 录制插件提示条 ===== */
-.rec-plugin-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin: 0 0 16px;
-  padding: 14px 18px;
-  border: 1px solid #d6e4ff;
+/* ===== Web 自动化 · 录制插件入口（按钮 + hover 浮层）=====
+   ★ 浮层内容由 el-popover 渲染并 teleport 到 body，**不受 scoped 约束**，
+     所以这套样式必须留在非 scoped 块里；同时靠 popper-class 限定作用域，
+     避免污染其它页面的 el-popover。 */
+.rec-plugin-popper.el-popover.el-popper {
+  padding: 0;
   border-radius: 10px;
-  background: linear-gradient(90deg, #f0f6ff 0%, #f7faff 60%, #ffffff 100%);
-  box-shadow: 0 2px 10px rgba(64, 120, 255, 0.06);
+  border: 1px solid #d6e4ff;
+  box-shadow: 0 8px 26px rgba(31, 45, 61, 0.14);
 }
 
-.rec-plugin-banner-icon {
+.rec-plugin-pop {
+  padding: 14px 16px 13px;
+  text-align: left;
+  white-space: normal;
+}
+
+.rec-plugin-pop-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.rec-plugin-pop-ico {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: #409eff;
   color: #fff;
 }
 
-.rec-plugin-banner-body {
-  flex: 1 1 auto;
+.rec-plugin-pop-head-text {
   min-width: 0;
 }
 
-.rec-plugin-banner-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
+.rec-plugin-pop-title {
+  font-size: 14px;
   font-weight: 600;
   color: #1f2d3d;
+  line-height: 1.35;
 }
 
-.rec-plugin-banner-ver {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #e8f1ff;
-  color: #2f6fd0;
+.rec-plugin-pop-sub {
+  margin-top: 1px;
   font-size: 12px;
-  font-weight: 400;
+  color: #8492a6;
 }
 
-.rec-plugin-banner-desc {
-  margin-top: 4px;
+.rec-plugin-pop-desc {
+  margin-top: 10px;
   font-size: 12.5px;
   line-height: 1.7;
   color: #5e6d82;
 }
 
-.rec-plugin-banner-actions {
-  flex: 0 0 auto;
+.rec-plugin-pop-steps {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #5e6d82;
+}
+
+.rec-plugin-pop-steps li {
+  margin-bottom: 2px;
+}
+
+.rec-plugin-pop-steps li::marker {
+  color: #409eff;
+  font-weight: 600;
+}
+
+.rec-plugin-pop-steps code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #f0f4fa;
+  color: #2f6fd0;
+  font-size: 12px;
+}
+
+.rec-plugin-pop-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px dashed #e4ebf5;
 }
 
 .rec-plugin-dl-btn {
@@ -3907,15 +3986,33 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   background: #fff;
 }
 
-/* 窄屏时按钮换行，避免挤压正文 */
-@media screen and (max-width: 1200px) {
-  .rec-plugin-banner {
-    flex-wrap: wrap;
-  }
+/* 工具条按钮本身：未确认过时带一个呼吸小红点 */
+.rec-plugin-btn {
+  position: relative;
+}
 
-  .rec-plugin-banner-actions {
-    width: 100%;
-    justify-content: flex-end;
+.rec-plugin-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f56c6c;
+  box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.7);
+  animation: recPluginPulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes recPluginPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(245, 108, 108, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0);
   }
 }
 </style>

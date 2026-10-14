@@ -75,7 +75,30 @@ describe('帮助文档内容装配', () => {
     const html = subMenuContentMap['guide-faq'].content
     const rows = html.match(/<tr><td>\d+<\/td>/g) || []
     expect(rows.length).toBeGreaterThanOrEqual(21)
-    expect(html).toContain('提示条里直接下载') // FAQ 21：插件在哪下载
+    expect(html).toContain('录制插件') // FAQ 21：插件在哪下载
+  })
+
+  it('录制插件入口的描述与真实 UI 一致（v0.20.1 由横幅改为悬浮按钮）', () => {
+    // ★ 这条断言的价值：入口形态改过一次（整条横幅 → 工具条悬浮按钮），
+    //   文档若继续写「页顶部的提示条」，用户按描述去找必然找不到。
+    //   这里把「文档必须指向工具条按钮 + 悬浮」锁死，防止再次漂移。
+    const targeted = [
+      subMenuContentMap['guide-recording'],
+      subMenuContentMap['guide-faq'],
+      subMenuContentMap['case-scriptCase'],
+      menuContentMap['测试资产'],
+      menuContentMap['平台指南'],
+      quickStartContent
+    ].map(c => (c && c.content) || '').join('\n')
+    expect(targeted).toContain('录制插件')
+    expect(targeted).toMatch(/悬浮|鼠标移上去/)
+
+    // 反向闸门：全库任何一页都不允许再出现已过时的「提示条」描述
+    const all = [quickStartContent,
+      ...Object.values(menuContentMap),
+      ...Object.values(subMenuContentMap)]
+      .map(c => (c && c.content) || '').join('\n')
+    expect(all).not.toContain('提示条')
   })
 
   it('快速开始提到录制插件入口', () => {

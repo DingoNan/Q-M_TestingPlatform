@@ -261,7 +261,7 @@ export const menuContentMap = {
 
       <div class="callout callout-tip">
         <h4>WEB_UI 用例可以「录」出来</h4>
-        <p>脚本用例 → Web 自动化页顶部可下载<b>浏览器录制插件</b>；装好后在网页上正常操作即自动记录，
+        <p>脚本用例 → Web 自动化页，<b>用例列表右上角工具条</b>的<b>「录制插件」</b>按钮上悬浮即可下载<b>浏览器录制插件</b>；装好后在网页上正常操作即自动记录，
         回<b>录制履历</b>审阅并一键转成用例步骤。 HAR 文件与 DevTools Recorder 脚本也能通过
         用例编辑页的<b>导入录制</b>导入。完整说明见<b>平台指南 → Web 自动化录制</b>。</p>
       </div>
