@@ -27,7 +27,11 @@ def import_api_doc_task(task_id: str, format: str, source: str, service_id: int,
                         user_id: int, message_id: int = None,
                         url: str = None, content: str = None,
                         uri_prefix: str = '', match_mode: str = ImportMatchMode.Overwrite,
-                        target_module_id=None, auth_config: dict = None):
+                        target_module_id=None, auth_config: dict = None,
+                        pick: list = None):
+    # ★ P4a：pick 是「审阅台勾选的 seq」。默认 None ⇒ 全部导入（历史行为）。
+    #   必须与 import_api_v2 保持同一套语义：不传 = 全导入，传 [] = 一条不导入。
+    #   给默认值是为了 django_q 的历史队列（旧任务载荷里没有这个键）仍能正常出队。
     """
     异步导入接口文档：
       1. 获取原始内容（URL 拉取 / 已传入的文件文本）
@@ -65,7 +69,7 @@ def import_api_doc_task(task_id: str, format: str, source: str, service_id: int,
                 stats = _parse_jmeter_v2(content, service_id, user_id, uri_prefix, match_mode, target_module_id)
             elif format == ImportApiTypeV2.Har:
                 stats = _parse_har_v2(content, service_id, user_id, uri_prefix, match_mode,
-                                      target_module_id, auth_config=auth_config)
+                                      target_module_id, auth_config=auth_config, pick=pick)
             else:
                 raise ValueError(f'不支持的格式: {format}')
         logger.info(f"[接口导入任务 {task_id}] 完成 - 新增{stats['success']}, 更新{stats['updated']}, "

@@ -499,6 +499,25 @@
 		        <el-select v-model="caseForm.tag" placeholder="请选择用例标签"  multiple class="select" size="large" popper-class="select-dropdown-rounded">
 		          <el-option v-for="tag in tag_list" :label="tag.name" :value="tag.id" />
 		        </el-select>
+		        <!-- ★ 就地新建：不用跳去标签管理页，避免把填写中的弹窗带走 -->
+		        <div v-if="!caseView" class="tag-inline-new">
+		          <el-input
+		            v-model="newTagName"
+		            size="small"
+		            maxlength="20"
+		            placeholder="没有合适的？输入名称直接新建"
+		            class="tag-inline-input"
+		            @keyup.enter="createTagInline"
+		          />
+		          <el-button
+		            size="small"
+		            type="primary"
+		            class="tag-inline-btn"
+		            :loading="tagCreating"
+		            :disabled="!newTagName"
+		            @click="createTagInline"
+		          >新建标签</el-button>
+		        </div>
 		      </el-form-item>
 		      <el-form-item label="用例状态">
 		        <el-input :model-value="getCaseStatusName(caseForm.case_status)" disabled size="large" />
@@ -1334,6 +1353,52 @@ export default{
   computed:{
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
     /**
+     * ★ 用例表单校验规则（2026-10-14 改为 computed）
+     * 标签必填是项目级开关，放 data 里只求值一次，改设置后不刷新页面不生效。
+     */
+    caseRules() {
+      const rules = {
+        name: [{
+          required: true,
+          message: '用例名称不能为空',
+          trigger: 'blur',
+        }],
+        module: [{
+          required: true,
+          message: '请选择所属模块',
+          trigger: 'change',
+        }],
+        can_autoed: [{
+          required: true,
+          message: '请选择用例类型',
+          trigger: 'change',
+        }],
+        auto_status: [{
+          required: true,
+          message: '请选择自动化状态',
+          trigger: 'change',
+        }],
+        case_status: [{
+          required: true,
+          message: '请选择用例状态',
+          trigger: 'change',
+        }],
+        owner: [{
+          required: true,
+          message: '请选择用例负责人',
+          trigger: 'change',
+        }],
+      }
+      if (this.tagRequired) {
+        rules.tag = [{
+          required: true,
+          message: '请选择用例标签',
+          trigger: 'change',
+        }]
+      }
+      return rules
+    },
+    /**
      * ★ 列元数据（供 ColumnSetting 计算「按容器宽自动适配」）
      * width / minWidth 必须与下方 el-table-column 上的取值一一对应，否则自动适配总宽会算错。
      * hideable === false 的列不可隐藏，但其宽度计入总宽。
@@ -1389,6 +1454,11 @@ export default{
         {label: '未执行', value: 4},
       ],
       tag_list: '',
+      // ★ 用例标签是否必填（项目级开关，从通用设置读取；默认必填以兼容旧行为）
+      tagRequired: true,
+      // 就地新建标签的输入与状态
+      newTagName: '',
+      tagCreating: false,
       caseForm:{
         project: '',
         id: '',
@@ -1408,43 +1478,7 @@ export default{
 		step_type: 2
       },
 	  search_person: 1,
-      caseRules: {
-        name: [{
-          required: true,
-          message: '用例名称不能为空',
-          trigger: 'blur',
-        }],
-        module: [{
-          required: true,
-          message: '请选择所属模块',
-          trigger: 'change',
-        }],
-		can_autoed: [{
-		  required: true,
-		  message: '请选择用例类型',
-		  trigger: 'change',
-		}],
-		auto_status: [{
-		  required: true,
-		  message: '请选择自动化状态',
-		  trigger: 'change',
-		}],
-		case_status: [{
-		  required: true,
-		  message: '请选择用例状态',
-		  trigger: 'change',
-		}],
-        tag: [{
-          required: true,
-          message: '请选择用例标签',
-          trigger: 'change',
-        }],
-		owner: [{
-		  required: true,
-		  message: '请选择用例负责人',
-		  trigger: 'change',
-		}],
-      },
+      // ★ caseRules 已挪到上方唯一 computed 块（标签必填开关需要响应式）
       caseFormTmp:{
         project: '',
         id: '',
@@ -2422,6 +2456,49 @@ export default{
         this.tag_list = response.data.results
       }
     },
+
+    /** ★ 读取项目通用设置里的「用例标签是否必填」（未配置/失败 ⇒ 保守取 true） */
+    async loadTagRequired(){
+      const pid = this.liveProjectId()
+      if (!pid) return
+      try {
+        const res = await this.$api.getProjectGeneralSetting({ project: pid })
+        if (res && res.status === 200){
+          const raw = res.data?.result ?? res.data?.data ?? res.data?.results
+          const cfg = Array.isArray(raw) ? raw[0] : (Array.isArray(raw?.results) ? raw.results[0] : raw)
+          this.tagRequired = !cfg || cfg.tag_required !== false
+        }
+      } catch (e) {
+        this.tagRequired = true
+      }
+    },
+
+    /** ★ 就地新建标签：建完自动勾选，不打断用例填写流程 */
+    async createTagInline(){
+      const name = (this.newTagName || '').trim()
+      if (!name) return
+      this.tagCreating = true
+      try {
+        const res = await this.$api.createTag({ name, project: this.liveProjectId() })
+        if (res.status === 201 || res.status === 200){
+          const created = (res.data && (res.data.result || res.data)) || {}
+          await this.getTags()   // 重拉，保证与后端顺序一致
+          if (created.id){
+            if (!Array.isArray(this.caseForm.tag)) this.caseForm.tag = []
+            if (this.caseForm.tag.indexOf(created.id) === -1){
+              this.caseForm.tag.push(created.id)
+            }
+          }
+          this.newTagName = ''
+          ElMessage({ message: `标签「${name}」已新建并选中`, type: 'success' })
+        }
+      } catch (e) {
+        const msg = (e && (e.detail || e.msg || e.message)) || '新建标签失败'
+        ElMessage({ message: Array.isArray(msg) ? msg.join('，') : String(msg), type: 'error' })
+      } finally {
+        this.tagCreating = false
+      }
+    },
     
     editStep(row, column, event){
       localStorage.setItem('case_model', 'tree')
@@ -2569,6 +2646,8 @@ export default{
     // ★ 表格宽度测量（列设置「按容器宽自适应」靠它）。
     //   这一句原先写在文件前部的另一个 mounted() 里，被后键覆盖后**从未执行**。
     this.setupTableObserver()
+    // 项目级「标签是否必填」开关（决定新增/编辑用例时 tag 的校验）
+    this.loadTagRequired()
     // 【AI 用例可见性修复 - 兜底】生成完成通知若以"整页跳转"打开链接，
     // RouterLink/href 的 hash 变化可能在组件挂载前就被 hashchange 消费掉，
     // 导致 mounted 里读到的 $route.query 不含 filter。
@@ -5328,5 +5407,34 @@ html body .fun-case-drawer .drawer-footer {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+}
+
+/* ---- 用例标签：就地新建 ---- */
+.tag-req {
+  color: #f56c6c;
+  margin-left: 4px;
+}
+
+.tag-optional {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--qm-text-3);
+}
+
+.tag-inline-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-inline-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tag-inline-btn {
+  flex: 0 0 auto;
 }
 </style>

@@ -1410,7 +1410,8 @@
 			  </div>
 			</el-card>
 		</el-tab-pane>
-		<el-tab-pane label="手机设备配置" name="app" lazy='true'>
+		<!-- 手机设备配置：暂未启用，开关见 src/utils/features.js（appDevice） -->
+	<el-tab-pane v-if="showAppDeviceTab" label="手机设备配置" name="app" lazy='true'>
 			<el-card class="filter-card elegant-shadow">
 			  <div class="filter-header">
 			    <div class="header-title-section">
@@ -2407,6 +2408,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BodyEdit from '../../components/BodyEdit.vue'
 import Header from './Header.vue'
 import Cookie from './Cookie.vue'
+import { isFeatureEnabled } from '@/utils/features'
 import {
   Refresh,
   Search,
@@ -2424,6 +2426,10 @@ export default {
   name: 'EnvironmentManagement',
   computed: {
     ...mapState(['pathPermission', 'projectInfo', 'env_id', 'env_name', 'userInfo']),
+    // 手机设备配置是否露出（功能开关，见 src/utils/features.js）
+    showAppDeviceTab() {
+      return isFeatureEnabled('appDevice')
+    },
   },
   data() {
     return {

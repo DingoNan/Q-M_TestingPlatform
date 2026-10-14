@@ -8,6 +8,29 @@ from apps.interfaces.api_guard import assert_api_reference_allowed
 from rest_framework import serializers
 
 
+def _tag_required(project) -> bool:
+    """
+    判断指定项目下「用例标签」是否为必填项。
+
+    ★ 默认 True 是有意的：与改造前 DRF 依据 `Case.tag`（无 blank=True）推导出的
+      required=True 完全一致，保证存量前端/接口调用方零感知；只有在项目通用设置
+      里显式关掉开关，才会放开。
+    ★ project 为空（取不到项目上下文）时同样返回 True —— 宁可拦下也不能在
+      校验缺失的情况下放一条无标签用例进库。
+    """
+    if project is None:
+        return True
+    try:
+        from apps.projects.models import ProjectGeneralSetting
+        setting = ProjectGeneralSetting.objects.filter(
+            project_id=project.id, is_delete=False).first()
+    except Exception:
+        return True
+    if setting is None:
+        return True
+    return bool(setting.tag_required)
+
+
 class TagSerializer(BaseSerializer):
 
     class Meta:
@@ -116,6 +139,13 @@ class StepSerializer(BaseSerializer):
 class CaseSerializer(BaseSerializer):
     name = serializers.CharField(allow_blank=False, error_messages={'blank': "用例名称不能为空"})
     params = serializers.JSONField(required=False)
+    # ★★ 标签是否必填改为「项目级可配置」（2026-10-14）
+    #   原来 Case.tag = ManyToManyField('Tag') **没有 blank=True**，DRF 会据此
+    #   把它生成为 required=True ⇒ 不打标签直接 400「该字段是必填项」。
+    #   这里显式声明为 required=False，真正的必填校验下沉到 validate()，
+    #   按 ProjectGeneralSetting.tag_required 决定（默认 True，保持原行为）。
+    tag = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all(), required=False)
     # tag = serializers.CharField(many=True, read_only=True, source='tag')
     module_name = serializers.CharField(source='module.name', read_only=True)
     plant_name = serializers.CharField(source='module.plant.name', read_only=True)
@@ -148,6 +178,16 @@ class CaseSerializer(BaseSerializer):
         else:
             if case_set.exists():
                 raise ValidationError('用例名称不能重复')
+        # ★ 用例标签必填（可按项目关闭）。为什么放在 validate() 而不是声明成
+        #   required=True：关闭开关后必须能真正存进空标签，而 required 会在
+        #   进入 validate 之前就拦下 —— 那样开关就永远只是个装饰。
+        if _tag_required(attrs.get('project') or getattr(self.instance, 'project', None)):
+            if self.instance is None:
+                if not attrs.get('tag'):
+                    raise ValidationError({'tag': ['用例标签不能为空']})
+            elif 'tag' in attrs and not attrs.get('tag'):
+                # 编辑时显式清空标签也要拦截；不带 tag 字段的局部更新视为沿用原值
+                raise ValidationError({'tag': ['用例标签不能为空']})
         return attrs
 
     # def get_type_name(self, obj):

@@ -1975,7 +1975,8 @@ def _har_detect_auth_endpoint(api_list) -> dict:
 def _parse_har_v2(content: str, service_id: int, user_id: int,
                   uri_prefix: str = '', match_mode: str = ImportMatchMode.Overwrite,
                   target_module_id=None, auth_config: dict = None,
-                  dry_run: bool = False, api_ids_out: list = None):
+                  dry_run: bool = False, api_ids_out: list = None,
+                  pick: list = None):
     """解析 HAR 文件，提取 XHR/Fetch 接口并入库
 
     auth_config: 见 _har_apply_auth / _har_fetch_token
@@ -1983,6 +1984,10 @@ def _parse_har_v2(content: str, service_id: int, user_id: int,
     api_ids_out: 传入 list 时，会把本次落库的接口 id 按 HAR 真实发起顺序
                  追加进去（供「用例内 HAR 导入」接着批量建步骤用）。
                  2026-09-22 新增。
+    pick: ★ P4a 新增。审阅台里用户勾选的 `seq` 列表；**传了才生效**。
+          None  ⇒ 全部导入（与改造前逐字一致，老调用方零回归）。
+          []    ⇒ 一条都不导入（用户在审阅台全部取消勾选，这是明确语义，
+                  不能悄悄退化成「全导入」—— 那会导入一堆用户明确不要的接口）。
     """
     service_obj = Service.objects.get(id=service_id, is_delete=False)
     user_obj = User.objects.get(id=user_id, is_delete=False)
@@ -1997,6 +2002,23 @@ def _parse_har_v2(content: str, service_id: int, user_id: int,
     stats['total'] = len(api_list)
     if har_stats.get('auth_error'):
         stats['errors'].append(f"认证补齐失败: {har_stats['auth_error']}")
+
+    # ==================== P4a 审阅台勾选过滤 ====================
+    # ★ 为什么必须在这里过滤、而不是落库后再删：
+    #   _create_or_update_api_v2 会按 match_mode 去**更新/覆盖同 URL 的既有接口**。
+    #   先全量落库再删，会把用户没勾选的接口也先改一遍（overwrite 模式下
+    #   等于「取消勾选仍然生效」），这是不可逆的副作用。
+    if pick is not None:
+        _wanted = set()
+        for _p in pick:
+            try:
+                _wanted.add(int(_p))
+            except (TypeError, ValueError):
+                continue
+        _before = len(api_list)
+        api_list = [a for a in api_list if int(a.get('seq') or -1) in _wanted]
+        stats['picked'] = len(api_list)
+        stats['excluded'] = _before - len(api_list)
 
     # ★ 2026-09-22 修复「HAR 导入后接口列表顺序整体反了」：
     #   解析层 _har_sort_entries_by_time() 已按 startedDateTime 把 api_list 排成
@@ -2176,6 +2198,22 @@ def import_api_v2(request: Request):
     if auth_config is not None and not isinstance(auth_config, dict):
         return Response({'detail': 'authConfig 必须是对象'}, status=400)
 
+    # ---- P4a：审阅台勾选（pick），与 import_har_sync 同一套语义 ----
+    pick = request.data.get('pick')
+    if pick is None:
+        pick = request.data.get('pickSeqs')
+    if isinstance(pick, str) and pick.strip():
+        try:
+            pick = json.loads(pick)
+        except (json.JSONDecodeError, ValueError):
+            return Response({'detail': 'pick 不是合法 JSON 数组'}, status=400)
+    elif isinstance(pick, str):
+        # 空字符串按「没传」处理：FormData 里 append('pick','') 是常见形态，
+        # 不能把它解释成「用户一条都没勾」—— 那会让整批导入静默变成 0 条。
+        pick = None
+    if pick is not None and not isinstance(pick, (list, tuple)):
+        return Response({'detail': 'pick 必须是数组（seq 列表）'}, status=400)
+
     # 请求期内读取上传文件内容（request.FILES 无法在异步任务中访问），URL 交由任务内拉取
     content = ''
     url = ''
@@ -2232,6 +2270,7 @@ def import_api_v2(request: Request):
         match_mode=match_mode,
         target_module_id=int(target_module_id) if target_module_id else None,
         auth_config=auth_config,
+        pick=pick,
     )
     return Response({'task_id': task_id, 'message': '导入任务已提交，完成后将发送站内信通知',
                      'message_id': message.id}, status=200)
@@ -2338,6 +2377,10 @@ def import_har_sync(request: Request):
       - uriPrefix  : URL 前缀（可选）
       - matchMode  : overwrite / skip / keep_both（默认 overwrite）
       - authConfig : 认证补齐配置（可选）
+      - pick       : ★ P4a 新增，可选。审阅台里勾选的 seq 列表（JSON 数组或数组）。
+                     **不传** ⇒ 全部导入（历史行为，零回归）；
+                     传 [] ⇒ 明确不导入任何一条。
+                     命中时 stats 会多回 picked / excluded 两个计数。
 
     返回:
       {"stats": {...}, "api_ids": [...], "apis": [{id,name,method,url,status}]}
@@ -2416,6 +2459,24 @@ def import_har_sync(request: Request):
     if auth_config is not None and not isinstance(auth_config, dict):
         return Response({'detail': 'authConfig 必须是对象'}, status=400)
 
+    # ---- P4a：审阅台勾选（pick）----
+    # ★ 前端表单提交时数组常被序列化成字符串（FormData / JSON 字符串），
+    #   这里两种形态都接受；**只有显式传了才生效**，不传保持历史行为。
+    pick = request.data.get('pick')
+    if pick is None:
+        pick = request.data.get('pickSeqs')
+    if isinstance(pick, str) and pick.strip():
+        try:
+            pick = json.loads(pick)
+        except (json.JSONDecodeError, ValueError):
+            return Response({'detail': 'pick 不是合法 JSON 数组'}, status=400)
+    elif isinstance(pick, str):
+        # 空字符串按「没传」处理：FormData 里 append('pick','') 是常见形态，
+        # 不能把它解释成「用户一条都没勾」—— 那会让整批导入静默变成 0 条。
+        pick = None
+    if pick is not None and not isinstance(pick, (list, tuple)):
+        return Response({'detail': 'pick 必须是数组（seq 列表）'}, status=400)
+
     user = getattr(request, 'user', None)
     if user is None or not getattr(user, 'is_authenticated', False):
         return Response({'detail': '未认证，请先登录'}, status=401)
@@ -2425,7 +2486,7 @@ def import_har_sync(request: Request):
         stats = _parse_har_v2(str(content), service_obj.id, user.id,
                               uri_prefix=uri_prefix, match_mode=match_mode,
                               target_module_id=module_id, auth_config=auth_config,
-                              api_ids_out=api_ids)
+                              api_ids_out=api_ids, pick=pick)
     except (Service.DoesNotExist, ServiceModule.DoesNotExist):
         return Response({'detail': '目标服务或模块不存在'}, status=400)
     except User.DoesNotExist:

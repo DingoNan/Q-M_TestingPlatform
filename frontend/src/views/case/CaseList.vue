@@ -56,11 +56,34 @@
           <label class="dialog-label">
             <i class="icon-tag-dialog"></i>
             用例标签
-			<el-link type="success"  style='margin-left: 330px;' @click="() => this.$router.push({ name: 'tag' })">去添加用例标签</el-link>
+            <!-- ★ 必填时才标红；开关关掉后明确写「选填」，别让用户在红星的
+                 心理暗示下瞎选一个不相关的标签，污染标签体系 -->
+            <span v-if="tagRequired" class="tag-req">*</span>
+            <span v-else class="tag-optional">（选填）</span>
           </label>
           <el-select v-model="caseForm.tag" placeholder="请选择用例标签" clearable multiple class="select" size='large' popper-class='select-dropdown-rounded'  filterable >
             <el-option v-for="tag in tag_list" :label='tag.name' :value="tag.id" />
           </el-select>
+          <!-- ★ 就地新建标签：原来的「去添加用例标签」是整页跳转，会把当前
+               新增/编辑弹窗一起带走，填好的名称、模块、前置条件全丢。 -->
+          <div v-if="!caseView" class="tag-inline-new">
+            <el-input
+              v-model="newTagName"
+              size="small"
+              maxlength="20"
+              placeholder="没有合适的？输入名称直接新建"
+              class="tag-inline-input"
+              @keyup.enter="createTagInline"
+            />
+            <el-button
+              size="small"
+              type="primary"
+              class="tag-inline-btn"
+              :loading="tagCreating"
+              :disabled="!newTagName"
+              @click="createTagInline"
+            >新建标签</el-button>
+          </div>
         </el-form-item>
       </el-form>
     </div>
@@ -782,6 +805,10 @@ export default{
       if (this.$refs.treeRef) {
         this.$refs.treeRef.filter(val)
       }
+    },
+    // 切项目后重新读一次开关（不同项目的设置是独立的）
+    'projectInfo.id'(val) {
+      if (val) this.loadTagRequired()
     }
   },
   props: {
@@ -853,6 +880,11 @@ export default{
         {label: '未执行', value: 4},
       ],
       tag_list: '',
+      // ★ 用例标签是否必填（项目级开关，从通用设置读取；默认必填以兼容旧行为）
+      tagRequired: true,
+      // 就地新建标签的输入与状态
+      newTagName: '',
+      tagCreating: false,
       caseForm:{
         project: '',
         id: '',
@@ -862,23 +894,9 @@ export default{
         tag: '',
         params: [],
       },
-      caseRules: {
-        name: [{
-          required: true,
-          message: '用例名称不能为空',
-          trigger: 'blur',
-        }],
-        module: [{
-          required: true,
-          message: '请选择所属模块',
-          trigger: 'change',
-        }],
-        tag: [{
-          required: true,
-          message: '请选择用例标签',
-          trigger: 'change',
-        }],
-      },
+      // ★ caseRules 已改为 computed（见下方唯一 computed 块）：标签是否必填
+      //   由项目通用设置 tag_required 决定，写在 data 里只会求值一次，
+      //   设置改了界面不会跟着变。
       caseFormTmp:{
         project: '',
         id: '',
@@ -972,6 +990,8 @@ export default{
   },
   mounted() {
     this.setupTableObserver()
+    // 项目级「标签是否必填」开关，决定新增/编辑用例时 tag 的校验规则
+    this.loadTagRequired()
   },
   beforeUnmount() {
     this.teardownTableObserver()
@@ -986,6 +1006,33 @@ export default{
     //   这三个直取 store 现值的帮助方法；这里保留 mapState 是为了模板里
     //   `projectInfo` / `userInfo` 的响应式刷新，不是给 created() 同步阶段用的。
     ...mapState(['pathPermission', 'projectInfo', 'userInfo']),
+    /**
+     * ★ 用例表单校验规则（2026-10-14 从 data 挪到 computed）
+     * 为什么必须挪：标签必填是「项目级开关」，写在 data 里只在组件初始化时
+     * 求值一次；用户在设置里关掉必填后，不刷新页面根本不会生效。
+     */
+    caseRules() {
+      const rules = {
+        name: [{
+          required: true,
+          message: '用例名称不能为空',
+          trigger: 'blur',
+        }],
+        module: [{
+          required: true,
+          message: '请选择所属模块',
+          trigger: 'change',
+        }],
+      }
+      if (this.tagRequired) {
+        rules.tag = [{
+          required: true,
+          message: '请选择用例标签',
+          trigger: 'change',
+        }]
+      }
+      return rules
+    },
     /**
      * 当前是否处于「Web 自动化」类型。
      * ★ 必须 String() 归一化再比：`caseSearch.type` 被 automationTypes 定义为
@@ -1639,6 +1686,59 @@ export default{
       const response = await this.$api.getTags({project: this.liveProjectId()})
       if (response.status === 200){
         this.tag_list = response.data.results
+      }
+    },
+
+    /**
+     * ★ 读取项目通用设置里的「用例标签是否必填」
+     * - 404 / 未配置 ⇒ 保持默认 true（与改造前 DRF 依据模型推导出的 required 一致）
+     * - 请求失败 ⇒ 同样保守取 true，避免在网络抖动时把必填校验悄悄放开
+     */
+    async loadTagRequired(){
+      const pid = this.liveProjectId()
+      if (!pid) return
+      try {
+        const res = await this.$api.getProjectGeneralSetting({ project: pid })
+        if (res && res.status === 200){
+          const raw = res.data?.result ?? res.data?.data ?? res.data?.results
+          const cfg = Array.isArray(raw) ? raw[0] : (Array.isArray(raw?.results) ? raw.results[0] : raw)
+          this.tagRequired = !cfg || cfg.tag_required !== false
+        }
+      } catch (e) {
+        this.tagRequired = true
+      }
+    },
+
+    /**
+     * ★ 就地新建标签（新建/编辑用例弹窗内）
+     * 原来的实现只有一个跳到「标签管理」页的链接 —— 点了会把整个弹窗一起
+     * 带走，填好的用例名称/模块全丢，回来还得重填。改成这里直接建、建完自动
+     * 勾选，流程不中断。
+     */
+    async createTagInline(){
+      const name = (this.newTagName || '').trim()
+      if (!name) return
+      this.tagCreating = true
+      try {
+        const res = await this.$api.createTag({ name, project: this.liveProjectId() })
+        if (res.status === 201 || res.status === 200){
+          const created = (res.data && (res.data.result || res.data)) || {}
+          // 重新拉一次，保证下拉里的顺序与后端一致（不要只 push 本地对象）
+          await this.getTags()
+          if (created.id){
+            if (!Array.isArray(this.caseForm.tag)) this.caseForm.tag = []
+            if (this.caseForm.tag.indexOf(created.id) === -1){
+              this.caseForm.tag.push(created.id)
+            }
+          }
+          this.newTagName = ''
+          ElMessage({ message: `标签「${name}」已新建并选中`, type: 'success' })
+        }
+      } catch (e) {
+        const msg = (e && (e.detail || e.msg || e.message)) || '新建标签失败'
+        ElMessage({ message: Array.isArray(msg) ? msg.join('，') : String(msg), type: 'error' })
+      } finally {
+        this.tagCreating = false
       }
     },
 
@@ -3647,5 +3747,34 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   font-size: 14px;
   font-weight: 500;
   color: var(--qm-text-1);
+}
+
+/* ---- 用例标签：就地新建 ---- */
+.tag-req {
+  color: #f56c6c;
+  margin-left: 4px;
+}
+
+.tag-optional {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--qm-text-3);
+}
+
+.tag-inline-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-inline-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tag-inline-btn {
+  flex: 0 0 auto;
 }
 </style>

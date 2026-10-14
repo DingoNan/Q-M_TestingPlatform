@@ -258,9 +258,36 @@ class PageViewSet(BaseModelViewSet):
     filterset_class = PageFilter
 
 
+def _safe_project_id(request):
+    """取 `?project=` 并做健壮性归一。
+
+    ★ 为什么要这个函数（实测事故）：
+      前端在没有项目上下文时会把 `project` 拼成**空串**（`?project=`）。
+      `Plant.objects.filter(project='')` 会直接抛
+      `ValueError: Field 'id' expected a number but got ''` ⇒ 整页 500，
+      控制台一片红，而页面上只是「树是空的」，看着像前端的锅。
+      空串 / 非数字一律当「没传」处理 ⇒ 返空列表，由前端决定怎么提示。
+
+    ★ 为什么不用 `project_id or None` 直接内联在每个视图里：这种写法会被
+      复制 7 遍，而漏掉一处的代价就是一个 500。收成一个函数才有 enforceable 的意义。
+
+    ★★ 非数字也要拦：`?project=abc` 一样会抛 `Field 'id' expected a number but
+      got 'abc'` ⇒ 500。这里统一用 int() 试一次，失败即当「没传」。
+      （第一版只拦了空串，没拦非数字 —— 文档写了「非数字一律当没传」而代码没做到，
+       是验收把它抓出来的。文档承诺必须等于代码行为。）
+    """
+    raw = request.query_params.get('project')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(str(raw).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 @api_view(['GET'])
 def get_all_plant_module(request):
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     disabled = request.query_params.get('disabled')
     all_plant = []
     plants = Plant.objects.all().filter(is_delete=False, project=project_id).values()
@@ -278,7 +305,7 @@ def get_all_plant_module(request):
 
 @api_view(['GET'])
 def get_all_service_module(request):
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_service = []
     # 一次性查出所有服务与模块，内存构建树，避免逐层递归查询（原 N+1 导致接口列表页 3-5s）
     services = list(Service.objects.filter(is_delete=False, project=project_id).values())
@@ -319,7 +346,7 @@ def get_all_plant_module_two(request):
     """
     获取平级结构模块列表
     """
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_plant = []
     plants = Plant.objects.all().filter(is_delete=False, project=project_id).values()
     for plant in plants:
@@ -377,7 +404,7 @@ def get_all_service_module_two(request):
     """
     获取平级结构模块列表
     """
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_service = []
     services = Service.objects.all().filter(is_delete=False, project=project_id).values()
     for service in services:
@@ -397,7 +424,7 @@ def get_all_plant_module_case(request):
     """
     获取平级结构模块用例列表
     """
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_plant = []
     plants = Plant.objects.all().filter(is_delete=False, project=project_id).values()
     for plant in plants:
@@ -419,7 +446,7 @@ def get_all_plant_module_case(request):
 
 @api_view(['GET'])
 def get_all_plant_module_page(request):
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_plant = []
     plants = Plant.objects.all().filter(is_delete=False, project=project_id).values()
     for plant in plants:
@@ -453,7 +480,7 @@ def get_all_plant_element(request):
       现改为按 module 关联，返回 plant → module → element 三级结构。
       注意：返回层级由四层变三层，是本次修复带来的**结构变更**。
     """
-    project_id = request.query_params.get('project')
+    project_id = _safe_project_id(request)
     all_plant = []
     plants = Plant.objects.filter(is_delete=False, project=project_id).values()
     for plant in plants:

@@ -161,6 +161,12 @@ def ai_generate_elements(request: Request):
                   or request.data.get('project_id')
                   or request.data.get('project'))
     need_login = request.data.get('need_login', False)
+    # ★ 就地填写的登录态（2026-10-14 新增）
+    #   原来「页面需登录」只能用环境里已存的 Cookie，用户拿到一个新 Cookie 还得
+    #   先跑去「环境管理 → 环境配置 → 全局会话配置」存一次再回来。这里允许直接贴。
+    cookies_raw = request.data.get('cookies')
+    if cookies_raw is not None:
+        cookies_raw = str(cookies_raw).strip() or None
     try:
         vector_threshold = float(request.data.get('vector_threshold', 0.6))
     except (TypeError, ValueError):
@@ -245,5 +251,6 @@ def ai_generate_elements(request: Request):
         message_id=message.id,
         vector_threshold=vector_threshold,
         page_path=(page_path if not plant_id else None),
+        cookies_raw=cookies_raw,
     )
     return Response({'task_id': task_id, 'message': 'AI元素生成任务已提交', 'message_id': message.id})

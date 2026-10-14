@@ -6,6 +6,7 @@
 import json as _json
 import logging
 import re
+from urllib.parse import urlparse
 from django.utils import timezone
 from playwright.sync_api import sync_playwright
 
@@ -297,7 +298,74 @@ def json_dumps(value):
     return _json.dumps(value, ensure_ascii=False)
 
 
-def _scrape_candidates(url, need_login, module, env_id=None):
+_ATTR_KEYS = {'path', 'domain', 'expires', 'max-age', 'samesize', 'samesite',
+              'secure', 'httponly', 'partitioned', 'priority', 'hostonly'}
+
+
+def _parse_cookie_string(raw, url=None):
+    """
+    把浏览器里复制出来的 Cookie 串解析成 Playwright 需要的 cookie dict 列表。
+
+    支持两种常见形态：
+      a) 'a=1; b=2; Path=/; HttpOnly'  —— DevTools / 抓包工具直接复制
+      b) 'a=1\\nb=2'                      —— 一行一个
+
+    ★ 关键点一：Cookie 串里除了真正的键值，还混着 Path=/、Domain=x、Secure、
+      HttpOnly、Expires=... 这类**属性**。它们不是业务 cookie，必须挑出来当公共
+      属性用，否则会把「Path」当成一个假 cookie 塞进去。
+
+    ★ 关键点二：Playwright 的 `context.add_cookies()` 要求每个 cookie 带 `url`
+      或 `domain`+`path`。用户从浏览器复制时经常不带 domain，这里用目标 URL 的
+      host 兜底，避免「明明填了 Cookie 却一条都没注入」。
+    """
+    if not raw:
+        return []
+    text = str(raw).replace('\r', '\n').replace('\n', ';')
+
+    host = ''
+    if url:
+        try:
+            host = urlparse(url).hostname or ''
+        except Exception:
+            host = ''
+
+    attrs = {}
+    pairs = []
+    for chunk in text.split(';'):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if '=' in chunk:
+            k, v = chunk.split('=', 1)
+            k = k.strip()
+            v = v.strip()
+        else:
+            k, v = chunk, True  # Secure / HttpOnly 这类无值属性
+        if not k:
+            continue
+        low = k.lower()
+        if low in ('path', 'domain'):
+            attrs[low] = v
+        elif low in _ATTR_KEYS:
+            # Expires/Max-Age/Secure/HttpOnly/SameSite 等：不逐条回放，
+            # 只保留语义安全的 path/domain，避免格式不符导致整体注入失败
+            continue
+        else:
+            pairs.append({'name': k, 'value': v})
+
+    cookies = []
+    for p in pairs:
+        ck = {'name': p['name'], 'value': p['value'] if p['value'] is not True else ''}
+        dom = attrs.get('domain') or host
+        if dom:
+            # add_cookies 不接受前导点
+            ck['domain'] = str(dom).lstrip('.')
+            ck['path'] = attrs.get('path') or '/'
+        cookies.append(ck)
+    return cookies
+
+
+def _scrape_candidates(url, need_login, module, env_id=None, cookies_raw=None):
     """访问页面并抓取候选元素列表。
 
     激进模式：除初始扫描外，还会逐个点击可点击元素展开动态内容
@@ -321,14 +389,20 @@ def _scrape_candidates(url, need_login, module, env_id=None):
             page.wait_for_timeout(1200)
             need_apply = False
             if need_login:
-                _cookies_qs = Cookies.objects.filter(
-                    plant_id=module.plant_id, project_id=module.project_id, is_delete=False)
-                if env_id:
-                    _cookies_qs = _cookies_qs.filter(env_id=env_id)
-                cookies_qs = _cookies_qs.all()
-                if cookies_qs:
-                    _apply_cookies(context, page, cookies_qs)
+                # ★ 优先用本次就地填写的 Cookie；没有才回落到环境里已存的那份
+                inline = _parse_cookie_string(cookies_raw, url)
+                if inline:
+                    context.add_cookies(inline)
                     need_apply = True
+                else:
+                    _cookies_qs = Cookies.objects.filter(
+                        plant_id=module.plant_id, project_id=module.project_id, is_delete=False)
+                    if env_id:
+                        _cookies_qs = _cookies_qs.filter(env_id=env_id)
+                    cookies_qs = _cookies_qs.all()
+                    if cookies_qs:
+                        _apply_cookies(context, page, cookies_qs)
+                        need_apply = True
             if need_apply:
                 page.goto(url, wait_until='domcontentloaded')
                 page.wait_for_timeout(1000)
@@ -417,7 +491,8 @@ def ai_generate_elements_task(task_id: str, project_id: int, module_ids, env_id:
                               ai_config_id: int, need_login: bool,
                               user_id: int, message_id: int = None,
                               vector_threshold: float = 0.6,
-                              page_path: str = None):
+                              page_path: str = None,
+                              cookies_raw: str = None):
     """
     异步任务：AI 自动生成元素（支持单模块或平台下全部模块）
     1. 逐模块：解析 host → 登录态注入 → Playwright 抓取候选元素
@@ -450,7 +525,8 @@ def ai_generate_elements_task(task_id: str, project_id: int, module_ids, env_id:
             try:
                 _process_module(task_id, module, project, env_id, ai_config_id,
                                 need_login, user, stats, vector_threshold,
-                                page_path=(page_path if len(module_ids or []) == 1 else None))
+                                page_path=(page_path if len(module_ids or []) == 1 else None),
+                                cookies_raw=cookies_raw)
             except Exception as e:
                 stats['failed'] += 1
                 stats['names'].append(f"{module.name}(失败)")
@@ -464,7 +540,7 @@ def ai_generate_elements_task(task_id: str, project_id: int, module_ids, env_id:
 
 
 def _process_module(task_id, module, project, env_id, ai_config_id, need_login, user, stats,
-                    vector_threshold=0.6, page_path=None):
+                    vector_threshold=0.6, page_path=None, cookies_raw=None):
     """单模块处理：抓取→命名→去重→三态落库"""
     # 1. host 与 URL（单模块使用前端传入的页面地址；根节点/多模块使用模块自带页面地址，无则跳过）
     env_plant = EnvPlant.objects.filter(env_id=env_id, plant=module.plant,
@@ -484,7 +560,8 @@ def _process_module(task_id, module, project, env_id, ai_config_id, need_login, 
     url = env_plant.host.rstrip('/') + path
 
     # 2. 抓取
-    candidates = _scrape_candidates(url, need_login, module, env_id)
+    candidates = _scrape_candidates(url, need_login, module, env_id,
+                                    cookies_raw=cookies_raw)
     if not candidates:
         stats['names'].append(f"{module.name}(无可识别元素)")
         return
@@ -534,12 +611,6 @@ def _process_module(task_id, module, project, env_id, ai_config_id, need_login, 
             target.save(update_fields=['name', 'web', 'status', 'update_by', 'update_time'])
             stats['names'].append(f"{target.name}({'更新' if ok else '待修改'})")
         else:
-            if not loc_obj:
-                stats['added_tomodify'] += 1
-                stats['names'].append(f"{name}(待修改)")
-            else:
-                stats['added_published'] += 1
-                stats['names'].append(f"{name}(新增)")
             try:
                 new_el = Element.objects.create(
                     project_id=project.id, module_id=module.id,
@@ -548,12 +619,32 @@ def _process_module(task_id, module, project, env_id, ai_config_id, need_login, 
                     web=loc_obj or {},
                     ios=[], android=[],
                     status=Element.ElementStatus.PUBLISHED if loc_obj else Element.ElementStatus.TO_MODIFY,
+                    # ★★ 这三个计数列必须**显式给值**（2026-10-14 真实事故修复）：
+                    #   MySQL 的 tb_element.hit_count / fallback_count / fail_count 三列是
+                    #   NOT NULL 且**没有 DEFAULT**，而 MySQL 开了 STRICT_TRANS_TABLES。
+                    #   一旦 INSERT 不带这三列，数据库直接抛 (1364, "Field 'fail_count'
+                    #   doesn't have a default value") ⇒ 元素一条都进不去。
+                    #   靠 Django 模型层的 default=0 不够稳：模型与库表结构一旦被
+                    #   手工改动/迁移漏跑，就会静默退化成 1364。这里显式兜底。
+                    hit_count=0, fallback_count=0, fail_count=0,
+                    source=getattr(Element.SourceChoice, 'AI', None)
+                           or getattr(Element.SourceChoice, 'MANUAL'),
                     create_by=user, update_by=user,
                 )
                 created_ids.add(new_el.id)
+                # ★ 计数放在 create **成功之后**：上一版是先自增计数再 create，
+                #   于是 create 全炸了站内信照样报「新增(已发布) 24」——谎报成功。
+                if loc_obj:
+                    stats['added_published'] += 1
+                    stats['names'].append(f"{name}(新增)")
+                else:
+                    stats['added_tomodify'] += 1
+                    stats['names'].append(f"{name}(待修改)")
             except Exception as e:
                 stats['failed'] += 1
-                logger.warning(f"[AI元素任务 {task_id}] 创建元素失败: {e}")
+                # ★ 落库失败不能再只写 warning：这是「界面看不到元素」的唯一线索
+                logger.error(f"[AI元素任务 {task_id}] 创建元素失败(name={name}): {e}", exc_info=True)
+                stats.setdefault('errors', []).append(f"创建元素失败「{name}」: {e}")
 
     # 已发布但本次未命中/未新增的 → 待废弃（软删除，可恢复）
     protected = matched_ids | created_ids
@@ -736,6 +827,15 @@ def _update_message(task_id, project_id, message_id, user, stats, error, duratio
         else:
             title = 'AI元素生成完成'
             name_text = "\n".join([f"  {i + 1}. {n[:60]}" for i, n in enumerate(names)])
+            # ★ 落库异常必须一起写进站内信，否则用户只看到「新增 N」，
+                #   却在界面上一条都找不到 —— 无法自查、只能来问人。
+            err_text = ''
+            errs = stats.get('errors') or []
+            if errs:
+                err_text = "\n落库异常:\n" + "\n".join(
+                    [f"  - {x[:200]}" for x in errs[:5]])
+                if len(errs) > 5:
+                    err_text += f"\n  ……另有 {len(errs) - 5} 条"
             content = (
                 f"项目: {project.name if project else ''}\n"
                 f"新增(已发布): {stats['added_published']}\n"
@@ -744,7 +844,7 @@ def _update_message(task_id, project_id, message_id, user, stats, error, duratio
                 f"待废弃: {stats['deprecated']}\n"
                 f"失败/跳过: {stats['failed']}\n"
                 f"耗时: {duration:.1f} 秒\n"
-                f"明细:\n{name_text}"
+                f"明细:\n{name_text}{err_text}"
             )
             task_status = Message.TaskStatus.SUCCESS
             if stats['failed'] or stats['added_tomodify']:

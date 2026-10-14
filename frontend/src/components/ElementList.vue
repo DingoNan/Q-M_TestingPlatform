@@ -55,6 +55,22 @@
           <span class="ai-login-tip">开启后使用所选环境的登录态(Cookie)访问</span>
         </div>
       </el-form-item>
+      <!-- ★ 就地贴 Cookie：原来必须先去「环境管理 → 环境配置 → 全局会话配置」
+           存一条再回来，来回切页很烦。这里直接贴，优先于环境里已存的那份。 -->
+      <el-form-item v-if="aiNeedLogin" class="dialog-form-item">
+        <label class="dialog-label">本次登录态（可选）</label>
+        <el-input
+          v-model="aiCookies"
+          type="textarea"
+          :rows="3"
+          placeholder="粘贴 Cookie，如：SESSION=xxx; token=yyy"
+          class="select"
+        />
+        <div class="ai-pagepath-tip">
+          留空则沿用「环境管理 → 环境配置 → 全局会话配置」中已保存的登录态
+        </div>
+      </el-form-item>
+
     </el-form>
     <template #footer>
       <div class="dialog-footer">
@@ -988,6 +1004,7 @@ export default{
 	  aiConfigs: [],
 	  aiConfigId: '',
 	  aiNeedLogin: false,
+	  aiCookies: '',          // ★ 本次就地填写的登录态（优先于环境里已存的）
 	  aiVectorThreshold: 0.6,
 	  aiShowPagePath: false,
 	  aiPagePath: '',
@@ -1298,9 +1315,10 @@ export default{
 
 	async openAiGenerate(){
 	  this.aiGenerateVisible = true
-	  this.aiEnvId = ''
-	  this.aiConfigId = ''
-	  this.aiNeedLogin = false
+      this.aiEnvId = ''
+      this.aiConfigId = ''
+      this.aiNeedLogin = false
+      this.aiCookies = ''
 	  this.aiVectorThreshold = 0.6
 	  // 模块维度：回显模块自带页面地址（可编辑，必填）；根节点：不显示页面路径
 	  const isModule = this.selectNode && this.selectNode > 0
@@ -1364,9 +1382,10 @@ export default{
 	      project: this.projectInfo.id,
 	      env_id: this.aiEnvId,
 	      ai_config_id: this.aiConfigId,
-	      need_login: this.aiNeedLogin,
-	      vector_threshold: this.aiVectorThreshold,
-	    }
+      need_login: this.aiNeedLogin,
+      vector_threshold: this.aiVectorThreshold,
+      cookies: (this.aiCookies || '').trim(),
+    }
 	    if (this.selectNode < 0) {
 	      payload.plant = -this.selectNode
 	    } else {

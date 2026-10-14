@@ -1080,28 +1080,17 @@
     <!-- HAR 解析预览抽屉 -->
     <el-drawer v-model="harPreviewVisible" title="HAR 解析预览" size="72%" class="har-preview-drawer">
       <div v-if="harPreview" class="har-preview-body">
-        <!-- 概览 -->
-        <div class="har-summary">
-          <div class="har-sum-item">
-            <div class="har-sum-num">{{ harPreview.stats.xhr_count }}</div>
-            <div class="har-sum-lbl">识别接口</div>
-          </div>
-          <div class="har-sum-item">
-            <div class="har-sum-num">{{ harPreview.stats.skipped_static }}</div>
-            <div class="har-sum-lbl">跳过静态资源</div>
-          </div>
-          <div class="har-sum-item">
-            <div class="har-sum-num">{{ Object.keys(harPreview.stats.groups || {}).length }}</div>
-            <div class="har-sum-lbl">业务分组</div>
-          </div>
-          <div class="har-sum-item">
-            <div class="har-sum-num" :class="harPreview.stats.auth_injected ? 'ok' : 'warn'">
-              {{ harPreview.stats.auth_injected ? '已补齐' : '未补齐' }}
-            </div>
-            <div class="har-sum-lbl">认证状态</div>
-          </div>
-        </div>
-
+        <!-- ★ P4a：统计条 / 忽略原因 / 底栏 / 结果回执统一走 ImportReviewBoard，
+             与「录制导入审阅台」是同一份实现。 -->
+        <ImportReviewBoard
+          :stats="harBoardStats"
+          :drops="harBoardDrops"
+          drop-title="解析时未纳入"
+          drop-hint="HAR 里除了接口调用还混着大量静态资源与失败请求，它们不是接口，导入时会被排除。"
+          footer-tip="只导入勾选的接口；未勾选的不会写进接口库。"
+          :result="harResult"
+          v-model:result-visible="harResultVisible"
+        >
         <!-- 认证告警 -->
         <el-alert v-if="!harPreview.stats.auth_injected" type="warning" :closable="false" class="har-alert"
                   title="HAR 中不含认证凭据"
@@ -1130,13 +1119,27 @@
           </el-table>
         </div>
 
-        <!-- 接口清单 -->
+        <!-- 接口清单（★ P4a：可勾选 —— 只导入你勾的那些） -->
         <div class="har-block">
           <div class="har-block-title">
             <el-icon><Document /></el-icon>
             接口清单（{{ harPreview.apis.length }}）
+            <span class="har-pick-tools">
+              <el-button link size="small" @click="harPickSetAll(true)">全选</el-button>
+              <el-button link size="small" @click="harPickSetAll(false)">全不选</el-button>
+              <el-button link size="small" @click="harPickInvert">反选</el-button>
+              <span class="har-pick-n">已选 {{ harPickedSeqs.length }} / {{ harPreview.apis.length }}</span>
+            </span>
           </div>
           <el-table :data="harPreview.apis" size="small" border max-height="420" class="har-table">
+            <el-table-column width="46" align="center">
+              <template #default="scope">
+                <el-checkbox
+                  :model-value="isHarPicked(scope.row.seq)"
+                  @change="harTogglePick(scope.row)"
+                />
+              </template>
+            </el-table-column>
             <el-table-column prop="seq" label="#" width="50" />
             <el-table-column prop="group" label="分组" width="130" show-overflow-tooltip />
             <el-table-column prop="method" label="方法" width="80">
@@ -1292,6 +1295,19 @@
             </div>
           </template>
         </div>
+
+        <template #actions>
+          <el-button size="small" class="dialog-cancel-btn" @click="harPreviewVisible = false">关闭</el-button>
+          <el-button
+            type="primary"
+            size="small"
+            class="dialog-confirm-btn"
+            :loading="harImporting"
+            :disabled="!harPickedSeqs.length"
+            @click="submitHarImport"
+          >导入选中 {{ harPickedSeqs.length }} 条</el-button>
+        </template>
+        </ImportReviewBoard>
       </div>
       <div v-else class="har-preview-empty">暂无预览数据</div>
     </el-drawer>
@@ -1396,6 +1412,8 @@ import MockResponse from './MockResponse.vue'
 import MockData from './MockData.vue'
 import Data from './Data.vue'
 import BodyEdit from './BodyEdit.vue'
+// ★ P4a：HAR 导入与录制导入统一到同一套「导入审阅台」骨架
+import ImportReviewBoard from './common/ImportReviewBoard.vue'
 
 export default{
   name: 'ApiManagement',
@@ -1415,6 +1433,44 @@ export default{
           used_by: d.used_by || [],
         }
       })
+    },
+    // ---------------- P4a 统一审阅台：给 ImportReviewBoard 的输入 ----------------
+    // ★ 统计条在这里组装，抽屉里不再自己写一套 har-summary 卡片。
+    harBoardStats(){
+      const s = (this.harPreview && this.harPreview.stats) || {}
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      return [
+        { label: '识别接口', value: s.xhr_count != null ? s.xhr_count : apis.length },
+        { label: '已勾选', value: this.harPickedSeqs.length,
+          tone: this.harPickedSeqs.length === apis.length ? 'ok' : 'warn' },
+        { label: '业务分组', value: Object.keys(s.groups || {}).length },
+        { label: '认证状态', value: s.auth_injected ? '已补齐' : '未补齐',
+          tone: s.auth_injected ? 'ok' : 'warn' },
+      ]
+    },
+    // ★「我抓了 60 个请求怎么只有 12 个接口」—— 以前 HAR 侧只有一个干巴巴的计数，
+    //   现在和录制侧一样，把「为什么少了」摊开说。
+    harBoardDrops(){
+      const s = (this.harPreview && this.harPreview.stats) || {}
+      const out = []
+      if(s.skipped_static) {
+        out.push({
+          reason: '非 XHR/Fetch 请求（图片、CSS、JS、字体等静态资源）',
+          count: s.skipped_static,
+        })
+      }
+      if(s.auth_error) out.push({ reason: '认证补齐失败：' + s.auth_error, count: 1 })
+      return out
+    },
+    // 用户没动过勾选 ⇒ 全选（且不向后端传 pick，走历史行为）
+    harPickedSeqs(){
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      if(!this.harPickTouched) return apis.map(a => a.seq)
+      return this.harPick.slice()
+    },
+    harPickAll(){
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      return apis.length > 0 && this.harPickedSeqs.length === apis.length
     },
     chooseApiVisible: {
       get(){
@@ -1714,6 +1770,14 @@ export default{
       harPreviewVisible: false,
       harPreviewLoading: false,
       harPreview: null,
+      // ★ P4a 统一审阅台：勾选状态 / 导入中 / 结果回执
+      //   harPick 存的是**预览里的 seq**（后端 pick 参数认的就是它），
+      //   不存下标 —— HAR 每次解析都会重排，下标不稳。
+      harPick: [],
+      harPickTouched: false,   // false = 用户没动过勾选 ⇒ 视为「全选」，不传 pick
+      harImporting: false,
+      harResultVisible: false,
+      harResult: null,
       // ★ AI 归因（HAR 轨迹 → 规则式分析 → LLM 归因 → 用例草稿）
       harAiLoading: false,
       harAiSaving: false,
@@ -1925,7 +1989,8 @@ export default{
     CopyDocument,
     Setting,
     Expand,
-    Fold
+    Fold,
+    ImportReviewBoard
   },
   watch: {
     filterServiceText(val) {
@@ -2826,6 +2891,12 @@ export default{
       this.harPreview = null
       this.harPreviewVisible = false
       this.harPreviewLoading = false
+      // ★ P4a：勾选与回执一并重置，否则下次打开还留着上一次的勾选
+      this.harPick = []
+      this.harPickTouched = false
+      this.harImporting = false
+      this.harResult = null
+      this.harResultVisible = false
       if(closeDialog) this.apiImportVisible = false
     },
     async submitImportV2(){
@@ -2898,6 +2969,88 @@ export default{
     // ---------------- HAR 导入 ----------------
     harVarLabel(key, varName){
       return key + ' → ${' + varName + '}'
+    },
+    // ---------------- P4a 统一审阅台：勾选 + 落库 ----------------
+    isHarPicked(seq){
+      return this.harPickedSeqs.indexOf(seq) >= 0
+    },
+    harTogglePick(row){
+      const seq = row && row.seq
+      if(seq === undefined || seq === null) return
+      const next = this.harPickedSeqs.slice()
+      const i = next.indexOf(seq)
+      if(i >= 0) next.splice(i, 1)
+      else next.push(seq)
+      this.harPick = next
+      this.harPickTouched = true
+    },
+    harPickSetAll(v){
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      this.harPick = v ? apis.map(a => a.seq) : []
+      this.harPickTouched = true
+    },
+    harPickInvert(){
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      const cur = this.harPickedSeqs
+      this.harPick = apis.map(a => a.seq).filter(s => cur.indexOf(s) < 0)
+      this.harPickTouched = true
+    },
+    /**
+     * 审阅台里「导入选中 N 条」：走**同步**的 /import_har_sync/。
+     * ★ 为什么不用向导里的异步 import_api_v2：异步只回 task_id + 站内信，
+     *   拿不到「到底落了哪几条」，也就填不出统一审阅台的结果回执。
+     *   而「落库后立刻告诉你落了什么」正是统一审阅台要解决的问题。
+     */
+    async submitHarImport(){
+      const apis = (this.harPreview && this.harPreview.apis) || []
+      if(!this.apiImportSet.service){
+        ElMessage({ type: 'warning', message: '请先在导入表单里选择所属服务' })
+        return
+      }
+      if(!this.harPickedSeqs.length){
+        ElMessage({ type: 'warning', message: '至少勾选一条接口' })
+        return
+      }
+      this.harImporting = true
+      try {
+        const payload = new FormData()
+        payload.append('file', this.apiImportSet.file)
+        payload.append('source', 'file')
+        payload.append('service', this.apiImportSet.service)
+        if(this.apiImportSet.module) payload.append('module', this.apiImportSet.module)
+        if(this.apiImportSet.uriPrefix) payload.append('uriPrefix', this.apiImportSet.uriPrefix)
+        payload.append('matchMode', this.apiImportSet.matchMode || 'overwrite')
+        const authCfg = this.buildHarAuthConfig()
+        if(authCfg) payload.append('authConfig', JSON.stringify(authCfg))
+        // ★ 只有用户真的动过勾选才传 pick：没动过 = 全选 = 历史行为（不传）
+        if(this.harPickTouched) payload.append('pick', JSON.stringify(this.harPickedSeqs))
+
+        const response = await this.$api.import_har_sync(payload)
+        const respBody = response.data || {}
+        const inner = respBody.result || respBody
+        if(response.status === 200 && inner && inner.api_ids){
+          const st = inner.stats || {}
+          this.harResult = {
+            title: '导入结果',
+            lines: [
+              { label: '导入接口', value: (inner.api_ids || []).length + ' 条' },
+              { label: '新增', value: st.success != null ? st.success : '—' },
+              { label: '更新', value: st.updated != null ? st.updated : '—' },
+              { label: '跳过', value: st.skipped != null ? st.skipped : '—' },
+              { label: '未勾选', value: (st.excluded != null ? st.excluded : (apis.length - this.harPickedSeqs.length)) + ' 条' },
+            ],
+            errors: st.errors || [],
+          }
+          this.harResultVisible = true
+          this.$emit('import-done')
+        } else {
+          ElMessage({ type: 'error', message: inner.detail || respBody.detail || '导入失败' })
+        }
+      } catch (e) {
+        ElMessage({ type: 'error', message: '导入异常：' + (e && e.message ? e.message : e) })
+      } finally {
+        this.harImporting = false
+      }
     },
     buildHarAuthConfig(){
       // mode=none 时不传 authConfig，后端不会尝试补齐
@@ -4767,6 +4920,20 @@ export default{
   font-weight: 600;
   color: var(--qm-text-1);
   margin-bottom: 4px;
+}
+
+/* P4a：接口清单的批量勾选工具条 */
+.har-pick-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 400;
+}
+.har-pick-n {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--qm-text-3);
 }
 
 .har-block-sub {

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Q·M 录制器</title>
+  <style>
+    :root { --bd:#e4e7ed; --tx:#303133; --sub:#909399; --pri:#409eff; --ok:#67c23a; --dg:#f56c6c; }
+    * { box-sizing: border-box; }
+    body { width: 340px; margin:0; padding:14px; font:13px/1.5 -apple-system,"Microsoft YaHei",sans-serif; color:var(--tx); }
+    h1 { margin:0 0 12px; font-size:15px; display:flex; align-items:center; gap:6px; }
+    h1 .dot { width:8px; height:8px; border-radius:50%; background:var(--sub); }
+    h1.rec .dot { background:var(--dg); animation:pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+    label { display:block; margin:10px 0 4px; color:var(--sub); font-size:12px; }
+    input, select, textarea {
+      width:100%; padding:6px 8px; border:1px solid var(--bd); border-radius:4px;
+      font-size:12px; color:var(--tx); outline:none; background:#fff;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--pri); }
+    textarea { resize:vertical; min-height:52px; font-family:Consolas,monospace; }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+    button {
+      width:100%; padding:8px; border:none; border-radius:4px; cursor:pointer;
+      font-size:13px; color:#fff; background:var(--pri);
+    }
+    button:hover { opacity:.88; }
+    button.stop { background:var(--dg); }
+    button.ghost { background:#fff; color:var(--tx); border:1px solid var(--bd); }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .acts { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+    .stat {
+      margin-top:12px; padding:8px 10px; border-radius:4px; background:#f5f7fa;
+      font-size:12px; color:var(--sub);
+    }
+    .stat b { color:var(--tx); font-weight:600; }
+    .err { margin-top:8px; color:var(--dg); font-size:12px; word-break:break-all; }
+    .hint { color:var(--sub); font-size:11px; margin-top:4px; }
+    .ok { color:var(--ok); }
+    .cfg { display:none; }
+    .cfg.show { display:block; }
+    .link { color:var(--pri); cursor:pointer; text-decoration:underline; font-size:12px; }
+  </style>
+</head>
+<body>
+  <h1 id="title"><span class="dot"></span>Q·M 录制器</h1>
+
+  <div id="cfgBox" class="cfg">
+    <label>平台地址</label>
+    <input id="base" placeholder="http://172.16.21.161:8000">
+
+    <label>访问令牌（登录平台后从浏览器取得）</label>
+    <textarea id="token" placeholder="在平台页面按 F12 → Console 粘贴：JSON.parse(localStorage.token)"></textarea>
+    <div class="hint">获取方式：登录平台 → F12 → Console 输入 <code>JSON.parse(localStorage.token)</code> → 回车，复制输出的字符串。</div>
+
+    <label>项目 ID（可从「项目概览」页地址栏 project= 后看到）</label>
+    <input id="projectId" type="number" min="1" placeholder="例如 2">
+
+    <div class="acts">
+      <button id="saveCfg" class="ghost">保存配置</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <label>录制名称（可留空，自动生成）</label>
+    <input id="name" placeholder="例如：登录-正常流程">
+
+    <div class="acts">
+      <button id="startBtn">● 开始录制</button>
+      <button id="stopBtn" class="stop" style="display:none">■ 结束并生成</button>
+    </div>
+
+    <div class="stat" id="stat">状态：待开始</div>
+    <div class="err" id="err" style="display:none"></div>
+
+    <div style="margin-top:10px">
+      <span class="link" id="toggleCfg">⚙ 配置</span>
+      <span style="color:#dcdfe6">|</span>
+      <span class="link" id="openPlatform">打开平台录制履历</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

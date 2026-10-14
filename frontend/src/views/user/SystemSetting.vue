@@ -354,12 +354,36 @@
 										<span class="setting-hint">天</span>
 									</el-form-item>
 								</div>
-								<div class="config-tip">
-									执行用例产生的 Trace 回放文件、视频及用例执行日志（含 base64 截图），按其所属项目配置的保留天数由系统每天 03:30 自动删除（报告本身保留）；项目未配置时按默认 30 天清理，无法识别所属项目的文件按最长保留天数清理。取值范围 1~365 天。
+									<div class="config-tip">
+										执行用例产生的 Trace 回放文件、视频及用例执行日志（含 base64 截图），按其所属项目配置的保留天数由系统每天 03:30 自动删除（报告本身保留）；项目未配置时按默认 30 天清理，无法识别所属项目的文件按最长保留天数清理。取值范围 1~365 天。
+									</div>
+								</div>
+								<!-- 用例标签是否必填
+								     ★ 关掉后，新建/编辑用例允许不打标签；用例列表里
+								       也支持在下拉框里直接「新建标签」，不用跳去标签页。 -->
+								<div class="config-section">
+									<div class="section-title">
+										<el-icon><CollectionTag /></el-icon>
+										<span>用例标签</span>
+									</div>
+									<div class="form-row">
+										<el-form-item label="标签必填">
+											<el-switch
+												v-model="generalConfig.tag_required"
+												active-text="必填"
+												inactive-text="选填"
+											/>
+											<span class="setting-hint">
+												开启时新建/编辑用例必须选标签；关闭后允许留空
+											</span>
+										</el-form-item>
+									</div>
+									<div class="config-tip">
+										只影响本项目。关闭后仍然可以在新建用例时直接在标签下拉里新建标签，不必先去「用例管理 → 标签管理」加完再回来。
+									</div>
 								</div>
 							</div>
-						</div>
-					</template>
+						</template>
 
 					<!-- 成员管理配置 -->
 					<template v-else-if="activeTab === 'member_config'">
@@ -635,7 +659,7 @@
 <script>
 import { mapState } from 'vuex'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Delete, Notification, Link, Connection, Message, Bell, User, UserFilled, Plus, Timer, StarFilled } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Delete, Notification, Link, Connection, Message, Bell, User, UserFilled, Plus, Timer, StarFilled, CollectionTag } from '@element-plus/icons-vue'
 import api from '@/api/index.js'
 
 export default {
@@ -653,7 +677,8 @@ export default {
 		UserFilled,
 		Plus,
 		Timer,
-		StarFilled
+		StarFilled,
+		CollectionTag
 	},
 	data() {
 		const validateAiProvider = (rule, value, callback) => {
@@ -860,7 +885,9 @@ export default {
 			// 通用设置
 			generalConfig: {
 				id: null,
-				trace_retention_days: 30
+				trace_retention_days: 30,
+				// 用例标签是否必填（默认必填，与改造前行为一致）
+				tag_required: true
 			},
 
 			// 成员管理配置
@@ -1522,10 +1549,18 @@ export default {
 					if (config) {
 						this.generalConfig = {
 							id: config.id,
-							trace_retention_days: config.trace_retention_days || 30
+							trace_retention_days: config.trace_retention_days || 30,
+							// ★ tag_required 用 !== false 兜底：老数据没有这个字段时
+							//   config.tag_required 是 undefined，直接取值会让
+							//   开关显示成「关」，但后端默认其实是「开」。
+							tag_required: config.tag_required !== false
 						}
 					} else {
-						this.generalConfig = { id: null, trace_retention_days: 30 }
+						this.generalConfig = {
+							id: null,
+							trace_retention_days: 30,
+							tag_required: true
+						}
 					}
 				}
 			} catch (error) {
@@ -1548,7 +1583,11 @@ export default {
 			try {
 				const params = {
 					project: this.projectId,
-					trace_retention_days: days
+					trace_retention_days: days,
+					// ★ 用例标签是否必填。这里显式取 Boolean 值下发：后端是
+					//   BooleanField，若漏传会被重置回模型默认值 True，
+					//   导致用户「关掉必选」看起来保存了其实没生效。
+					tag_required: this.generalConfig.tag_required !== false
 				}
 				if (this.generalConfig.id) {
 					await api.updateProjectGeneralSetting(this.generalConfig.id, params)

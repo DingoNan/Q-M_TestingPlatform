@@ -235,6 +235,12 @@ class ProjectGeneralSetting(BaseModel):
         default=30
     )
 
+    tag_required = models.BooleanField(
+        verbose_name='用例标签必填',
+        help_text='开启后新建/编辑用例时「用例标签」为必填项；关闭则允许不打标签',
+        default=True
+    )
+
     class Meta:
         db_table = 'tb_project_general_setting'
         verbose_name = '项目通用设置'

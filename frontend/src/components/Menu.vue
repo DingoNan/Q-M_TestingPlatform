@@ -73,14 +73,52 @@
 			  router
 			>
 
-		  <!-- 项目首页 -->
-		  <el-menu-item index="/project/index" class="menu-item" @click='toProjectIndex' v-if='!showUser'>
+	  <!-- 项目首页 -->
+	  <el-menu-item index="/project/index" class="menu-item" @click='toProjectIndex' v-if='!showUser'>
+		  <template #title>
+		  	<el-icon class="menu-icon"><component is="House"></component></el-icon>
+		  	<span class="menu-text">项目概览</span>
+		  </template>
+	  </el-menu-item>
+	  
+	  <!-- 环境管理（仅项目视图）
+	       ★ 为什么在功能树里再放一份：原来只有顶栏一个「?」样式图标，用户进项目后
+	         基本找不到入口。这里按 4 个子页直接铺成二级树，紧跟在「项目概览」下方 ——
+	         符合真实使用顺序：先看概览，再配环境，然后才做用例。
+	       ★ index 用真实路由 ⇒ el-menu 的 router 模式会自己跳转并正确高亮，
+	         不用再手写 push；同时也不会引入「点了菜单没有任何反应」的假入口。 -->
+	  <el-sub-menu index="env-management" class="sub-menu" popper-class="custom-submenu-popup"
+	               v-if="!showUser && hasEnvManagementPermission">
+		  <template #title>
+			  <el-icon class="menu-icon"><Monitor /></el-icon>
+			  <span class="menu-text">环境管理</span>
+		  </template>
+		  <el-menu-item v-if="hasEnvPerm('/env/env')" index="/env/env" class="sub-menu-item">
 			  <template #title>
-			  	<el-icon class="menu-icon"><component is="House"></component></el-icon>
-			  	<span class="menu-text">项目概览</span>
+				  <el-icon class="sub-menu-icon"><Share /></el-icon>
+				  <span class="sub-menu-text">环境配置</span>
 			  </template>
 		  </el-menu-item>
-		  
+		  <el-menu-item v-if="hasEnvPerm('/env/service')" index="/env/service" class="sub-menu-item">
+			  <template #title>
+				  <el-icon class="sub-menu-icon"><SwitchFilled /></el-icon>
+				  <span class="sub-menu-text">服务配置</span>
+			  </template>
+		  </el-menu-item>
+		  <el-menu-item v-if="hasEnvPerm('/env/plant')" index="/env/plant" class="sub-menu-item">
+			  <template #title>
+				  <el-icon class="sub-menu-icon"><Box /></el-icon>
+				  <span class="sub-menu-text">产品配置</span>
+			  </template>
+		  </el-menu-item>
+		  <el-menu-item v-if="hasEnvPerm('/env/db')" index="/env/db" class="sub-menu-item">
+			  <template #title>
+				  <el-icon class="sub-menu-icon"><Coin /></el-icon>
+				  <span class="sub-menu-text">数据库配置</span>
+			  </template>
+		  </el-menu-item>
+	  </el-sub-menu>
+	  
 		  <!-- 动态菜单（过滤掉"环境管理"，已改为弹窗方式打开） -->
 		  <template v-for="menu_obj in menus">
 			  <el-sub-menu
@@ -434,7 +472,7 @@
 <script>
 import {mapState, mapActions, mapMutations} from 'vuex'
 import { h } from 'vue'
-import { Menu, Fold, Expand, ArrowDown, ArrowUp, Key, Document, SwitchButton, QuestionFilled, FullScreen, StarFilled, House, Bell, Delete, Right, Check, HelpFilled, View, Moon, Sunny } from '@element-plus/icons-vue'
+import { Menu, Fold, Expand, ArrowDown, ArrowUp, Key, Document, SwitchButton, QuestionFilled, FullScreen, StarFilled, House, Bell, Delete, Right, Check, HelpFilled, View, Moon, Sunny, Monitor, Share, SwitchFilled, Box, Coin } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import api, { base_url } from '../api/index.js'
 import EnvManagement from './EnvManagement.vue'
@@ -463,7 +501,12 @@ export default {
 		HelpFilled,
 		View,
 		Moon,
-		Sunny
+		Sunny,
+		Monitor,
+		Share,
+		SwitchFilled,
+		Box,
+		Coin
   	}
   },
   data() {
@@ -498,7 +541,8 @@ export default {
 		second_menu_name: '',
 		isCollapse: false,
 		isExpand: false,
-		openedMenus: [],
+		// ★ 默认展开「环境管理」：它是配环境的第一步，藏起来等于没有
+		openedMenus: ['env-management'],
 		envManagementVisible: false,
 		modifyPwdVisible: false,
 		userSave: {
@@ -554,6 +598,18 @@ export default {
   		const envMenu = this.menus.find(m => m.name === '环境管理')
   		return envMenu ? envMenu.has_permission : false
   	},
+  	// 环境管理下 4 个子页各自的权限，按 path 索引
+  	// ★ 只认后端的 has_permission，不在这里硬编码兜底 —— 否则会出现
+  	//   「菜单看得见、点进去 403」的错位。
+  	envPermMap() {
+  		const map = {}
+  		if (!this.menus || !Array.isArray(this.menus)) return map
+  		const envMenu = this.menus.find(m => m.name === '环境管理')
+  		for (const c of ((envMenu && envMenu.children) || [])) {
+  			if (c && c.path) map[c.path] = !!c.has_permission
+  		}
+  		return map
+  	},
   	// 顶栏标题：项目空间显示项目名，系统层显示控制台
   	pageTitle() {
   		if (!this.showUser && this.projectInfo && this.projectInfo.name) return this.projectInfo.name
@@ -564,6 +620,10 @@ export default {
 	  ...mapMutations(['setPathPermission', 'toggleTheme']),
 	  openEnvManagement() {
 	  	this.envManagementVisible = true
+	  },
+	  // 功能树里「环境管理」各子项是否可见
+	  hasEnvPerm(path) {
+	  	return this.envPermMap[path] === true
 	  },
 	  toMyProject(){
 	  	this.$router.push({name: 'myProject'})

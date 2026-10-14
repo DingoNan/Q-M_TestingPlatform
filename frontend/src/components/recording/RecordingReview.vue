@@ -1,6 +1,6 @@
 <template>
-  <div class="rec-review" v-loading="loading">
-    <!-- ===================== 顶栏：会话身份 + 统计 ===================== -->
+  <div class="rec-review">
+    <!-- ===================== 顶栏：会话身份 ===================== -->
     <div class="rr-top">
       <div class="rr-top-left">
         <el-input
@@ -16,10 +16,6 @@
         <span v-if="startUrl" class="rr-url" :title="startUrl">{{ startUrl }}</span>
       </div>
       <div class="rr-top-right">
-        <span class="rr-stat"><b>{{ stat.kept }}</b> 条保留</span>
-        <span class="rr-stat is-drop"><b>{{ stat.off }}</b> 条已取消</span>
-        <span class="rr-stat"><b>{{ stat.elems }}</b> 个元素</span>
-        <span class="rr-stat"><b>{{ stat.asserts }}</b> 条断言</span>
         <el-tag v-if="saveState === 'saving'" size="small" type="warning" effect="plain">保存中…</el-tag>
         <el-tag v-else-if="saveState === 'error'" size="small" type="danger" effect="plain">保存失败</el-tag>
         <el-tag v-else-if="saveState === 'dirty'" size="small" type="info" effect="plain">有未保存修改</el-tag>
@@ -28,21 +24,22 @@
       </div>
     </div>
 
-    <!-- ===================== 被自动忽略的动作（可折叠） =====================
-         ★ 为什么一定要把这块露出来：用户最常问的是「我明明点了 30 下，怎么只有
-           12 个步骤」。答案全在这里。藏起来 = 用户认为工具丢数据。 -->
-    <div v-if="dropEntries.length" class="rr-drops">
-      <div class="rr-drops-head" @click="dropOpen = !dropOpen">
-        <el-icon><component :is="dropOpen ? 'ArrowDown' : 'ArrowRight'" /></el-icon>
-        <span>解析时自动忽略 {{ dropTotal }} 条动作（点击{{ dropOpen ? '收起' : '查看原因' }}）</span>
-      </div>
-      <div v-if="dropOpen" class="rr-drops-body">
-        <div v-for="(d, i) in dropEntries" :key="i" class="rr-drop-item">
-          <span class="rr-drop-n">{{ d.count }}</span>
-          <span class="rr-drop-t">{{ d.reason }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- ===================== 统一审阅台骨架（P4a） =====================
+         统计条 / 「被自动忽略」透明化 / 底栏 / 落库结果回执，
+         与 HAR 导入审阅用的是同一个组件 —— 换入口不用重新认一遍界面。
+         那些真正不同的部分（动作卡片、定位器编辑、断言、AI 补短板）走 default slot。 -->
+    <ImportReviewBoard
+      class="rr-board"
+      :stats="boardStats"
+      :drops="dropEntries"
+      drop-title="解析时自动忽略"
+      drop-hint="被忽略的动作不会生成步骤。若某条其实需要，回到录制里改用能映射关键字的操作，或手工在用例里补一步。"
+      footer-tip="编辑只写入录制会话，不产生任何用例数据；点「生成步骤用例」才真正落库。"
+      :loading="loading"
+      :result="boardResult"
+      v-model:result-visible="resultVisible"
+      @result-primary="goToCase"
+    >
 
     <!-- ===================== AI 补短板（P2） =====================
          ★ 三个按钮**都不自动触发**（设计方案 §05 的硬要求）。
@@ -391,94 +388,14 @@
       </section>
     </div>
 
-    <!-- ===================== 底栏 ===================== -->
-    <div class="rr-foot">
-      <div class="rr-foot-left">
-        <el-icon class="rr-foot-icon"><InfoFilled /></el-icon>
-        <span>编辑只写入录制会话，不产生任何用例数据；点「生成步骤用例」才真正落库。</span>
-      </div>
-      <div class="rr-foot-right">
-        <el-button size="small" :loading="discarding" @click="discardSession">丢弃本次录制</el-button>
-        <el-button size="small" :loading="saveState === 'saving'" @click="flushPatch({})">保存审阅</el-button>
-        <el-button type="primary" size="small" :loading="importing" @click="doImport">
-          生成步骤用例
-        </el-button>
-      </div>
-    </div>
-
-    <!-- ===================== 落库结果 ===================== -->
-    <el-dialog
-      v-model="resultVisible"
-      title="落库结果"
-      width="640"
-      :append-to-body="true"
-      :z-index="1010"
-      destroy-on-close
-    >
-      <div v-if="result" class="rr-result">
-        <div class="rr-result-line">
-          <span class="rr-result-lb">用例</span>
-          <span class="rr-result-vv">
-            {{ result.case_name }}
-            <el-tag v-if="result.case_created" size="small" type="success" effect="plain">新建</el-tag>
-            <el-tag v-else size="small" effect="plain">追加</el-tag>
-          </span>
-        </div>
-        <div class="rr-result-line">
-          <span class="rr-result-lb">模块</span>
-          <span class="rr-result-vv">{{ result.module_name }}</span>
-        </div>
-        <div class="rr-result-line">
-          <span class="rr-result-lb">步骤</span>
-          <span class="rr-result-vv">
-            共 {{ result.step_count }} 条（动作 {{ result.action_step_count }} / 校验 {{ result.verify_step_count }}）
-          </span>
-        </div>
-        <div class="rr-result-line">
-          <span class="rr-result-lb">断言</span>
-          <span class="rr-result-vv">{{ result.assertion_count }} 条</span>
-        </div>
-        <div class="rr-result-line">
-          <span class="rr-result-lb">元素</span>
-          <span class="rr-result-vv">
-            新增 {{ (result.elements || {}).created || 0 }} / 复用 {{ (result.elements || {}).reused || 0 }}
-          </span>
-        </div>
-        <div v-if="(result.variables || []).length" class="rr-result-line">
-          <span class="rr-result-lb">变量</span>
-          <span class="rr-result-vv">
-            <el-tag
-              v-for="v in result.variables"
-              :key="v.name"
-              size="small"
-              effect="plain"
-              class="rr-var-tag"
-            >{{ v.name }}</el-tag>
-          </span>
-        </div>
-        <div v-if="(result.skipped_actions || []).length" class="rr-result-line">
-          <span class="rr-result-lb">跳过</span>
-          <span class="rr-result-vv">
-            {{ result.skipped_actions.length }} 条
-            <div v-for="(s, i) in result.skipped_actions" :key="i" class="rr-skip">
-              seq={{ s.seq }}：{{ s.reason }}
-            </div>
-          </span>
-        </div>
-        <div v-if="(result.deferred_assertions || []).length" class="rr-result-line">
-          <span class="rr-result-lb">待补断言</span>
-          <span class="rr-result-vv">
-            {{ result.deferred_assertions.length }} 条（期望值需要人工填写）
-          </span>
-        </div>
-      </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button size="small" @click="resultVisible = false">关闭</el-button>
-          <el-button type="primary" size="small" @click="goToCase">打开用例</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <template #actions>
+      <el-button size="small" :loading="discarding" @click="discardSession">丢弃本次录制</el-button>
+      <el-button size="small" :loading="saveState === 'saving'" @click="flushPatch({})">保存审阅</el-button>
+      <el-button type="primary" size="small" :loading="importing" @click="doImport">
+        生成步骤用例
+      </el-button>
+    </template>
+    </ImportReviewBoard>
   </div>
 </template>
 
@@ -519,6 +436,8 @@ import { ArrowRight, ArrowDown, InfoFilled, MagicStick, WarningFilled } from '@e
 import RecActionCard from './ActionCard.vue'
 import RecLocatorPicker from './LocatorPicker.vue'
 import RecAssertionPanel from './AssertionPanel.vue'
+// ★ P4a：与 HAR 导入共用同一套「导入审阅台」骨架
+import ImportReviewBoard from '../common/ImportReviewBoard.vue'
 
 // 与会话侧 `RecordingSession.Source` 对齐（后端 get_source_display 已给中文，这里只做兜底）
 const SOURCE_TEXT = {
@@ -537,7 +456,10 @@ const ARG_WHITELIST = [
 
 export default {
   name: 'RecordingReview',
-  components: { RecActionCard, RecLocatorPicker, RecAssertionPanel, ArrowRight, ArrowDown, InfoFilled, MagicStick, WarningFilled },
+  components: {
+    RecActionCard, RecLocatorPicker, RecAssertionPanel, ImportReviewBoard,
+    ArrowRight, ArrowDown, InfoFilled, MagicStick, WarningFilled
+  },
   props: {
     /** 录制会话 id */
     sessionId: { type: [Number, String], required: true }
@@ -550,7 +472,6 @@ export default {
       ir: { actions: [], stats: {} },
       sessionName: '',
       activeSeq: null,
-      dropOpen: false,
 
       // 保存状态机：idle（已同步）/ dirty（有未保存）/ saving / error
       saveState: 'idle',
@@ -675,6 +596,53 @@ export default {
     },
     dropTotal() {
       return this.dropEntries.reduce((n, d) => n + d.count, 0)
+    },
+    // ---- P4a：喂给统一审阅台骨架的输入 ----
+    // ★ 统计条原本是本组件自己用 rr-stat 文本渲染的；现在与 HAR 导入共用
+    //   同一份实现 —— 换到接口自动化那边，长得一模一样。
+    boardStats() {
+      const s = this.stat || {}
+      return [
+        { label: '条保留', value: s.kept != null ? s.kept : 0 },
+        { label: '条已取消', value: s.off != null ? s.off : 0, tone: s.off ? 'warn' : 'plain' },
+        { label: '个元素', value: s.elems != null ? s.elems : 0 },
+        { label: '条断言', value: s.asserts != null ? s.asserts : 0 },
+      ]
+    },
+    // ★ 结果回执也走统一组件：把本组件自己的 result 翻译成骨架认识的形状。
+    //   「跳过 / 待补断言」这些**最容易让用户以为工具吞了数据**的信息必须在。
+    boardResult() {
+      const r = this.result
+      if (!r) return null
+      const lines = [
+        {
+          label: '用例', value: r.case_name,
+          tags: [{ text: r.case_created ? '新建' : '追加', type: r.case_created ? 'success' : 'info' }],
+        },
+        { label: '模块', value: r.module_name },
+        {
+          label: '步骤',
+          value: `共 ${r.step_count} 条（动作 ${r.action_step_count} / 校验 ${r.verify_step_count}）`,
+        },
+        { label: '断言', value: `${r.assertion_count} 条` },
+        {
+          label: '元素',
+          value: `新增 ${(r.elements || {}).created || 0} / 复用 ${(r.elements || {}).reused || 0}`,
+        },
+      ]
+      if ((r.deferred_assertions || []).length) {
+        lines.push({
+          label: '待补断言',
+          value: `${r.deferred_assertions.length} 条（期望值需要人工填写）`,
+        })
+      }
+      return {
+        title: '落库结果',
+        lines,
+        variables: (r.variables || []).map((v) => (v && v.name) ? v.name : v),
+        skips: r.skipped_actions || [],
+        primaryText: '打开用例',
+      }
     },
     activeIndex() {
       return this.actions.findIndex((a) => a.seq === this.activeSeq)
@@ -1568,6 +1536,26 @@ export default {
   height: 100%;
   min-height: 0;
   font-size: 13px;
+}
+
+/* P4a：统一审阅台骨架要撑满剩余高度，否则三栏会塌成 0 高 */
+.rr-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px 0;
+}
+/* ★ 骨架的 default slot 里装的是「AI 面板 + 三栏主体」，得让它把剩余高度吃满 */
+.rr-board ::v-deep .irb-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* AI 面板高度随内容，别跟着抢三栏的空间 */
+.rr-board ::v-deep .rr-ai {
+  flex: none;
 }
 
 /* ---------------- 顶栏 ---------------- */

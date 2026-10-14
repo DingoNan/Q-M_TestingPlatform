@@ -58,6 +58,7 @@
 
 <script>
 import { Right, Setting, SwitchFilled, Box } from '@element-plus/icons-vue'
+import { isFeatureEnabled } from '@/utils/features'
 import Env from '../views/env/Env.vue'
 import Service from '../views/env/Service.vue'
 import Plant from '../views/env/Plant.vue'
@@ -95,7 +96,8 @@ export default {
             { key: 'global_params', label: '全局变量配置', tabName: 'global_params' },
             { key: 'params', label: '环境变量配置', tabName: 'params' },
             { key: 'web', label: '浏览器集群配置', tabName: 'web' },
-            { key: 'app', label: '手机设备配置', tabName: 'app' },
+            // 手机设备配置暂未启用（见 src/utils/features.js），改为按需挂载
+            { key: 'app', label: '手机设备配置', tabName: 'app', feature: 'appDevice' },
             { key: 'header', label: '全局请求头配置', tabName: 'header' },
             { key: 'cookie', label: '全局会话配置', tabName: 'cookie' }
           ]
@@ -152,9 +154,16 @@ export default {
     },
     // 按权限过滤后的菜单组
     filteredMenuGroups() {
-      return this.menuGroups.filter(group => {
-        return this.permissionMap[group.permissionPath]
-      })
+      return this.menuGroups
+        .filter(group => this.permissionMap[group.permissionPath])
+        // ★ 二级项也过一遍功能开关：带 feature 的项在开关关闭时不渲染。
+        //   放在这里而不是模板里 v-if，是为了避免 v-for + v-if 同节点的
+        //   优先级歧义；同时天然支持「整组被过滤空则整组不显示」。
+        .map(group => Object.assign({}, group, {
+          children: group.children.filter(
+            c => !c.feature || isFeatureEnabled(c.feature))
+        }))
+        .filter(group => group.children.length > 0)
     }
   },
   watch: {
