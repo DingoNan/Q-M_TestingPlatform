@@ -54,6 +54,19 @@ class RecordingSession(BaseModel):
     # 扩展侧上传凭据（一次性 / 可续期），避免扩展持有用户长期令牌
     token = models.CharField(verbose_name='上传凭据', max_length=64, blank=True, default='',
                              db_index=True)
+
+    # ==================== P4 断网补传 · 幂等闸门 ====================
+    # ★ 为什么必须有这个字段：/recording/session/<id>/events/ 在 append=true（默认）
+    #   下是**追加**语义 —— 客户端网络恢复后重发未确认的批次，就会**重复写入**。
+    #   实施计划 §07 里写的「端点已是幂等设计」是错的，这里补上真正的幂等键。
+    #
+    #   约定：幂等键 = (session_id, seq)。seq 由客户端在会话内单调递增、从 1 开始。
+    #   收到事件时丢弃 `seq <= last_seq` 的条目，成功后把 last_seq 推进到本批最大值。
+    #   初值 0 ⇒ 第一条合法 seq 是 1。
+    #
+    #   ★ 唯一正确性前提：客户端必须按 seq **升序**发送。乱序会让 last_seq 把后面
+    #     的合法事件挡掉（宁可少收也不能错收，所以服务端按「单调推进」实现）。
+    last_seq = models.IntegerField(verbose_name='已接收的最大事件序号', default=0)
     imported_case_id = models.IntegerField(verbose_name='落库生成的用例ID', null=True, blank=True)
 
     class Meta:

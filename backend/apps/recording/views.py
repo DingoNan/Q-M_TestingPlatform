@@ -481,7 +481,76 @@ def recording_session_events(request, session_id):
         logger.warning('[REC] 事件包解析失败: %s', traceback.format_exc())
         return Response(data={'detail': '事件包解析失败：%s' % e}, status=400)
 
+    # ==================== P4 幂等闸门（断网补传不重复） ====================
+    # ★ 为什么必须做：`append=true`（默认）是**追加**语义，客户端重试一批事件就会
+    #   重复写入一次。实施计划 §07 里写的「端点已是幂等设计」是**错的**，这里补上。
+    #
+    #   幂等键 = (session_id, seq)：丢弃 `seq <= last_seq` 的条目，再推进 last_seq。
+    #
+    # ★★ 为什么幂等键必须看**原始入参**、不能看归一化后的事件（实测踩到的坑）：
+    #     core/recorder/sources.py::normalize_source 会给**没有 seq 的事件自动补 seq**
+    #     （按序号 1,2,3…）。若据此去重，那么旧客户端 / 手工导入 / 其它解析器的批次
+    #     会被整体判定成「重放」而**被丢光** —— 一次静默的数据丢失，而且离线检查
+    #     看源码根本发现不了（只有真跑一次才会暴露）。
+    #   ⇒ 判据：`原始入参`里**每条**事件都带 seq 才启用去重；否则走旧行为。
+    def _raw_event_list(d):
+        if isinstance(d, dict):
+            for _k in ('events', 'steps', 'actions'):
+                _v = d.get(_k)
+                if isinstance(_v, list):
+                    return _v
+        elif isinstance(d, list):
+            return d
+        return []
+
+    _raws = _raw_event_list(data)
+    _has_seq = bool(_raws) and all(
+        isinstance(_x, dict) and _x.get('seq') is not None for _x in _raws)
+
     append = str(request.data.get('append', 'true')).lower() not in ('false', '0', 'no')
+    _last = int(session.last_seq or 0)
+    _skipped = 0
+    if append and _has_seq:
+        _kept = []
+        _max = _last
+        for _e in events:
+            _s = _e.get('seq') if isinstance(_e, dict) else None
+            if _s is None:
+                _kept.append(_e)
+                continue
+            try:
+                _s = int(_s)
+            except (TypeError, ValueError):
+                _kept.append(_e)
+                continue
+            if _s <= _last:
+                _skipped += 1
+                continue
+            _kept.append(_e)
+            if _s > _max:
+                _max = _s
+        events = _kept
+        if _max != _last:
+            session.last_seq = _max
+    elif append:
+        # 旧客户端（事件不带 seq）：**完全不去重、不动 last_seq**，
+        # 行为与改造前逐字一致 —— 新旧客户端可以混用同一套接口。
+        pass
+    else:
+        # 整批覆盖（调试重录）：不去重，并把 last_seq 重置为本批最大值
+        # （本批无 seq 语义时归 0，与"没有幂等基线"等价）
+        _seqs = []
+        if _has_seq:
+            for _e in events:
+                _s = _e.get('seq') if isinstance(_e, dict) else None
+                if _s is None:
+                    continue
+                try:
+                    _seqs.append(int(_s))
+                except (TypeError, ValueError):
+                    pass
+        session.last_seq = max(_seqs) if _seqs else 0
+
     raw = dict(session.raw_payload or {})
     old = (raw.get('payload') or {})
     old_events = old.get('events') if isinstance(old, dict) else None
@@ -504,10 +573,13 @@ def recording_session_events(request, session_id):
                    extra={'file_name': file_name} if file_name else None)
     if session.status == RecordingSession.Status.FINISHED:
         session.status = RecordingSession.Status.RECORDING
-    session.save(update_fields=['raw_payload', 'status', 'update_time'])
+    session.save(update_fields=['raw_payload', 'status', 'update_time', 'last_seq'])
     return Response(data={
         'session_id': session.id,
         'received': len(events),
+        # ★ skipped>0 就是「这一批是重放的」最直接证据 —— 客户端据此停止重发
+        'skipped': _skipped,
+        'last_seq': int(session.last_seq or 0),
         'total': len(merged),
         'source': meta.get('source') or SRC.SOURCE_NATIVE,
     }, status=200)
