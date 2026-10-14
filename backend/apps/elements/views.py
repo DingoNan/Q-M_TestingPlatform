@@ -62,6 +62,46 @@ class ElementViewSet(BaseModelViewSet):
         elements.delete()
         return Response(data={'msg': '成功', 'count': count}, status=200)
 
+    @action(methods=['get'], detail=False)
+    def health(self, request, *args, **kwargs):
+        """
+        元素健康度视图（P3 自愈与治理）。
+
+        GET /element/health/?project=<id>&module=<id>&name=xx&only_bad=1&page=1&size=10
+
+        - 治理指标 degrade_rate = fallback_count / (hit_count + fallback_count)
+          分母为 0（从未执行过/从未定位过）记为 0.0，排在最后。
+        - `only_bad=1` 只看 fail_count > 0 —— 即「最需要修复的元素」。
+        - 排序固定为 降级率↓ → 失败次数↓ → id↓（末位用 id 兜底，保证分页稳定）。
+
+        ★ 为什么单独开一个 action 而不是给列表加排序字段：现有列表接口的排序由
+          OrderingFilter 接管（前端会传 ordering），改它会影响所有既有页面。
+          这里最后再 order_by 覆盖，属于纯增量、零回归。
+        """
+        from django.db.models import F, FloatField, Value, Case, When
+        from django.db.models.functions import Cast
+
+        qs = self.filter_queryset(self.get_queryset())
+
+        only_bad = str(request.query_params.get('only_bad', '') or '').strip().lower()
+        if only_bad in ('1', 'true', 'yes', 'y'):
+            qs = qs.filter(fail_count__gt=0)
+
+        qs = qs.annotate(
+            degrade_rate=Case(
+                # 分母为 0 时严禁做除法（MySQL 下会得 NULL，排序行为不可预期）
+                When(hit_count=0, fallback_count=0, then=Value(0.0)),
+                default=(Cast(F('fallback_count'), FloatField())
+                         / Cast(F('hit_count') + F('fallback_count'), FloatField())),
+                output_field=FloatField(),
+            )
+        ).order_by('-degrade_rate', '-fail_count', '-id')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            return self.get_paginated_response(self.get_serializer(page, many=True).data)
+        return Response(self.get_serializer(qs, many=True).data)
+
 
 @api_view(['POST'])
 def import_element(request: Request):

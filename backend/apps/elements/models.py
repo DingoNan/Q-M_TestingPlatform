@@ -11,6 +11,12 @@ class Element(BaseModel):
         PUBLISHED = 1, '已发布'
         TO_DEPRECATE = 2, '待废弃'
 
+    class SourceChoice(models.TextChoices):
+        """元素来源 —— 区分「手工建的」与「录制/AI 产的」，便于治理。"""
+        MANUAL = 'manual', '手工创建'
+        RECORDED = 'recorded', '录制生成'
+        AI = 'ai', 'AI 生成'
+
     class ByChoice(models.TextChoices):
         # Web 端：Playwright 定位方式
         ID = 'id', 'id'
@@ -47,6 +53,21 @@ class Element(BaseModel):
     status = models.IntegerField(verbose_name='元素状态',
                                  choices=ElementStatus.choices,
                                  default=ElementStatus.PUBLISHED)
+
+    # ==================== P3 元素健康度（自愈与治理） ====================
+    # ★ 以下计数字段由执行期自动维护，**不要手工改**：
+    #   core/step/run_playwright.py::locator() → _bump_element_counter()
+    #   一律用 Django F() 表达式原子自增（读-改-写在并发下会丢更新），
+    #   且计数失败必须被吞掉 —— 计数是旁路，绝不能影响用例执行结果。
+    #
+    # 治理指标：degrade_rate = fallback_count / (hit_count + fallback_count)
+    #   → 持续上升说明主定位已失效，应提示重新录制/修正定位器。
+    source = models.CharField(verbose_name='元素来源', max_length=16,
+                              choices=SourceChoice.choices,
+                              default=SourceChoice.MANUAL)
+    hit_count = models.IntegerField(verbose_name='主定位命中次数', default=0)
+    fallback_count = models.IntegerField(verbose_name='降级命中次数', default=0)
+    fail_count = models.IntegerField(verbose_name='定位失败次数', default=0)
 
     history = HistoricalRecords()
 

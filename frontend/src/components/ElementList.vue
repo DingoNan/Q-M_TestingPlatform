@@ -396,6 +396,19 @@
               </div>
             </div>
 			<div class="content-actions">
+				<!-- ★ P3 元素健康度视图：打开后按「降级率」倒序取数，并可只看失败过的元素。
+				     这是把「自愈」从被动兜底变成主动运维的入口 —— 降级率持续上升 =
+				     主定位已失效，应优先修正或重新录制。 -->
+				<div class="health-toggle" :class="{ 'is-on': healthMode }">
+					<span class="health-toggle-label">元素健康度</span>
+					<el-switch v-model="healthMode" @change="onHealthModeChange" />
+					<el-checkbox
+					  v-if="healthMode"
+					  v-model="healthOnlyBad"
+					  @change="onHealthModeChange"
+					  class="health-only-bad"
+					>只看失败过</el-checkbox>
+				</div>
 				<el-dropdown
 				  v-if="permission.has_edit_permission || permission.has_delete_permission"
 				  @command="handleBatchCommand"
@@ -446,6 +459,7 @@
             :show-overflow-tooltip='true'
 			 @sort-change='handleSortChange'
             @selection-change="handleSelectionChange"
+            :row-class-name="tableRowClassName"
             :header-row-style="headerRowStyle"
           > 
 			
@@ -543,6 +557,28 @@
               align="center"
               class-name="module-column"
             />
+
+            <!-- ★ P3 元素健康度列：仅健康度视图显示，避免干扰日常元素管理。
+                 ★ 必须放在 el-table 的**直接子级** —— 插到别的 el-table-column 的开始
+                   标签内部会被 Vue 判为 "Extraneous children found when component
+                   already has explicitly named default slot"（本次已踩过一次，
+                   由 compileTemplate 闸门拦下）。 -->
+            <el-table-column v-if="healthMode" label="命中" prop="hit_count" width="76" align="center"></el-table-column>
+            <el-table-column v-if="healthMode" label="降级" prop="fallback_count" width="76" align="center"></el-table-column>
+            <el-table-column v-if="healthMode" label="失败" prop="fail_count" width="76" align="center">
+              <template #default="scope">
+                <span :class="{ 'health-cell-bad': Number(scope.row.fail_count) > 0 }">
+                  {{ Number(scope.row.fail_count) || 0 }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="healthMode" label="降级率" prop="degrade_rate" width="96" align="center">
+              <template #default="scope">
+                <span :class="{ 'health-cell-warn': Number(scope.row.degrade_rate) > 0 }">
+                  {{ formatDegradeRate(scope.row.degrade_rate) }}
+                </span>
+              </template>
+            </el-table-column>
             
             <el-table-column 
               label="创建信息" 
@@ -994,6 +1030,9 @@ export default{
       },
 	 
       permission: {},
+      // ★ P3 元素健康度视图开关（取数走独立端点 /element/health/，后端固定按降级率排序）
+      healthMode: false,
+      healthOnlyBad: false,
       elementSearch:{
         id: '',
         name: '',
@@ -1516,10 +1555,49 @@ export default{
       this.elementSearch.project = this.projectInfo.id
       this.elementSave.project = this.projectInfo.id
       this.elementSearch.module = (this.elementSearch.module_list || []).join(',')
+      if (this.healthMode){
+        // ★ P3 健康度视图走独立端点。刻意**不带 ordering** ——
+        //   该视图的排序语义（降级率↓ → 失败次数↓）由后端定义，前端再传排序会把它覆盖掉。
+        const params = Object.assign({}, this.elementSearch, this.page_size_params)
+        delete params.ordering
+        if (this.healthOnlyBad){
+          params.only_bad = 1
+        }
+        const response = await this.$api.getElementHealth(params)
+        if (response.status === 200){
+          this.module_list = {...response.data}
+        }
+        return
+      }
       const response = await this.$api.getElements(Object.assign(this.elementSearch, this.page_size_params, this.sort_params))
       if (response.status === 200){
         this.module_list = {...response.data}
       }
+    },
+
+    // ==================== P3 元素健康度 ====================
+    onHealthModeChange(){
+      this.page_size_params.page = 1
+      this.getElements()
+    },
+
+    // fail_count > 0 的行高亮 —— 「最需要修复的元素」要一眼可见
+    tableRowClassName({ row }){
+      if (Number(row.fail_count) > 0){
+        return 'health-row-bad'
+      }
+      if (this.healthMode && Number(row.fallback_count) > 0){
+        return 'health-row-warn'
+      }
+      return ''
+    },
+
+    formatDegradeRate(value){
+      const n = Number(value)
+      if (!isFinite(n) || n <= 0){
+        return '0%'
+      }
+      return (n * 100).toFixed(1) + '%'
     },
     
     // 树结构相关方法
@@ -3214,6 +3292,66 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
   font-size: 14px;
   font-weight: 500;
   color: var(--qm-text-2);
+}
+
+/* ==================== P3 元素健康度 ====================
+   ★ 必须放在**非 scoped** 块里：row-class-name 返回的 class 是打在 el-table 内部
+   渲染出来的 <tr> 上的，scoped 的 data-v 属性不会附加到那里 ⇒ scoped 样式必然不生效。 */
+.health-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 12px;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 6px;
+  background: #f5f7fa;
+  border: 1px solid transparent;
+  transition: all .2s;
+}
+
+.health-toggle.is-on {
+  background: rgba(64, 158, 255, .10);
+  border-color: rgba(64, 158, 255, .35);
+}
+
+.health-toggle-label {
+  font-size: 13px;
+  color: var(--qm-text-2);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.health-only-bad {
+  margin-left: 4px;
+}
+
+.health-only-bad .el-checkbox__label {
+  font-size: 13px;
+  color: var(--qm-text-2);
+}
+
+/* fail_count > 0 = 最需要修复，红底 + 左侧色条；仅降级过 = 黄色提示 */
+.el-table .health-row-bad > td.el-table__cell {
+  background-color: rgba(245, 108, 108, .10) !important;
+}
+
+.el-table .health-row-bad > td.el-table__cell:first-child {
+  box-shadow: inset 3px 0 0 0 #f56c6c;
+}
+
+.el-table .health-row-warn > td.el-table__cell {
+  background-color: rgba(230, 162, 60, .08) !important;
+}
+
+.health-cell-bad {
+  color: #f56c6c;
+  font-weight: 600;
+}
+
+.health-cell-warn {
+  color: #e6a23c;
+  font-weight: 600;
 }
 
 </style>

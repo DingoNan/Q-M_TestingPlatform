@@ -324,6 +324,10 @@ export default {
 	batchDeleteElements(params){
 		return http_request.post('/element/batch_delete/', params)
 	},
+	// ★ P3 元素健康度视图：按降级率 fallback/(hit+fallback) 倒序；only_bad=1 只看 fail_count>0
+	getElementHealth(params){
+		return http_request.get('/element/health/', {params: params})
+	},
 	// 环境平台理接口
 	getEnvPlants(params){
 		return http_request.get('/env/env_plant/', {params: params})

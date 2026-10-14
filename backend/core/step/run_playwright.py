@@ -7,6 +7,8 @@ import shutil
 import time
 import uuid
 from django.conf import settings
+# ★ P3：元素健康度计数必须用 F() 原子自增（读-改-写在并发下会丢更新）
+from django.db.models import F
 import core.com.faker as sys_function
 from openai import OpenAI
 from core.com.common import (
@@ -1207,6 +1209,95 @@ class PlaywrightBaseAction:
                           % (elem_name, ai_loc_by, ai_loc_value))})
         return locator_obj.nth(element_index) if element_index >= 0 else locator_obj
 
+    # ==================== P3 元素健康度 · 计数 ====================
+    # 环境变量 QM_ELEMENT_HEALTH=0 可整体关闭计数（怀疑计数拖慢执行时可临时关）。
+    _HEALTH_FIELDS = ('hit_count', 'fallback_count', 'fail_count')
+
+    def _bump_element_counter(self, obj, field: str):
+        """元素健康度计数原子自增（P3）。
+
+        三条硬约束，违反任意一条都比「不计数」更糟：
+          1) 必须用 F() 表达式。读-改-写（`obj.hit_count += 1; obj.save()`）在并发下会丢更新，
+             而计数不准会直接让治理视图给出**错误的治理优先级**。
+          2) 任何异常都必须吞掉。计数是**旁路**，绝不能因为计数失败就让用例执行失败。
+          3) 用 queryset.update() 而不是 save()：既避免触发 simple-history 往历史表写一条
+             「计数变化」的噪声记录（每次元素操作都写，历史表会被撑爆），也少一次 SELECT。
+        """
+        if os.environ.get('QM_ELEMENT_HEALTH', '1') == '0':
+            return
+        if field not in self._HEALTH_FIELDS:
+            return
+        element_id = obj.get('id') if isinstance(obj, dict) else getattr(obj, 'id', None)
+        if not element_id:
+            return
+        try:
+            Element.objects.filter(id=element_id).update(**{field: F(field) + 1})
+        except Exception as exc:                      # 故意吞掉：计数绝不阻断执行
+            try:
+                self.case_logs_obj.logs[-1]['logs'].append({
+                    'title': formatter_log('WARN', '元素健康度计数失败（已忽略，不影响执行结果）'),
+                    'value': '元素 id=%s 字段 %s：%s' % (element_id, field, exc)})
+            except Exception:
+                pass
+
+    # ==================== P3 自愈链 · 候选链多级回退 ====================
+    def _try_alternatives(self, obj, element_index: int = 0, timeout: int = 5,
+                          origin_error=None):
+        """主定位失败后，依次尝试 `Element.web.opts.alternatives` 里的候选定位器。
+
+        ★ 这是 P3 的收益核心：整条回退链**零 token、零副作用**，能消化掉大部分
+          「UI 小改造导致定位失效」的场景。
+        候选链数据源：录制导入时 `importer._element_web_spec()` 写入的第 2~4 候选
+        （`{'by','value','opts','score'}`，落库上限 6 条）。
+
+        返回：命中的 Locator（或 nth / 元素列表）；全失败返回 None（由调用方接力 AI 兜底）。
+        副作用：命中时 fallback_count 自增，并写一条「定位器已降级，建议固化」的可读日志。
+        """
+        web = (obj.get('web') if isinstance(obj, dict) else None) or {}
+        opts = web.get('opts') or {}
+        alts = opts.get('alternatives') or []
+        if not isinstance(alts, list) or not alts:
+            return None
+
+        elem_name = obj.get('name') if isinstance(obj, dict) else None
+        origin = '%s=%s' % (web.get('by'), web.get('value'))
+
+        for seq, cand in enumerate(alts, start=1):
+            if not isinstance(cand, dict):
+                continue
+            c_by = (cand.get('by') or '').strip()
+            c_value = cand.get('value')
+            if not c_by or c_value in (None, ''):
+                continue
+            try:
+                cand_loc = self._build_locator(c_by, c_value, cand.get('opts') or {})
+                cand_loc.first.wait_for(state='visible', timeout=timeout * 1000)
+                count = cand_loc.count()
+                if count == 0:
+                    continue
+                if element_index == -1:
+                    result = [cand_loc.nth(i) for i in range(count)]
+                elif element_index >= count:
+                    continue
+                else:
+                    result = cand_loc.nth(element_index)
+            except Exception:
+                continue
+
+            # ---- 命中：计降级 + 留可读日志（不含截图：降级属成功路径，截图只会淹没证据）----
+            self._bump_element_counter(obj, 'fallback_count')
+            try:
+                self.case_logs_obj.logs[-1]['logs'].append({
+                    'title': formatter_log('WARN', '元素定位已降级（候选链命中）'),
+                    'value': ('元素「%s」主定位 %s 未匹配到可见元素，'
+                              '已自动降级到第 %s 候选 %s=%s（原始异常：%s）。\n'
+                              '建议固化该定位器，或重新录制该步骤。')
+                             % (elem_name, origin, seq, c_by, c_value, origin_error)})
+            except Exception:
+                pass
+            return result
+        return None
+
     def locator(self, obj: ElementSerializers, element_index: int = 0, timeout: int = 5):
         """
         查找元素列表
@@ -1214,6 +1305,11 @@ class PlaywrightBaseAction:
         element_index: 元素索引, int, 非必填，默认0，用于获取指定索引的元素, -1 返回所有元素
         timeout: 查找元素超时时间, int, 必填，默认5s
         return list 元素对象列表
+
+        ★ P3 三级自愈链（**主定位命中时行为与改造前完全一致**，这是硬约束）：
+            1. 主定位命中         → 正常执行，hit_count += 1（零成本）
+            2. 主定位失败 → 候选链 → 命中即降级执行，fallback_count += 1，写降级日志
+            3. 候选链全失败        → 走原有 AI 兜底，fail_count += 1（默认仍不写回元素库）
         """
         web_loc = obj['web']
         self._update_page_content()
@@ -1228,12 +1324,22 @@ class PlaywrightBaseAction:
                 elements = []
                 for i in range(count):
                     elements.append(element_list.nth(i))
+                self._bump_element_counter(obj, 'hit_count')
                 return elements
             elif count == 0 or element_index >= count:
                 raise Exception("Element not found")
             else:
+                self._bump_element_counter(obj, 'hit_count')
                 return element_list.nth(element_index)
         except Exception as e:
+            # ★ P3-②：主定位失败 → 先走「零 token」的候选链；命中就直接返回，不惊动 AI
+            fallback = self._try_alternatives(obj, element_index=element_index,
+                                              timeout=timeout, origin_error=e)
+            if fallback is not None:
+                return fallback
+
+            # ★ P3-③：候选链也全失败 → 原有 AI 兜底路径
+            self._bump_element_counter(obj, 'fail_count')
             # Frame 无 screenshot 方法, 截图始终用顶层 Page
             screenshot_bytes = self._current_page().screenshot()
             base64_str = 'data:image/png;base64,' + base64.b64encode(screenshot_bytes).decode('utf-8')
