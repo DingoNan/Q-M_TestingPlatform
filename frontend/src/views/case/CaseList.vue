@@ -373,6 +373,34 @@
         </div>
       </el-card>
 
+      <!-- ===== Web 自动化 · 录制插件提示条（2026-10-14 新增）=====
+           只在 Web 自动化页签显示：录制的实时采集靠 Chrome 扩展完成，
+           没有插件就只剩「导入录制」（传文件）这一条路，用户容易以为
+           「录制功能不存在」。这里把入口、下载、手册一次讲清。 -->
+      <div v-if="isWebType && !isCanChoose" class="rec-plugin-banner">
+        <div class="rec-plugin-banner-icon">
+          <el-icon :size="26"><VideoCamera /></el-icon>
+        </div>
+        <div class="rec-plugin-banner-body">
+          <div class="rec-plugin-banner-title">
+            实时录制需要浏览器插件
+            <span class="rec-plugin-banner-ver">v0.1.0 · Chrome / Edge</span>
+          </div>
+          <div class="rec-plugin-banner-desc">
+            下载并加载「Q·M 录制器」扩展后，在任意网页正常操作即可自动记录点击、输入与页面跳转，
+            录制结果回到本页「录制履历」审阅并一键转成用例（断网不丢事件，恢复后自动补传）。
+          </div>
+        </div>
+        <div class="rec-plugin-banner-actions">
+          <el-button type="primary" class="rec-plugin-dl-btn" @click="downloadRecPlugin">
+            <el-icon><Download /></el-icon>下载录制插件
+          </el-button>
+          <el-button class="rec-plugin-help-btn" @click="openRecGuide">
+            <el-icon><Reading /></el-icon>查看使用手册
+          </el-button>
+        </div>
+      </div>
+
       <!-- 用例列表区域 -->
       <el-card class="content-card elegant-shadow">
         <div class="content-header">
@@ -794,7 +822,9 @@ import {
   Fold,
   SuccessFilled,
   Pointer,
-  VideoCamera
+  VideoCamera,
+  Download,
+  Reading
 } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import RecordingHistory from '../../components/recording/RecordingHistory.vue'
@@ -985,6 +1015,8 @@ export default{
     Setting,
     Expand,
     Fold,
+    Download,
+    Reading,
     ColumnSetting,
     RecordingHistory
   },
@@ -1042,6 +1074,16 @@ export default{
      */
     isWebType() {
       return String(this.caseSearch.type) === '2'
+    },
+    /**
+     * 录制插件下载地址。
+     * zip 由前端工程 public/downloads/ 提供（nginx try_files 优先命中真实文件），
+     * 用当前 origin 拼接而不是写死 IP：换域名/端口部署时不用改代码。
+     */
+    pluginDownloadUrl() {
+      const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? window.location.origin : ''
+      return origin + '/downloads/qm-recorder-extension-v0.1.0.zip'
     },
     /**
      * ★ 供模板渲染的自动化类型列表（2026-09-17 新增）
@@ -1870,6 +1912,21 @@ export default{
     /** 落库完成后刷新列表，让新用例立刻出现 */
     onRecImported() {
       this.getCases()
+    },
+    /** 下载浏览器录制插件（Chrome / Edge MV3 扩展，zip 内含安装说明） */
+    downloadRecPlugin() {
+      const url = this.pluginDownloadUrl
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'qm-recorder-extension-v0.1.0.zip'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      this.$message.success('插件包已开始下载：解压后按「加载已解压的扩展程序」装入浏览器')
+    },
+    /** 跳帮助文档的「Web 自动化录制」章节（section 深链由 Help.vue 解析） */
+    openRecGuide() {
+      this.$router.push({ path: '/user/help', query: { section: 'guide-recording' } })
     },
   },
   async created() {
@@ -3776,5 +3833,89 @@ html body .el-radio-group.include-children-radio .el-radio-button__inner {
 
 .tag-inline-btn {
   flex: 0 0 auto;
+}
+
+/* ===== Web 自动化 · 录制插件提示条 ===== */
+.rec-plugin-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  border: 1px solid #d6e4ff;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f0f6ff 0%, #f7faff 60%, #ffffff 100%);
+  box-shadow: 0 2px 10px rgba(64, 120, 255, 0.06);
+}
+
+.rec-plugin-banner-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #409eff;
+  color: #fff;
+}
+
+.rec-plugin-banner-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rec-plugin-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.rec-plugin-banner-ver {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #2f6fd0;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.rec-plugin-banner-desc {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #5e6d82;
+}
+
+.rec-plugin-banner-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rec-plugin-dl-btn {
+  font-weight: 600;
+}
+
+.rec-plugin-help-btn {
+  color: #2f6fd0;
+  border-color: #b3d0ff;
+  background: #fff;
+}
+
+/* 窄屏时按钮换行，避免挤压正文 */
+@media screen and (max-width: 1200px) {
+  .rec-plugin-banner {
+    flex-wrap: wrap;
+  }
+
+  .rec-plugin-banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>

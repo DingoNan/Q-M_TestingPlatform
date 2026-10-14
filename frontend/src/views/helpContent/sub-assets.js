@@ -82,8 +82,44 @@ export const assetsChildren = {
       </div>
 
       <h3 id="sub-element-ai">AI 生成元素</h3>
-      <p>元素列表页提供<b>「AI 生成」</b>：粘贴页面 HTML 片段或页面地址，由 AI 推断出元素名称与定位方式，
-      批量生成元素记录。生成后请逐一核对定位值的正确性，AI 结果作为初稿而非终稿。</p>
+      <p>元素列表页提供<b>「AI 生成」</b>：选择模块、填写页面地址（或粘贴页面 HTML），
+      由 AI 推断出元素名称与定位方式，批量生成元素记录。生成后请逐一核对定位值的正确性，
+      AI 结果作为初稿而非终稿。</p>
+
+      <h4>需要登录的页面怎么配</h4>
+      <p>AI 抓取页面时默认不带登录态，遇到「页面需登录」的地址会采不到内容。
+      打开弹窗里的<b>页面需登录</b>开关，然后二选一：</p>
+      <table class="doc-table">
+        <thead><tr><th style="width:190px">方式</th><th>做法</th><th style="width:150px">适用</th></tr></thead>
+        <tbody>
+          <tr><td><b>就地粘贴</b>（推荐先试）</td>
+            <td>在弹窗的<b>「本次登录态」</b>里粘贴浏览器开发者工具 → Application → Cookies 中
+            复制到的内容，形如 <code>sessionid=xxx; csrftoken=yyy</code>，支持一整行或一行一个</td>
+            <td>临时抓取、Cookie 经常变</td></tr>
+          <tr><td><b>环境统一配置</b></td>
+            <td>到<b>环境管理 → 环境配置 → 全局会话配置</b>存一份 Cookie，
+            该环境下所有 AI 抓取自动复用</td>
+            <td>同一环境反复抓取</td></tr>
+        </tbody>
+      </table>
+      <p>两处都填时，<b>以本次就地粘贴的为准</b>；就地留空则回落到环境里已存的那份。</p>
+
+      <h4>提示「生成完成」但列表里看不到元素</h4>
+      <p>完成通知里的数字是<b>「AI 识别到多少条」</b>，不代表全部落库成功。请按顺序排查：</p>
+      <ol class="step-list">
+        <li><h4>1. 看站内信的「落库异常」段落</h4>
+          <p>通知下方会列出前几条失败原因（如页面结构变化导致定位缺失），这是最直接的定位依据。</p></li>
+        <li><h4>2. 确认筛选条件</h4>
+          <p>元素按<b>模块</b>归属，且列表页的模块树/搜索条件会过滤结果。生成时选了哪个模块，
+          列表就切到那个模块看。</p></li>
+        <li><h4>3. 确认登录态</h4>
+          <p>需要登录的页面没配 Cookie 时，AI 拿到的是登录页结构，识别出的元素自然不是目标页面的。</p></li>
+      </ol>
+      <div class="callout callout-tip">
+        <h4>状态为「待修改」也是正常产出</h4>
+        <p>AI 能识别但定位不完整的元素会以<b>待修改</b>状态入库，不会丢——
+        补全定位值后改成<b>已发布</b>即可被用例引用。</p>
+      </div>
 
       <h3 id="sub-element-rules">维护建议</h3>
       <div class="callout callout-warn">
@@ -551,8 +587,10 @@ export const assetsChildren = {
     anchors: [
       { id: 'sub-script-fields', title: '字段说明' },
       { id: 'sub-script-type', title: '用例类型与可选步骤' },
+      { id: 'sub-script-rec', title: 'Web 自动化录制' },
       { id: 'sub-script-how', title: '编排一条接口用例' },
       { id: 'sub-script-var', title: '变量与断言' },
+      { id: 'sub-script-tag', title: '标签：就地新增与必选开关' },
       { id: 'sub-script-rules', title: '注意事项' }
     ],
     content: `
@@ -603,6 +641,29 @@ export const assetsChildren = {
         App 自动化只在 APP_UI 用例下出现。如果看不到，请先检查用例类型是否选对。</p>
       </div>
 
+      <h3 id="sub-script-rec">Web 自动化录制</h3>
+      <p>WEB_UI 用例不必从零手写——把真实网页操作录下来，再审阅转成步骤，效率高得多。
+        平台提供三条互补路径：</p>
+      <table class="doc-table">
+        <thead><tr><th style="width:130px">入口</th><th style="width:170px">在哪里</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td><b>实时录制</b></td><td>浏览器插件<br/>「Q·M 录制器」</td>
+            <td><b>主流方式</b>。在网页上正常操作，自动记录点击、输入、页面跳转与 iframe 内元素；
+            插件包在本页（脚本用例 → Web 自动化）顶部的提示条里直接下载</td></tr>
+          <tr><td><b>导入录制</b></td><td>新增 / 编辑用例页<br/>「导入录制」按钮</td>
+            <td>导入浏览器导出的 <code>.har</code> 文件或 Chrome DevTools Recorder 脚本</td></tr>
+          <tr><td><b>录制履历</b></td><td>本页工具栏<br/>「录制履历」</td>
+            <td>录制结果的管理台：查看历史会话、审阅采集到的事件、勾选后一键转成用例步骤</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-tip">
+        <h4>第一次用请按这个顺序</h4>
+        <p>在本页顶部提示条<b>下载并加载插件</b> → 在插件面板选项目、开会话、开始录制 →
+        正常操作业务流程 → 完成录制 → 回<b>录制履历</b>审阅，只保留有效步骤后导入选中。
+        插件的详细安装步骤、断网补传机制与审阅台每个区域的作用，见
+        <b>平台指南 → Web 自动化录制</b>。</p>
+      </div>
+
       <h3 id="sub-script-how">编排一条接口用例</h3>
       <ol class="step-list">
         <li><h4>1. 新建用例</h4><p>填写名称，选择用例类型（接口测试选 API Case）与模块。</p></li>
@@ -629,6 +690,22 @@ export const assetsChildren = {
         <h4>作用域是单向的</h4>
         <p>只能「后面的步骤引用前面提取的变量」。如果第 3 步引用了第 5 步才会产生的变量，
         执行时必然解析失败。排错时先看日志里是<b>哪一步</b>报参数解析失败，再往前找该变量是否已被赋值。</p>
+      </div>
+
+      <h3 id="sub-script-tag">标签：就地新增与必选开关</h3>
+      <p>新建 / 编辑用例时，如果现有标签都不合适，<b>不必</b>先去<b>测试资产 → 标签管理</b>建好再回来：
+      在标签选择框下方直接输入名称、回车，即可<b>就地新建</b>并自动选中，不打断当前的编辑。</p>
+      <table class="doc-table">
+        <thead><tr><th style="width:150px">场景</th><th>行为</th></tr></thead>
+        <tbody>
+          <tr><td>开关为「必填」<br/>（默认）</td><td>标签带 <span style="color:#f56c6c">*</span> 标识，未选择时无法保存——与平台旧版行为一致</td></tr>
+          <tr><td>开关为「选填」</td><td>标签显示为「选填」，允许保存无标签用例，适合标签体系尚在完善的团队</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-info">
+        <h4>开关在哪里</h4>
+        <p><b>项目设置 → 通用设置 → 用例标签 → 标签必填</b>。该开关是<b>项目级</b>的，
+        不同项目可以不同；就地新建的标签同样进入标签管理，可在那里统一整理、合并。</p>
       </div>
 
       <h3 id="sub-script-rules">注意事项</h3>

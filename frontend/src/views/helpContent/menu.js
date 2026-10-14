@@ -137,10 +137,11 @@ export const platformMenu = [
     path: 'guide',
     icon: 'Guide',
     parent: 0,
-    desc: 'AI 助手、变量引用语法与常见问题排查',
+    desc: 'AI 助手、变量引用语法、Web 自动化录制与常见问题排查',
     children: [
       { name: 'AI 助手', level: 2, id: 'ai', path: '/guide/ai', icon: 'MagicStick', parent: 1 },
       { name: '变量引用语法', level: 2, id: 'vars', path: '/guide/vars', icon: 'PriceTag', parent: 1 },
+      { name: 'Web 自动化录制', level: 2, id: 'recording', path: '/guide/recording', icon: 'VideoCamera', parent: 1 },
       { name: '常见问题与避坑', level: 2, id: 'faq', path: '/guide/faq', icon: 'WarningFilled', parent: 1 }
     ]
   }

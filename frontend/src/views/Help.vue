@@ -305,6 +305,10 @@ export default {
       this.expandedItems.push(this.platformMenu[0].path)
     }
 
+    // 深链：其它页面用 /user/help?section=guide-recording 直接跳到指定章节
+    // （大小写敏感，且只接受真实存在的章节 key，防止手滑写错落到空白内容）
+    this.applySectionFromRoute()
+
     this.contentContainer = this.$refs.contentContainer
 
     // 内容完整性自检：漏写某个二级页面详情时会回落到套话模板，这里提前暴露
@@ -338,6 +342,10 @@ export default {
           this.contentContainer.scrollTop = 0
         }
       })
+    },
+    // 已停留在帮助页时，query 变化也要响应（例如从录制页反复点「查看使用手册」）
+    '$route.query.section'() {
+      this.applySectionFromRoute()
     }
   },
   methods: {
@@ -352,6 +360,27 @@ export default {
     /** 当前激活的是该模块下的二级页面（用于父菜单高亮） */
     isParentActive(menuItem) {
       return this.activeSection.startsWith(`${menuItem.path}-`)
+    },
+    /**
+     * 从路由 query 读取要跳转的章节（?section=xxx）。
+     * 只接受真实存在的章节 key；一级模块总览用模块 path，二级页面用 `path-id`。
+     */
+    applySectionFromRoute() {
+      const q = this.$route && this.$route.query
+      const sec = q && q.section ? String(q.section) : ''
+      if (!sec) return
+      const valid = ['quick-start']
+      this.platformMenu.forEach(m => {
+        valid.push(m.path)
+        ;(m.children || []).forEach(c => valid.push(this.sectionKey(m, c)))
+      })
+      if (valid.indexOf(sec) === -1) {
+        /* eslint-disable no-console */
+        console.warn('[help] 无效的 section 深链：', sec)
+        /* eslint-enable no-console */
+        return
+      }
+      this.switchSection(sec)
     },
     /** 点击一级菜单：既展开/收起子项，也切换到该模块总览 */
     onParentClick(menuItem) {

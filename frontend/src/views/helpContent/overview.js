@@ -259,6 +259,13 @@ export const menuContentMap = {
       </table>
       <p>AI 能力依赖<b>项目设置 → AI 供应商</b>中配置的模型；首次使用需在 AI 面板中<b>选择模型</b>后方可发送消息。</p>
 
+      <div class="callout callout-tip">
+        <h4>WEB_UI 用例可以「录」出来</h4>
+        <p>脚本用例 → Web 自动化页顶部可下载<b>浏览器录制插件</b>；装好后在网页上正常操作即自动记录，
+        回<b>录制履历</b>审阅并一键转成用例步骤。 HAR 文件与 DevTools Recorder 脚本也能通过
+        用例编辑页的<b>导入录制</b>导入。完整说明见<b>平台指南 → Web 自动化录制</b>。</p>
+      </div>
+
       <h3 id="ov-case-rules">维护要点</h3>
       <div class="callout callout-info">
         <h4>删除是软删除，名称可以复用</h4>
