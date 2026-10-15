@@ -308,6 +308,9 @@ def create_api_by_open_api_json(export_obj: dict, uri: str, service: int, user_i
     for path_key, path_value in paths_map.items():
         for method_key, method_value in path_value.items():
             module_name = method_value.get('tags')[0]
+            # ★ 2026-10-15：ServiceModule.name 只 20 字符，tag 原值建模块会
+            #   抛 (1406) "Data too long for column 'name'"，整条接口静默失败。
+            module_name = str(module_name)[:20]
             module_obj = ServiceModule.objects.filter(name=module_name, is_delete=False, service=service_obj)
             if module_obj.exists():
                 module_obj = module_obj[0]
@@ -669,9 +672,23 @@ def _parameters_to_params_v2(parameters, spec):
 
 
 def _ensure_module_v2(tag_name, service_obj, user_obj):
-    """根据 OpenAPI tag 名称确保模块存在，不存在则创建"""
+    """根据 OpenAPI tag 名称确保模块存在，不存在则创建
+
+    ★ 2026-10-15 修复：入口处统一按 ServiceModule.name 的实际长度（20）截断。
+
+    此前截断发生在**调用方**且写的是 50（`_har_group_key(api)[:50]`），
+    而 ServiceModule.name 的 max_length 只有 20 ⇒ 分组名稍长就直接炸：
+        (1406, "Data too long for column 'name' at row 1")
+    实测导入 242 登录 HAR 时，13 个接口里 `getUserPasswordVerifyRule`（25 字符）
+    这一条因此失败，其余 12 条正常 —— **报错只在 errors 数组里安静躺着，
+    整体仍返回 200**，用户看到的是「导入成功但少了 1 个接口」。
+
+    收敛在入口而不是调用方：所有建模块的路径（HAR / cURL / JMeter / Swagger /
+    OpenAPI tag）都从这里过，一处修住全部，后续新增调用方也不会重蹈。
+    """
     if not tag_name:
         tag_name = '未分类'
+    tag_name = str(tag_name)[:20] or '未分类'
     module_qs = ServiceModule.objects.filter(name=tag_name, is_delete=False, service=service_obj)
     if module_qs.exists():
         return module_qs.first()
@@ -1842,6 +1859,79 @@ def _har_sort_entries_by_time(entries):
         return list(entries)
 
 
+def _har_keep_decision(entry: dict, url: str, path: str, rt: str, mime: str):
+    """判断一条 HAR entry 是否应保留为接口，返回 (keep, session_reason)
+
+    ★ 2026-10-15 新增。修复「HAR 导入后登录请求消失」：
+
+    原实现只放行 `_resourceType in ('xhr', 'fetch')`，而**传统 Web 系统的登录
+    恰恰不是 XHR** —— 它是「表单 POST → 302 跳转」，在 HAR 里的三围是：
+
+        _resourceType = 'document'          （不是 xhr/fetch，第一分支命中丢弃）
+        response.content.mimeType = 'x-unknown'  （302 无响应体，不含 json）
+        path = '/login'                     （不以 /api 开头）
+
+    ⇒ 两个过滤分支都会 continue。登录没了，后续接口全部在未登录状态下跑，
+      表现为「HTTP 200 但响应体不对」（被重定向到登录页或返回空数据），
+      **极难定位** —— 因为状态码是绿的，看起来像成功。
+
+    判定顺序（先判「必须保留」，再退回原静态过滤语义）：
+      1. 路径含会话/认证关键字（login/signin/auth/token/oauth/session/captcha/sso…）
+      2. 非 GET 且带请求体（表单提交、写操作）
+      3. 响应下发 Set-Cookie（会话建立的最强信号）
+      4. 3xx 重定向且非静态资源（登录成功后跳转）
+      5. 兜底沿用原规则：xhr/fetch 保留；无 rt 时按 mime 含 json 或 /api 前缀
+
+    session_reason 非空表示「会话建立类」，仅供前端高亮与排序提示，
+    **不影响保留判定**。
+    """
+    req = entry.get('request') or {}
+    resp = entry.get('response') or {}
+    method = (req.get('method') or 'GET').upper()
+    low_path = (path or '').lower()
+
+    # 登录类（用于「提升到第一步」）—— 注意不含 logout，否则登出会被提到开头
+    login_words = ('login', 'signin', 'sign-in', 'logon', 'oauth', 'sso')
+    # 广义会话/认证类（用于「保留」）
+    auth_words = login_words + ('logout', 'auth', 'token', 'session', 'captcha', 'verify')
+
+    has_auth_word = any(w in low_path for w in auth_words)
+    post = req.get('postData') or {}
+    has_body = bool(post.get('text') or post.get('params'))
+    set_cookie = any((hd.get('name') or '').lower() == 'set-cookie'
+                     for hd in (resp.get('headers') or []))
+    status = resp.get('status')
+    is_redirect = isinstance(status, int) and 300 <= status < 400
+    static_rt = rt in ('image', 'stylesheet', 'script', 'font', 'media')
+
+    # ---- 是否保留 ----
+    if has_auth_word:
+        keep = True
+    elif method != 'GET' and has_body:
+        keep = True
+    elif set_cookie:
+        keep = True
+    elif is_redirect and not static_rt:
+        keep = True
+    elif rt:
+        keep = rt in ('xhr', 'fetch')
+    else:
+        keep = ('json' in (mime or '').lower()) or (path or '').startswith('/api')
+
+    # ---- 会话标记 ----
+    reason = ''
+    if keep:
+        if set_cookie:
+            reason = '响应下发 Set-Cookie（会话建立）'
+        elif any(w in low_path for w in login_words) and method != 'GET':
+            reason = '登录提交'
+        elif is_redirect and method != 'GET' and 'logout' not in low_path:
+            # 明确排除 logout：登出的 302 跳回登录页，标成「登录跳转」会误导，
+            # 更重要的是它绝不能被当成会话建立步骤
+            reason = '登录跳转（3xx）'
+    return keep, reason
+
+
 def _har_analyze(content: str, auth_config: dict = None):
     """HAR 文本 → (api_list, dict 依赖关系, dict 统计)"""
     try:
@@ -1867,26 +1957,45 @@ def _har_analyze(content: str, auth_config: dict = None):
 
     api_list = []
     skipped_static = 0
+    kept_session = 0
     for idx, entry in enumerate(entries):
         req = entry.get('request', {}) or {}
         url = req.get('url') or ''
         if not url.lower().startswith('http'):
             skipped_static += 1
             continue
-        # 只保留 XHR / Fetch（静态资源不是接口）
+        # ---- 保留判定：会话建立类 > 写操作类 > 原 xhr/fetch 规则 ----
+        # ★ 2026-10-15 修复：原实现只放行 xhr/fetch，会把「表单 POST → 302」的
+        #   登录请求 100% 丢掉（_resourceType='document'、mime='x-unknown'、
+        #   路径 '/login' 不以 /api 开头，两个分支都命中）。详见 _har_keep_decision。
         rt = (entry.get('_resourceType') or '').lower()
         mime = ((entry.get('response', {}) or {}).get('content') or {}).get('mimeType') or ''
         path = urlparse(url).path
-        if rt and rt not in ('xhr', 'fetch'):
+        keep, reason = _har_keep_decision(entry, url, path, rt, mime)
+        if not keep:
             skipped_static += 1
             continue
-        if not rt and ('json' not in mime.lower() and not path.startswith('/api')):
-            skipped_static += 1
-            continue
-        api_list.append(_har_entry_to_api(entry, len(api_list) + 1))
+        item = _har_entry_to_api(entry, len(api_list) + 1)
+        if reason:
+            item['session_entry'] = True
+            item['session_reason'] = reason
+            kept_session += 1
+        api_list.append(item)
 
     if not api_list:
         raise ValueError('HAR 中未识别到任何 XHR/Fetch 接口，请确认录制时页面有实际接口调用')
+
+    # ---- 登录类必须排在最前 ----
+    # _har_sort_entries_by_time 已按 startedDateTime 升序还原真实顺序，登录通常
+    # 天然在第一位。但 HAR 的时间戳精度/时区异常时可能排错，而「登录必须最先」
+    # 是硬约束（否则后续步骤全在无会话状态下跑）。这里做一次**稳定**提升：
+    # 只把 session_reason == '登录提交' 的项提到最前，其余保持相对顺序。
+    login_first = [a for a in api_list if a.get('session_reason') == '登录提交']
+    if login_first and login_first[0] is not api_list[0]:
+        rest = [a for a in api_list if a.get('session_reason') != '登录提交']
+        api_list = login_first + rest
+        for _i, _a in enumerate(api_list):
+            _a['seq'] = _i + 1
 
     # ---- 认证注入（可选） ----
     token = ''
@@ -1934,6 +2043,7 @@ def _har_analyze(content: str, auth_config: dict = None):
         'total_entries': len(entries),
         'xhr_count': len(api_list),
         'skipped_static': skipped_static,
+        'kept_session': kept_session,
         'hosts': sorted({a['host'] for a in api_list if a['host']}),
         'auth_injected': bool(token),
         'auth_header_present_in_har': any(a['auth_header_name'] for a in api_list),
@@ -1955,15 +2065,28 @@ def _har_detect_auth_endpoint(api_list) -> dict:
         low = (api['path'] or '').lower()
         if api['method'] == 'POST' and any(k in low for k in ('login', 'signin', 'sign-in', 'token')):
             body = {}
+            form_data = {}
+            # ★ 2026-10-15：原来只认 json body，而传统系统的登录是
+            #   application/x-www-form-urlencoded 表单提交，探测出来永远是空 {}
+            #   （用户看到「识别到登录接口」但一个字段都没有）。这里补上 form 解析，
+            #   并按真实类型分别放进 json / data —— _har_fetch_token 发请求时
+            #   对应用 json= 与 data=，放错会让服务端收不到账号密码。
             if api['body'] and api['body_kind'] == 'json':
                 try:
                     body = json.loads(api['body'])
                 except (json.JSONDecodeError, ValueError):
                     body = {}
+            elif api['body'] and api['body_kind'] == 'form':
+                try:
+                    form_data = dict(parse_qsl(api['body'], keep_blank_values=True))
+                except Exception:
+                    form_data = {}
             return {
                 'url': (api['host'] or '') + (api['path'] or ''),
                 'method': 'POST',
                 'json': body,
+                'data': form_data,
+                'bodyKind': api.get('body_kind') or '',
                 'tokenPath': 'data.token',
                 'headerName': 'Authorization',
                 'template': 'Bearer {token}',
@@ -2348,6 +2471,8 @@ def har_preview(request: Request):
                              if v.get('nullable')],
         'has_null_dynamic': any(v.get('is_null') for v in (a.get('dynamic') or {}).values()),
         'auth_injected': bool(a.get('auth_injected')),
+        'session_entry': bool(a.get('session_entry')),
+        'session_reason': a.get('session_reason') or '',
         'sensitive_header_stripped': not bool(a.get('auth_header_name')),
     } for a in api_list]
 
@@ -3117,8 +3242,11 @@ def import_swagger(request: Request):
     for tag in parsed['tags']:
         if tag not in [x['tag'] for x in items]:
             continue
+        # ★ 2026-10-15：ServiceModule.name 只有 20，直接用 OpenAPI tag 原值建模块，
+        #   tag 稍长就会抛 (1406) "Data too long for column 'name'"。
+        #   与 _ensure_module_v2 保持同一口径（在那里统一截断）。
         obj, _created = ServiceModule.objects.get_or_create(
-            name=tag, project_id=project_id, service_id=service_id,
+            name=str(tag)[:20], project_id=project_id, service_id=service_id,
             is_delete=False, defaults={'create_by': user, 'update_by': user})
         module_map[tag] = obj
         modules_out.append({'id': obj.id, 'name': obj.name, 'created': _created})

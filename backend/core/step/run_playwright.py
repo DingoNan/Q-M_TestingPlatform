@@ -62,6 +62,31 @@ def _resolve_ai_locator_client(project_id=None):
                         'source': '项目AI配置(%s/%s)' % (cfg.provider_name, cfg.model_name)}
         except Exception:
             pass
+
+    # ★ 2026-10-15：项目级查不到 → 回退到**任意启用且带 key**的配置。
+    #
+    #   AiConfig 是项目级的，用户往往只在**一个**项目里配过 key。
+    #   原实现只查当前项目 ⇒ 换到别的项目做 Web 自动化时，AI 兜底直接不可用，
+    #   报错还写成「未配置…请在项目 AI 模型设置中启用一个带 API Key 的配置」，
+    #   把「配过但在别的项目」引导成「你没配」（161 实测：唯一一条配置在 project=1，
+    #   用例在 project=4，于是每次元素定位失败都附带这条误导性错误）。
+    #   兜底本身是通用能力（给一段 HTML 猜定位表达式），跨项目复用同一 key 无副作用；
+    #   日志里用 source 标明来源，便于追溯。
+    try:
+        from apps.projects.models import AiConfig
+        for cfg in (AiConfig.objects
+                    .filter(is_active=True)
+                    .order_by('-is_default', 'id')[:50]):
+            if (cfg.api_key or '').strip():
+                return {'api_key': cfg.api_key.strip(),
+                        'base_url': (cfg.api_url or '').strip(),
+                        'model': (cfg.model_name or '').strip() or 'qwen-plus',
+                        'source': '跨项目回退(项目%s的%s/%s)' % (
+                            getattr(cfg, 'project_id', '?'),
+                            getattr(cfg, 'provider_name', '?'),
+                            getattr(cfg, 'model_name', '?'))}
+    except Exception:
+        pass
     return None
 
 
@@ -69,8 +94,10 @@ def generate_loc_path_by_ai(desc, code, case_logs_obj, project_id=None):
     cfg = _resolve_ai_locator_client(project_id)
     if not cfg:
         raise RuntimeError(
-            '未配置 AI 兜底元素定位所需的大模型：请设置环境变量 PLAYWRIGHT_AI_API_KEY，'
-            '或在项目「AI 模型设置」中启用一个带 API Key 的配置')
+            '未配置 AI 兜底元素定位所需的大模型：全平台都没有「已启用且带 API Key」的'
+            'AI 配置（当前项目 id=%s）。请设置环境变量 PLAYWRIGHT_AI_API_KEY，'
+            '或在任意项目的「AI 模型设置」中启用一个带 API Key 的配置'
+            '（配置可跨项目复用，不必在每个项目重复配）' % project_id)
     system_role_msg = '你是一个资深的自动化测试工程师,擅长网页HTML元素定位分析,请帮我分析网页并提取元素定位表达式,并以json格式返回'
     content = '请帮我根据下面的代码, 自动生成{desc}元素定位表达式并以json格式返回,格式为"by": "xpath", "value": ""\n{code}'.format(desc=desc, code=code)
     client = OpenAI(api_key=cfg['api_key'], base_url=cfg['base_url'])

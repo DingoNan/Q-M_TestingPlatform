@@ -33,6 +33,7 @@ import logging
 import time
 import uuid
 from collections import OrderedDict
+from urllib.parse import urlparse
 
 from django.db import transaction
 from django.db.models import Max
@@ -699,6 +700,32 @@ def import_ir(ir, project_id, user_id=None, case_id=None, module_id=None,
                 continue
             step_specs.append((act, keyword, element_id, el_obj))
 
+        # ---- 3.5) 打开起始页（goto）兜底 ----
+        # ★ 2026-10-15：录制时若在**已打开的页面**上点「开始录制」，浏览器不会产生
+        #   navigate 事件 ⇒ IR 里没有 goto ⇒ 导入出的用例**第一步就是 click/fill**。
+        #   回放时 Playwright 浏览器还停在 about:blank，任何定位都失败，
+        #   表现为「第一步就失败 / 查找元素失败」，而真因是「根本没打开页面」，
+        #   报错与成因隔了一层，极难定位（161 实测用例 463「web自动化-登录」）。
+        #
+        #   RecordingSession.start_url 与 IR meta.start_url 一直都在，此前只被用来
+        #   拼用例名。这里在**没有 goto 且有起始地址**时，于最前面补一条 goto。
+        #   uri 用相对路径（见 _uri_from_start_url），域名由环境配置提供。
+        if not any((a.get('keyword') == 'goto') for a in actions):
+            _start_url = (meta.get('start_url') or '').strip()
+            _uri = _uri_from_start_url(_start_url)
+            if _uri:
+                goto_act = {
+                    'seq': 0,
+                    'keyword': 'goto',
+                    'args': {'uri': {'kind': 'literal', 'value': _uri}},
+                    'element': {},
+                    'assertions': [],
+                    'notes': ['导入时自动补齐的「打开起始页」步骤（录制流里没有导航事件）'],
+                }
+                step_specs.insert(0, (goto_act, 'goto', '', None))
+                notes.append({'level': 'info',
+                              'message': '录制流里没有导航事件，已自动在首步补齐 goto %s' % _uri})
+
         resolver_created, resolver_reused = resolver.created, resolver.reused
 
         for act, keyword, element_id, el_obj in step_specs:
@@ -830,6 +857,34 @@ def import_ir(ir, project_id, user_id=None, case_id=None, module_id=None,
                 case_obj.id, case_obj.name, result['action_step_count'], result['verify_step_count'],
                 total_assertions, len(skipped), resolver_created, resolver_reused)
     return result
+
+
+def _uri_from_start_url(start_url: str) -> str:
+    """录制的绝对起始地址 → 平台 `goto` 需要的**相对** uri。
+
+    ★ 2026-10-15 新增。
+
+    执行底座 `run_playwright.goto` 内部是 `url = self.host + uri`
+    （host 取自环境/平台配置），所以这里**必须剥掉协议与域名**，
+    否则会拼成 `http://host/http://host/login` 这种重复域名导致导航失败
+    —— 平台已在保存期拦截 http(s):// 开头的 uri，导入阶段也得先规整好。
+
+    例：http://172.16.21.242:50001/login?a=1  ->  /login?a=1
+    """
+    if not start_url:
+        return ''
+    s = str(start_url).strip()
+    if '://' not in s:
+        # 本来就是相对路径，补根斜杠后直接用
+        return s if s.startswith('/') else ('/' + s)
+    try:
+        p = urlparse(s)
+    except Exception:
+        return ''
+    uri = p.path or '/'
+    if p.query:
+        uri = '%s?%s' % (uri, p.query)
+    return uri
 
 
 def _step_desc(act, keyword):
