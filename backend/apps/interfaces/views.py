@@ -3294,3 +3294,393 @@ def import_swagger(request: Request):
         'modules': modules_out, 'created': created, 'skipped': skipped,
         'apis': apis_out,
     }, status=200)
+
+
+# ============================================================================
+# 脚本导入转换（HAR / Locust / JMeter → 平台用例）
+# 设计稿：桌面/Q-M测试平台文档/10-QM平台_脚本导入转换(HAR-Locust-JMeter)优化设计.html
+# ============================================================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_script(request: Request):
+    """把外部脚本（jmx / locust / har）转换成平台可用的接口资产与用例步骤。
+
+    ★ 三步式：解析 → 审阅 → 落库。不允许「一键黑盒导入」——
+      必须先 dry_run 预览（含 skipped 清单），前端确认后再落库。
+
+    请求（multipart，脚本文件可能很大，不走 JSON body）：
+      file         上传的脚本文件（jmx / py / har）
+      content      脚本文本（与 file 二选一）
+      source       jmeter | locust | har（缺省按扩展名/内容自动识别）
+      project      项目 ID（落库必填）
+      service      目标服务 ID（落库必填）
+      dry_run      true 时只解析预览、不落库
+      mode         create_case | append_steps（默认 create_case）
+      case_id      append_steps 时必填
+      match_mode   skip | overwrite | append（默认 skip）
+      items        前端回传的（勾选/改名后的）IR items JSON 字符串；不传用解析结果
+
+    返回：
+      dry_run=true  : { ok, source, ir:{meta,vars,datasets,items,skipped,stats}, var_links }
+      dry_run=false : { ok, stats:{...}, modules, created, skipped, apis, steps, case_id }
+    """
+    from core.importers.jmx import parse_jmx
+    from core.importers import ir as IR
+
+    user = request.user
+
+    # ---------- 取脚本内容 ----------
+    content = (request.data.get('content') or '').strip()
+    up = request.FILES.get('file')
+    fname = ''
+    if up is not None:
+        fname = getattr(up, 'name', '') or ''
+        try:
+            raw_b = up.read()
+            for enc in ('utf-8', 'gbk', 'utf-8-sig'):
+                try:
+                    content = raw_b.decode(enc)
+                    break
+                except (UnicodeDecodeError, LookupError):
+                    continue
+        except Exception as e:
+            return Response({'detail': '读取上传文件失败：%s' % e}, status=400)
+    if not content:
+        return Response({'detail': '缺少脚本内容：请上传 file 或传入 content'}, status=400)
+
+    # ---------- 识别来源 ----------
+    source = (request.data.get('source') or '').strip().lower()
+    if not source:
+        low = fname.lower()
+        if low.endswith('.jmx'):
+            source = 'jmeter'
+        elif low.endswith('.py'):
+            source = 'locust'
+        elif low.endswith('.har'):
+            source = 'har'
+        else:
+            # 按内容猜
+            head = content.lstrip()[:200].lower()
+            if head.startswith('<?xml') or '<jmetertestplan' in head:
+                source = 'jmeter'
+            elif head.startswith('{') and 'log' in head[:400]:
+                source = 'har'
+            else:
+                source = 'locust'
+
+    if source != 'jmeter':
+        return Response({'detail': '暂不支持的来源：%s（P0 先交付 jmeter）' % source},
+                        status=400)
+
+    dry_run = str(request.data.get('dry_run', 'true')).strip().lower() in ('1', 'true', 'yes')
+
+    # ---------- 解析 ----------
+    raw_items = request.data.get('items')
+    if raw_items:
+        try:
+            import json as _json
+            items_in = _json.loads(raw_items) if isinstance(raw_items, str) else raw_items
+        except Exception as e:
+            return Response({'detail': 'items 解析失败：%s' % e}, status=400)
+        ir = IR.new_ir(source)
+        ir['items'] = items_in
+        IR.finalize(ir)
+    else:
+        ir = parse_jmx(content)
+
+    if ir.get('error'):
+        return Response({'detail': ir['error']}, status=400)
+    if not ir.get('items'):
+        ir.setdefault('warnings', []).append(
+            '未解析到任何可导入内容（可能源脚本里的线程组全部处于禁用状态）')
+
+    var_links = IR.check_var_links(ir)
+
+    if dry_run:
+        return Response({
+            'ok': True, 'dry_run': True, 'source': source,
+            'ir': ir, 'var_links': var_links,
+        }, status=200)
+
+    # ================= 落库 =================
+    project_id = request.data.get('project') or request.data.get('project_id')
+    service_id = request.data.get('service') or request.data.get('service_id')
+    if not project_id:
+        return Response({'detail': '缺少参数 project（项目 ID）'}, status=400)
+    if not service_id:
+        return Response({'detail': '缺少参数 service（目标服务 ID）'}, status=400)
+
+    mode = (request.data.get('mode') or 'create_case').strip()
+    case_id = request.data.get('case_id')
+    match_mode = (request.data.get('match_mode') or 'skip').strip()
+
+    from apps.envs.models import Service, ServiceModule, Module, Plant
+    from apps.tests.models import Case, CaseSteps, Step
+    from django.db import transaction as _tx
+    from django.db.models import Max as _Max
+
+    # ★ 步骤类型只能取自 core/run_case.py（Request=5 / Control=9）。
+    #   平台里有第二套 StepType（core/com/enum_obj.py），它没有 Control/Playwright，
+    #   用错会静默建出跑不通的步骤。apps.tests.models 里根本没有可导入的 StepType。
+    _STEP_TYPE_REQUEST = 5
+    _STEP_TYPE_CONTROL = 9
+
+    service_obj = Service.objects.filter(id=service_id, is_delete=False).first()
+    if service_obj is None:
+        return Response({'detail': '服务 %s 不存在' % service_id}, status=400)
+
+    case_obj = None
+    if mode == 'append_steps':
+        if not case_id:
+            return Response({'detail': 'append_steps 模式必须传 case_id'}, status=400)
+        case_obj = Case.objects.filter(id=case_id, is_delete=False).first()
+        if case_obj is None:
+            return Response({'detail': '用例 %s 不存在或已删除' % case_id}, status=404)
+        project_id = case_obj.project_id
+
+    # 平台（Step.plant 必填外键）：三级兜底，与 add_many_api_step_for_case 一致
+    plant_obj = None
+    if case_obj is not None:
+        _cs = CaseSteps.objects.filter(case_id=case_obj.id, is_delete=False).first()
+        if _cs is not None:
+            _st = Step.objects.filter(id=_cs.step_id).first()
+            if _st is not None and _st.plant_id:
+                plant_obj = Plant.objects.filter(id=_st.plant_id, is_delete=False).first()
+    if plant_obj is None:
+        plant_obj = Plant.objects.filter(project_id=project_id, is_delete=False).first()
+    if plant_obj is None:
+        return Response({'detail': '未找到可用的平台配置，请先在「环境配置 - 平台管理」中为本项目创建平台'},
+                        status=400)
+
+    module_name = IR.trunc(ir['meta'].get('title') or '导入脚本')
+    created_apis, skipped, steps_out, modules_out = [], [], [], []
+    errors = []
+
+    def _json_to_tree(value, name=None, parent_id=None, out=None):
+        """把 json body 转成平台的树形结构 [{id,name,value,type,parentId,is_required,explain}]。"""
+        if out is None:
+            out = []
+        import uuid as _u
+        nid = str(_u.uuid4())
+        if isinstance(value, dict):
+            out.append(dict(id=nid, name=name or 'root', value='', type='object',
+                            parentId=parent_id, is_required=True, explain=''))
+            for k, v in value.items():
+                _json_to_tree(v, k, nid, out)
+        elif isinstance(value, list):
+            out.append(dict(id=nid, name=name or 'root', value='', type='array',
+                            parentId=parent_id, is_required=True, explain=''))
+            for v in value[:50]:
+                _json_to_tree(v, None, nid, out)
+        else:
+            out.append(dict(id=nid, name=name or '', value='' if value is None else str(value),
+                            type='string', parentId=parent_id, is_required=True, explain=''))
+        return out
+
+    def _form_to_tree(pairs):
+        import uuid as _u
+        return [dict(id=str(_u.uuid4()), name=p.get('name', ''), value=p.get('value', ''),
+                     type='string', parentId=None, is_required=True, explain='')
+                for p in (pairs or [])]
+
+    def _kv(items):
+        return [{'name': h.get('name', ''), 'value': h.get('value', '')}
+                for h in (items or [])]
+
+    with _tx.atomic():
+        # ---------- 1. 建模块（★ 名字必须截断到 ServiceModule.name 的长度） ----------
+        module_obj, _mc = ServiceModule.objects.get_or_create(
+            name=module_name, project_id=project_id, service_id=service_id,
+            is_delete=False, defaults={'create_by': user, 'update_by': user})
+        modules_out.append({'id': module_obj.id, 'name': module_obj.name})
+
+        # ---------- 2. 建用例（create_case 模式） ----------
+        if case_obj is None:
+            from apps.tests.models import Tag
+            tag_obj = Tag.objects.filter(project_id=project_id, is_delete=False).first()
+            if tag_obj is None:
+                return Response({'detail': '该项目下没有可用标签，无法新建用例（用例 tag 为必填）'},
+                                status=400)
+            mod_obj = Module.objects.filter(project_id=project_id, is_delete=False).first()
+            if mod_obj is None:
+                # ★ envs.Module.plant 是必填外键，这里必须带上
+                mod_obj = Module.objects.create(
+                    name=module_name, project_id=project_id, plant=plant_obj,
+                    create_by=user, update_by=user)
+            # ★ Case 没有 owner 字段（owner 是 FuncCase 的），传了会 TypeError
+            case_obj = Case.objects.create(
+                name=IR.trunc(ir['meta'].get('title') or '导入脚本', 50),
+                project_id=project_id, module=mod_obj,
+                type=5,   # 性能用例（jmx 是压测脚本）
+                create_by=user, update_by=user)
+            case_obj.tag.add(tag_obj)
+
+        cur_max = CaseSteps.objects.filter(
+            case_id=case_obj.id, is_delete=False).aggregate(m=_Max('step_index'))['m']
+        next_index = 0 if cur_max is None else int(cur_max) + 1
+
+        # ---------- 3. 递归建步骤（控制器建父步骤，子步骤挂 parent_id） ----------
+        def _build(items, parent_case_step_id=None):
+            nonlocal next_index
+            for it in items or []:
+                if it.get('type') == 'controller':
+                    ctype = it.get('ctype') or 'transaction'
+                    keyword = IR.CONTROLLER_KEYWORD.get(ctype, '4')
+                    cfg = it.get('config') or {}
+                    # ★ Step.timeout 是 NOT NULL（默认 7），不能传 None
+                    until, loop, timeout = [], [], 7
+                    if ctype == 'while':
+                        until = [{'max_loop_times': cfg.get('condition') or 1}]
+                    elif ctype == 'for':
+                        loop = [{'loop_count': cfg.get('loop') or 1}]
+                    elif ctype == 'sleep':
+                        try:
+                            timeout = int(float(cfg.get('timeout') or 0))
+                        except (TypeError, ValueError):
+                            timeout = 0
+                    # ★ 保存点：单条失败只回滚这一条，不能污染整个事务
+                    #   （MySQL 下一个 atomic 块里只要出错，后续查询全部拒绝执行）
+                    _sp = _tx.savepoint()
+                    try:
+                        step_obj = Step.objects.create(
+                            type=_STEP_TYPE_CONTROL, desc=(it.get('name') or '控制器')[:100],
+                            project_id=project_id, plant=plant_obj, step_active_tab='body',
+                            keyword=keyword, api_service_id=service_id,
+                            api_method='', api_uri='',
+                            api_headers=[], api_params=[], api_json=[],
+                            api_json_type='object', api_json_tree=[], api_data=[],
+                            body_type=1, api_response=[], api_response_tree=[],
+                            api_response_type='object',
+                            check_params=[], run_params=[cfg], loop=loop, until=until,
+                            func_params=[], timeout=timeout,
+                            create_by=user, update_by=user)
+                        cs = CaseSteps.objects.create(
+                            case_id=case_obj.id, step_id=step_obj.id,
+                            step_index=next_index, step_params=[],
+                            parent_id=parent_case_step_id,
+                            create_by=user, update_by=user)
+                    except Exception as e:
+                        _tx.savepoint_rollback(_sp)
+                        errors.append('控制器「%s」建步骤失败：%s' % (it.get('name'), e))
+                        continue
+                    next_index += 1
+                    steps_out.append({'id': cs.id, 'name': it.get('name'),
+                                      'type': 'controller', 'ctype': ctype,
+                                      'parent_id': parent_case_step_id})
+                    _build(it.get('children') or [], cs.id)
+                    continue
+
+                # ---------- request ----------
+                req = it
+                url = (req.get('path') or '')[:100]
+                if not url:
+                    skipped.append({'name': req.get('name'), 'reason': '缺少请求路径'})
+                    continue
+                name = IR.trunc(req.get('name') or url, 50)
+                body = req.get('body') or {}
+                kind = body.get('kind') or 'none'
+                json_tree, data_tree, body_type = [], [], 1
+                if kind == 'json':
+                    json_tree = _json_to_tree(body.get('value'))
+                elif kind == 'raw':
+                    json_tree = [dict(id='raw', name='raw', value=str(body.get('value') or ''),
+                                      type='string', parentId=None, is_required=True,
+                                      explain='源脚本为 raw body，未做结构化解析')]
+                elif kind == 'form':
+                    body_type = 2
+                    data_tree = _form_to_tree(body.get('value'))
+
+                _sp2 = _tx.savepoint()
+                try:
+                    exist = Api.objects.filter(
+                        service_id=service_id, method=req.get('method') or 'GET',
+                        url=url, is_delete=False).first()
+                    if exist is not None and match_mode == 'skip':
+                        api_obj = exist
+                        skipped.append({'name': name, 'reason': '接口已存在（match_mode=skip）'})
+                    elif exist is not None and match_mode == 'overwrite':
+                        exist.name = name
+                        exist.headers = _kv(req.get('headers'))
+                        exist.params = _kv(req.get('params'))
+                        exist.json = json_tree
+                        exist.data = data_tree
+                        exist.body_type = body_type
+                        exist.update_by = user
+                        exist.save()
+                        api_obj = exist
+                    else:
+                        api_obj = Api.objects.create(
+                            service_id=service_id, module_id=module_obj.id,
+                            name=name, url=url, method=req.get('method') or 'GET',
+                            headers=_kv(req.get('headers')),
+                            body_type=body_type, json=json_tree,
+                            api_json_type='object', api_response_type='object',
+                            data=data_tree, params=_kv(req.get('params')),
+                            response=[], create_by=user, update_by=user)
+                        created_apis.append(api_obj.id)
+                except Exception as e:
+                    _tx.savepoint_rollback(_sp2)
+                    skipped.append({'name': name, 'reason': str(e)})
+                    continue
+
+                try:
+                    step_obj = Step.objects.create(
+                        type=_STEP_TYPE_REQUEST, desc=name[:100],
+                        project_id=project_id, plant=plant_obj, step_active_tab='body',
+                        keyword=str(api_obj.id), api_service_id=service_id,
+                        api_method=(req.get('method') or 'GET')[:10], api_uri=url,
+                        api_headers=_kv(req.get('headers')),
+                        api_params=_kv(req.get('params')),
+                        api_json=json_tree, api_json_type='object', api_json_tree=[],
+                        api_data=data_tree, body_type=body_type,
+                        api_response=[], api_response_tree=[], api_response_type='object',
+                        check_params=[], run_params=[], loop=[], until=[], func_params=[],
+                        create_by=user, update_by=user)
+                    cs = CaseSteps.objects.create(
+                        case_id=case_obj.id, step_id=step_obj.id, step_index=next_index,
+                        step_params=[], parent_id=parent_case_step_id,
+                        create_by=user, update_by=user)
+                except Exception as e:
+                    _tx.savepoint_rollback(_sp2)
+                    errors.append('步骤「%s」创建失败：%s' % (name, e))
+                    continue
+                next_index += 1
+                steps_out.append({'id': cs.id, 'name': name, 'type': 'request',
+                                  'api_id': api_obj.id, 'parent_id': parent_case_step_id})
+                _build(req.get('children') or [], cs.id)
+
+        _build(ir.get('items') or [], None)
+
+        # ---------- 4. 挂变量到用例 ----------
+        if ir.get('vars'):
+            try:
+                exist_params = case_obj.params or []
+                names = {p.get('name') for p in exist_params}
+                for v in ir['vars']:
+                    if v.get('name') and v['name'] not in names:
+                        exist_params.append({'name': v['name'], 'value': v.get('value', ''),
+                                             'desc': v.get('desc', '')})
+                case_obj.params = exist_params
+                case_obj.save()
+            except Exception as e:
+                errors.append('用例变量写入失败：%s' % e)
+
+    return Response({
+        'ok': True, 'dry_run': False, 'source': source,
+        'case_id': case_obj.id,
+        'modules': modules_out,
+        'stats': {
+            'apis_created': len(created_apis),
+            'steps_created': len([s for s in steps_out if s['type'] == 'request']),
+            'controllers_created': len([s for s in steps_out if s['type'] == 'controller']),
+            'skipped': len(skipped),
+            'errors': len(errors),
+        },
+        'created_api_ids': created_apis,
+        'steps': steps_out,
+        'skipped': skipped[:50],
+        'errors': errors[:20],
+        'var_links': var_links,
+        'warnings': ir.get('warnings') or [],
+    }, status=200)

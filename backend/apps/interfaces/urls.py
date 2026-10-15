@@ -18,6 +18,8 @@ urlpatterns = [
     path('import_har_sync/', views.import_har_sync),
     # ★ 2026-10-15 新增：Swagger 2.0 / OpenAPI 3.x 导入，无需流量即可批量建接口资产
     path('import_swagger/', views.import_swagger),
+    # ★ 2026-10-15 新增：脚本导入转换（jmx / locust / har → 平台用例），三步式：解析→审阅→落库
+    path('import_script/', views.import_script),
     # ★ 2026-09-22 新增：HAR 轨迹 → 规则式分析 → LLM 归因（阶段一最小闭环）
     #   规则式 _har_analyze 给事实，LLM 做业务归因与用例草稿，两条链在此汇合
     path('har_analyze_ai/', views.har_analyze_ai),
