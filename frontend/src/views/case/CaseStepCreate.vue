@@ -115,6 +115,13 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item label="压测模式" label-width="110">
+            <el-radio-group v-model="locustMode" size='large'>
+              <el-radio-button value="normal">固定并发</el-radio-button>
+              <el-radio-button value="step">阶梯加压</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <template v-if="locustMode === 'normal'">
           <el-form-item label="并发用户数" label-width="110">
             <el-input-number v-model="locustRunForm.concurrent_users" :min="1" style="width: 100%;" class="input" size='large' />
           </el-form-item>
@@ -124,6 +131,43 @@
           <el-form-item label="压测时间/s" label-width="110">
             <el-input-number v-model="locustRunForm.durations" :min="1" style="width: 100%;"class="input" size='large' />
           </el-form-item>
+          </template>
+          <template v-else>
+          <el-form-item label="阶梯档位" label-width="110">
+            <div style="width: 100%;">
+              <div v-for="(lv, i) in locustStepLoad" :key="i" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="width: 46px; color: #6b7280; font-size: 13px;">第{{ i + 1 }}档</span>
+                <el-input-number v-model="lv.users" :min="1" size='small' style="width: 100px;" />
+                <span style="color: #9ca3af; font-size: 12px;">并发</span>
+                <el-input-number v-model="lv.spawn_rate" :min="1" size='small' style="width: 100px;" />
+                <span style="color: #9ca3af; font-size: 12px;">每秒启动</span>
+                <el-input-number v-model="lv.duration" :min="1" size='small' style="width: 100px;" />
+                <span style="color: #9ca3af; font-size: 12px;">持续/秒</span>
+                <el-button size='small' type='danger' plain :disabled="locustStepLoad.length <= 1" @click="removeStepLevel(i)">删除</el-button>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <el-button size='small' @click="addStepLevel">+ 加一档</el-button>
+                <el-button size='small' type='primary' plain @click="genStepLevels">按步长生成</el-button>
+              </div>
+              <div style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
+                档位从上到下逐级加压，共 {{ stepTotalDuration }} 秒、峰值 {{ stepMaxUsers }} 并发（最多 20 档）。
+              </div>
+            </div>
+          </el-form-item>
+          <el-form-item label="步长生成" label-width="110">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="color: #6b7280; font-size: 13px;">起始</span>
+              <el-input-number v-model="stepGen.start" :min="1" size='small' style="width: 90px;" />
+              <span style="color: #6b7280; font-size: 13px;">步长</span>
+              <el-input-number v-model="stepGen.step" :min="1" size='small' style="width: 90px;" />
+              <span style="color: #6b7280; font-size: 13px;">每档</span>
+              <el-input-number v-model="stepGen.duration" :min="1" size='small' style="width: 90px;" />
+              <span style="color: #6b7280; font-size: 13px;">秒</span>
+              <span style="color: #6b7280; font-size: 13px;">档数</span>
+              <el-input-number v-model="stepGen.count" :min="1" :max="20" size='small' style="width: 90px;" />
+            </div>
+          </el-form-item>
+          </template>
         </el-form>
       </el-tab-pane>
       <el-tab-pane label="压测工具下载" name="tool">
@@ -429,6 +473,11 @@
 	</el-row>
     <div class="drawer-content">
       <el-scrollbar >
+        <!-- ★ 2026-10-15（Q3 深测修复）：0 条历史时此处原先是一片空白 ——
+             el-timeline 的 v-for 对空数组什么都不渲染，用户分不清
+             「还没执行过」还是「加载失败」。补一个空状态。 -->
+        <el-empty v-if="!(case_logs.results && case_logs.results.length)"
+                  description="暂无执行历史：点上方「执行用例」跑一次后，这里会显示执行记录" />
         <el-timeline v-for="(case_log, case_index) in case_logs.results" :key="case_log.id" style='padding-left: 0px; padding-top: 15px'>
           <el-timeline-item center :timestamp="case_log.create_time" placement="top">
             <el-collapse v-model="caseActive" accordion class="elegant-collapse">
@@ -2044,6 +2093,15 @@ export default {
         // header_id: '',
         // cooke_id: ''
       },
+      // ★ 2026-10-15（Q3 深测补齐）：后端 v0.20.9 已支持阶梯压测 step_load，
+      //   但压测弹窗一直只有「固定并发」三项，后端能力根本暴露不出来。这里补上。
+      locustMode: 'normal',
+      locustStepLoad: [
+        { users: 1, spawn_rate: 1, duration: 60 },
+        { users: 5, spawn_rate: 1, duration: 60 },
+        { users: 10, spawn_rate: 2, duration: 60 }
+      ],
+      stepGen: { start: 1, step: 5, duration: 60, count: 5 },
       treeConfig: {
         transform: true,
         rowField: 'case_step_id',
@@ -2273,6 +2331,16 @@ export default {
       return arr.slice(0, 3).map(it => (typeof it === 'string' ? it : (it && it.message) || JSON.stringify(it))).join('；')
                 + (arr.length > 3 ? ` 等 ${arr.length} 项` : '')
     },
+    // ★ 2026-10-15（Q3 深测补齐）：阶梯档位汇总展示。
+    //   必须是 computed —— 模板里是无括号引用 {{ stepTotalDuration }}，
+    //   放 methods 里渲染出来是 undefined（Q3 补丁首版就踩了这个）。
+    stepTotalDuration() {
+      return (this.locustStepLoad || []).reduce((s, l) => s + (Number(l.duration) || 0), 0)
+    },
+    stepMaxUsers() {
+      const arr = (this.locustStepLoad || []).map(l => Number(l.users) || 0)
+      return arr.length ? Math.max.apply(null, arr) : 0
+    },
   },
   methods: {
     // ★ 直取 store 现值的路径权限表。
@@ -2354,6 +2422,26 @@ export default {
 	  return `${year}-${month}-${day} ${hours}:${minutes}`
 	},
 	
+    // ★ 2026-10-15（Q3 深测补齐）：阶梯档位操作
+    addStepLevel() {
+      const last = this.locustStepLoad[this.locustStepLoad.length - 1] || { users: 1, spawn_rate: 1, duration: 60 }
+      this.locustStepLoad.push({ users: last.users, spawn_rate: last.spawn_rate, duration: last.duration })
+    },
+    removeStepLevel(i) {
+      if (this.locustStepLoad.length <= 1) { return }
+      this.locustStepLoad.splice(i, 1)
+    },
+    genStepLevels() {
+      const start = Number(this.stepGen.start) || 1
+      const step = Number(this.stepGen.step) || 1
+      const dur = Number(this.stepGen.duration) || 60
+      const cnt = Math.min(20, Math.max(1, Number(this.stepGen.count) || 1))
+      const arr = []
+      for (let i = 0; i < cnt; i++) {
+        arr.push({ users: start + step * i, spawn_rate: Math.max(1, step), duration: dur })
+      }
+      this.locustStepLoad = arr
+    },
     controlCommand(command) {
       this.stepView = false
       this.loading = false
@@ -2376,7 +2464,7 @@ export default {
         this.one_step_obj.desc = '新增While条件控制器'
       } else if (command === '4') {
         this.one_step_obj.keyword = '4'
-        this.one_step_obj.desc = '新增事务件控制器'
+        this.one_step_obj.desc = '新增事务控制器'
       } else if (command === '5') {
         this.one_step_obj.keyword = '5'
         this.one_step_obj.desc = '新增等待时间控制器'
@@ -3105,9 +3193,42 @@ export default {
         ElMessage({ message: '请选择执行环境', type: 'error' })
         return
       }
-      this.locustRunForm.case_id = this.$route.query.id
-      this.locustRunForm.project_id = this.projectInfo.id
-      const response = await this.$api.locustRun(this.locustRunForm)
+      const payload = {
+        env_id: this.locustRunForm.env_id,
+        case_id: this.$route.query.id,
+        project_id: this.projectInfo.id
+      }
+      if (this.locustMode === 'step') {
+        // ★ 阶梯加压：后端 LocustReport 的 max_user / rate / duration 是 NOT NULL，
+        //   阶梯模式下也必须给值 —— 取峰值并发 / 峰值启动速率 / 各档时长之和。
+        const levels = (this.locustStepLoad || []).map(l => ({
+          users: Number(l.users), spawn_rate: Number(l.spawn_rate), duration: Number(l.duration)
+        }))
+        if (levels.length === 0) {
+          ElMessage({ message: '阶梯压测至少要配置 1 个档位', type: 'error' })
+          return
+        }
+        if (levels.length > 20) {
+          ElMessage({ message: '阶梯档位最多 20 档（当前 ' + levels.length + ' 档）', type: 'error' })
+          return
+        }
+        for (let i = 0; i < levels.length; i++) {
+          const l = levels[i]
+          if (!(l.users >= 1) || !(l.spawn_rate >= 1) || !(l.duration >= 1)) {
+            ElMessage({ message: '第 ' + (i + 1) + ' 档参数不完整：并发 / 每秒启动 / 持续秒数都必须 >= 1', type: 'error' })
+            return
+          }
+        }
+        payload.step_load = levels
+        payload.concurrent_users = Math.max.apply(null, levels.map(l => l.users))
+        payload.users_per_second = Math.max.apply(null, levels.map(l => l.spawn_rate))
+        payload.durations = levels.reduce((s, l) => s + l.duration, 0)
+      } else {
+        payload.users_per_second = this.locustRunForm.users_per_second
+        payload.concurrent_users = this.locustRunForm.concurrent_users
+        payload.durations = this.locustRunForm.durations
+      }
+      const response = await this.$api.locustRun(payload)
       if (response.status === 200) {
         this.locustRunVisible = false
         ElMessage({
