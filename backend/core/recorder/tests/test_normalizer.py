@@ -938,6 +938,132 @@ def t45():
     eq(events2[0]['frame_path'], [], '非法 frame 应退化成主文档')
 
 
+@case('46 DevTools Recorder：doubleClick 必须映射成 double_click（曾整步静默丢弃）')
+def t46():
+    """schema：`StepType.doubleClick = 'doubleClick'`（puppeteer-replay，即 Chrome
+    DevTools Recorder 的导出格式）。
+
+    历史缺陷**两级闸门同时关着**，所以补一处都不够：
+      ① `sources._STEP_TYPE_MAP` 没有 'doubleclick' ⇒ etype 变成 'unknown'
+         （表现为「无法解析的动作」，用户看到的是「我明明双击了，用例里没这步」）；
+      ② 即便补了①，`normalizer.map_to_actions` 也没有 double_click 分支
+         ⇒ 掉进末尾的「不支持的事件类型：double_click」被**静默丢弃**。
+    讽刺的是平台**早就有** `run_playwright.py:763 def double_click(obj,
+    element_index, timeout)`，签名与 `click` 逐字一致 —— 属于
+    「关键字存在、只是永远走不到」那一类（与先前 `kind:'select'` 白名单缺失同形）。
+    """
+    payload = {'title': 'rec', 'steps': [
+        {'type': 'navigate', 'url': 'http://x.example/login'},
+        {'type': 'doubleClick', 'target': 'main',
+         'selectors': [['#ok']], 'offsetX': 3, 'offsetY': 4},
+    ]}
+    events, meta = SRC.normalize_source(payload, 'devtools_plugin')
+
+    eq(len(events), 2, '合成数据应产出 2 条事件（navigate + doubleClick）')
+    eq(events[1]['type'], 'double_click',
+       'doubleClick 必须收敛成内部类型 double_click（不能是 unknown）')
+
+    ir = NZ.build_ir(events, meta)
+    # ★ 非空转自证：先证明这份数据真的产出了元素，否则下面的断言全是空转
+    check(len(ir['elements']) >= 1,
+          '非空转自证失败：本用例没产出任何元素，断言无意义（实际 %r）'
+          % (ir['elements'],))
+    eq(kws(ir), ['goto', 'double_click'],
+       '双击步骤必须保留，且不得退化成 click（原样保留双击语义）')
+    eq(ir['stats']['drop_reasons'], {},
+       '不应有任何丢弃原因（曾经正是「不支持的事件类型：double_click」）')
+    check(ir['stats']['unparsed_actions'] == 0,
+          '双击不得被算进「无法解析的动作」')
+
+
+@case('47 双击边界：checkbox 上不转 check；无目标的双击按噪声剔除')
+def t47():
+    """两条边界，都是「类型字母表不一致」最容易漏的地方。
+
+    ① 双击 checkbox ≠ 单击勾选 —— 强转成 `check` 会**改变用例行为**
+       （check 是幂等的"勾上"，双击往往代表"打开详情"）。所以保持 double_click。
+    ② 无目标的双击必须被规则 7 当噪声剔除 —— 前提是 `double_click` 已经在
+       `ELEMENT_EVENT_TYPES` 里；否则它会带着空目标一路进 IR，落库后才在运行期
+       报「缺少必填参数 obj」，失败点远在回放期。
+    """
+    ce = tgt([sel('css', '#agree', 1)], node_name='input',
+             attrs={'type': 'checkbox'})
+
+    ir = build([act(1, 'double_click', target=ce)])
+    # ★ 非空转自证：同一个 checkbox 目标，用 `click` 事件进来时**确实**会变 check。
+    #   这条反证证明「本用例的 checkbox 线索真的生效」，否则下面第 ① 条断言是空转的
+    #   （上轮 t44 就是因为漏了这类自证，变异反证「不变红」才发现断言指错字段）。
+    ir_click = build([act(1, 'click', target=ce)])
+    eq(kws(ir_click), ['check'],
+       '自证失败：click + checkbox 竟然没走 check 分支，说明 checkbox 线索没生效')
+
+    check(len(ir['elements']) >= 1, '非空转自证失败：未产出元素')
+    eq(kws(ir), ['double_click'],
+       '双击 checkbox 必须保持 double_click，不得被转成 check')
+
+    # ② 无目标的双击 ⇒ 规则 7 剔除，且原因可读
+    ir2 = build([act(1, 'double_click')])
+    eq(kws(ir2), [], '无目标的双击不应留在 IR 里')
+    eq(ir2['stats']['elements_unique'], 0, '不应为无目标动作造出元素')
+    reasons = json.dumps(ir2['stats']['drop_reasons'], ensure_ascii=False)
+    check('无目标元素' in reasons,
+          '丢弃原因应指向「无目标元素」，实际 %s' % reasons)
+
+
+@case('48 库存形状不变量：归一化后的事件流必须能用 native 解析器再解析（3 个来源都要过）')
+def t48():
+    """`finish()` 会把 `raw_payload['payload']`（**归一化之后**的事件流）再喂回解析器。
+
+    而 `raw_payload['source']` 记的是**原始上传数据**的来源 —— 它还要给
+    `/events/` 的增量批次做「没带 source 时」的来源回退，所以不能改成别的值。
+    两者对不上时，「用声明来源去解析已归一化的数据」只有 native / raw_events 能过：
+      · devtools_recorder  ⇒ 抛「DevTools Recorder 数据缺少 steps 数组」
+      · playwright_script  ⇒ 抛「Playwright 脚本必须是文本」
+    ⇒ finish 直接 400，而这句话与真实原因（"库存形状 ≠ 声明来源"）毫无关联。
+    实测复现：/events/ 显式声明 source=devtools_recorder 后 finish 必 400。
+
+    本用例把「库存形状必须能被 native 解析器读回」这条不变量钉死；
+    视图侧按形状分派（views.recording_session_finish 的 effective_source）。
+    """
+    cases = [
+        ('devtools',
+         {'title': 'rec', 'steps': [
+             {'type': 'navigate', 'url': 'http://x.example/'},
+             {'type': 'doubleClick', 'selectors': [['#ok']]},
+         ]}, SRC.SOURCE_DEVTOOLS),
+        ('playwright',
+         "await page.goto('http://x.example/');\nawait page.click('#ok');\n",
+         SRC.SOURCE_PLAYWRIGHT_SCRIPT),
+        ('native',
+         {'events': [
+             {'seq': 1, 'kind': 'navigate', 'url': 'http://x.example/'},
+             {'seq': 2, 'kind': 'click', 'target': {'selectors': ['#ok']}},
+         ]}, SRC.SOURCE_NATIVE),
+    ]
+    for tag, raw, src in cases:
+        ev1, meta1 = SRC.normalize_source(raw, src)
+        # ★ 非空转自证：先证明这个来源真的产出了事件，否则下面都是空转
+        check(len(ev1) >= 1, '非空转自证失败：来源 %s 没产出任何事件' % tag)
+
+        stored = {'events': ev1, 'meta': meta1}
+        # ① 不变量：库存形状必须能被 native 解析器原样读回
+        ev2, _ = SRC.normalize_source(stored, SRC.SOURCE_NATIVE)
+        eq(len(ev2), len(ev1),
+           '来源 %s：库存形状用 native 再解析后事件数必须不变' % tag)
+
+        # ② 反证：证明这个形状**确实**是「按声明来源解析会炸」的那个
+        #    （否则说明本用例钉的不是真问题）
+        if src != SRC.SOURCE_NATIVE:
+            raised = False
+            try:
+                SRC.normalize_source(stored, src)
+            except Exception:
+                raised = True
+            check(raised,
+                  '来源 %s：按声明来源解析库存形状本应失败 —— '
+                  '没失败说明这条不变量测的不是真问题' % tag)
+
+
 # ---------------------------------------------------------------------------
 # 运行
 # ---------------------------------------------------------------------------

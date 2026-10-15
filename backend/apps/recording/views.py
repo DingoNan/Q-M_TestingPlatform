@@ -667,8 +667,31 @@ def recording_session_finish(request, session_id):
     if not isinstance(options, dict):
         return Response(data={'detail': 'options 必须是对象'}, status=400)
 
+    # ★★★ 2026-10-15 修：用**库存形状**决定解析器，而不是用 `raw_payload['source']` 的声明值。
+    #
+    #   为什么：`raw_payload['payload']` 存的一律是**归一化之后**的形状
+    #   （`{'events': [...], 'meta': {...}}`，见 recording_session_events 的
+    #   `_store_payload(session, meta['source'], {'events': merged, 'meta': meta})`），
+    #   而 `raw_payload['source']` 记的是**原始上传数据**的来源（它同时要给
+    #   `/events/` 的增量批次做来源回退，所以不能改成别的值）。
+    #   两者对不上：拿「原始数据的来源」去解析「已归一化的数据」，只有
+    #   native / raw_events 能过 ——
+    #     · devtools_recorder ⇒ 抛「DevTools Recorder 数据缺少 steps 数组」
+    #     · playwright_script ⇒ 抛「Playwright 脚本必须是文本」
+    #   于是 finish 直接 400，而这句话与真实原因（"库存形状 ≠ 声明来源"）
+    #   毫无关联 —— 与「两套字母表」那一族缺陷同形，排查成本极高。
+    #   实测复现：/events/ 显式声明 source=devtools_recorder 后 finish 必 400。
+    #
+    #   现在按形状分派：是归一化形状 ⇒ 用 native 解析器；否则（parse 直存的
+    #   原始文件）沿用声明的来源。已交付的扩展路径行为**逐字不变**（它本来就发 native）。
+    effective_source = source
+    if (isinstance(payload, dict)
+            and isinstance(payload.get('events'), list)
+            and isinstance(payload.get('meta'), dict)):
+        effective_source = SRC.SOURCE_NATIVE
+
     try:
-        events, meta = SRC.normalize_source(payload, source)
+        events, meta = SRC.normalize_source(payload, effective_source)
         ir = NZ.build_ir(events, meta, options or None)
     except Exception as e:
         logger.warning('[REC] 归一化失败: %s', traceback.format_exc())

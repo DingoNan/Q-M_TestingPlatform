@@ -36,6 +36,9 @@ _SELECTOR_PREFIX_MAP = {
 # 但能在 label 也不可用时提供一条可用的定位路径。
 _ROLE_GUESS_BY_STEP = {
     'click': 'button',
+    # ★ 2026-10-15 修：Chrome Recorder 的 `doubleClick` 类型。
+    #   角色猜 'button' 与 click 一致（双击的目标多为按钮/单元格）。
+    'double_click': 'button',
     'change': 'textbox',
     'input': 'textbox',
     'check': 'checkbox',
@@ -47,6 +50,15 @@ _ROLE_GUESS_BY_STEP = {
 _STEP_TYPE_MAP = {
     'navigate': 'navigate',
     'click': 'click',
+    # ★★★ 2026-10-15 修：漏映射 ⇒ 双击步骤被**静默丢弃**
+    #   puppeteer-replay 的 `StepType.doubleClick = 'doubleClick'`（Chrome DevTools
+    #   Recorder 的导出 schema 就是它）。这张表原来没有它，`.get(..., 'unknown')`
+    #   会把它标成 unknown —— 虽不报错，但真机导入时会以「无法解析的动作」出现，
+    #   用户看到的是「录制里明明双击了，用例里没这一步」。
+    #   平台其实**早就有** `run_playwright.py:763 def double_click(obj, element_index,
+    #   timeout)`，签名与 `click` 完全一致 —— 属于「关键字存在、只是永远走不到」
+    #   那一类缺陷（同类前例：kind:'select' 白名单缺失）。
+    'doubleclick': 'double_click',
     'change': 'change',
     'input': 'input',
     'keydown': 'keydown',

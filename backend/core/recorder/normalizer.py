@@ -41,6 +41,10 @@ ELEMENT_EVENT_TYPES = {
     #   （content.js 发 `kind:'select'`）。漏掉它 → 规则 7「无目标剔除」不生效，
     #   select 事件会带着空目标一路走到 map_to_actions 才被丢，且原因难懂。
     'select',
+    # ★ 'double_click' 必须在这里：它是元素级动作，漏掉 ⇒ 规则 7「无目标剔除」
+    #   不生效，一个没有任何 selectors 的双击会带着空目标一路进 IR，
+    #   落库后才在运行期报「缺少必填参数 obj」。
+    'double_click',
 }
 
 # 平台不支持 / 不需要的事件类型，直接丢弃并给出可读原因
@@ -590,6 +594,16 @@ def map_to_actions(events, options=None):
                 notes.append('源动作为点击 checkbox/radio，已映射为 check（幂等，比 click 更稳）')
             else:
                 keyword = 'click'
+
+        elif etype == 'double_click':
+            # ★★★ 2026-10-15 新增：Chrome Recorder 的 `doubleClick` 步骤。
+            #   历史缺陷：sources._STEP_TYPE_MAP 没有 'doubleclick' ⇒ etype='unknown'；
+            #   即便补了映射，这里原来也没有分支 ⇒ 掉到末尾
+            #   「不支持的事件类型：double_click」被**静默丢弃**。
+            #   两级闸门都要开，缺一不可（同 'select' 那一类缺陷的形态）。
+            #   注意：这里**不**做 checkbox 特判 —— 双击 checkbox 的语义与
+            #   单击勾选不同，强转成 check 会改变用例行为；保持 `double_click` 原意。
+            keyword = 'double_click'
 
         elif etype in ('change', 'input', 'select'):
             # ★★ 'select' 是浏览器扩展对 <select> 变更的**显式声明**（kind:'select'）。
