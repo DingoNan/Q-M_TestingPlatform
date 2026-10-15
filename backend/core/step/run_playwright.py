@@ -277,7 +277,8 @@ class PlaywrightBaseAction:
     def goto(self, uri: str, need_add_cookie: bool = False):
         """
         打开浏览器并访问URL
-        uri: 页面路径, 必填
+        uri: 页面路径（相对路径，不含域名），必填。例如 /login —— 平台内部是 url = 环境域名 + uri，
+             填 http(s):// 开头的完整地址会拼成重复域名导致导航失败，保存时会被直接拦截。
         need_add_cookie: 是否需要添加Cookie，如果是,则从环境管理中的Cookie中自动添加Cookie绕过登录操作
         return: None
         """

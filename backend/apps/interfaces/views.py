@@ -9,7 +9,7 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from requests.sessions import Session
 from django.db.models import Q
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django_q.tasks import async_task
@@ -3006,3 +3006,163 @@ def check_json_condition(check_list, act_body):
                 return False
     else:
         return True
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_swagger(request: Request):
+    """从 Swagger 2.0 / OpenAPI 3.x 一键生成接口资产（P2 接口资产自动发现）。
+
+    ★ 2026-10-15 新增。甘肃 242 那 32 个接口是靠浏览器抓 XHR 再手工录的，成本极高；
+      绝大多数服务都能直接暴露 /v2/api-docs 或 /v3/api-docs，解析契约即可批量建资产，
+      不必先有真实流量（这是它与 HAR 导入的本质区别）。
+
+    请求体（multipart 或 JSON 均可）：
+      project            项目 ID（必填）
+      service            目标服务 ID（必填）
+      source             file | url | content（默认 content）
+      file               上传的 swagger json/yaml（source=file）
+      url                swagger 文档地址（source=url）
+      content            文档文本（source=content）
+      default_tag        无 tag 时的默认模块名（默认「默认模块」）
+      only_tags          只导入这些 tag（数组，可选）
+      match_mode         skip | overwrite（默认 skip：同 service+method+url 已存在则跳过）
+      dry_run            为 true 时只解析预览、不落库
+
+    返回：
+      { ok, version, info, stats, modules:[{id,name}], created, skipped,
+        apis:[{id,name,method,url,tag}] }
+    """
+    from core.openapi.importer import parse_openapi, load_openapi_text
+
+    project_id = request.data.get('project') or request.data.get('project_id')
+    service_id = request.data.get('service') or request.data.get('service_id')
+    if not project_id:
+        return Response({'detail': '缺少参数 project（项目 ID）'}, status=400)
+    if not service_id:
+        return Response({'detail': '缺少参数 service（目标服务 ID）'}, status=400)
+
+    service_obj = Service.objects.filter(id=service_id, is_delete=False).first()
+    if service_obj is None:
+        return Response({'detail': f'服务 {service_id} 不存在或已删除'}, status=400)
+
+    # ---- 1. 取文档内容（与 import_har_sync 同一套口径）----
+    #   ⚠ source=content(JSON body) 受 DATA_UPLOAD_MAX_MEMORY_SIZE(2.5MB) 限制，
+    #     大文件请用 source=file（multipart）。
+    source = (request.data.get('source') or 'content').lower()
+    if source == 'url':
+        url = request.data.get('url')
+        if not url:
+            return Response({'detail': 'source=url 时必须提供 url'}, status=400)
+        try:
+            content = _fetch_url_content_v2(url)
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=400)
+    elif source == 'file':
+        uploaded = request.FILES.get('file')
+        if uploaded is None:
+            return Response({'detail': 'source=file 时必须上传 file'}, status=400)
+        try:
+            content = uploaded.read().decode('utf-8', errors='ignore')
+        except Exception as e:
+            return Response({'detail': f'文件读取失败: {e}'}, status=400)
+    else:
+        raw = request.data.get('content') or ''
+        content = raw.decode('utf-8', errors='ignore') if isinstance(raw, bytes) else raw
+    if not content or not str(content).strip():
+        return Response({'detail': '没有取到任何文档内容'}, status=400)
+
+    doc, err = load_openapi_text(content)
+    if doc is None:
+        return Response({'detail': '文档解析失败：%s' % err}, status=400)
+
+    default_tag = request.data.get('default_tag') or '默认模块'
+    parsed = parse_openapi(doc, default_tag=default_tag)
+    if not parsed['ok']:
+        return Response({'detail': 'OpenAPI 解析失败：%s' % parsed['error']}, status=400)
+
+    items = parsed['items']
+    only_tags = request.data.get('only_tags')
+    if isinstance(only_tags, str) and only_tags.strip():
+        try:
+            only_tags = json.loads(only_tags)
+        except (json.JSONDecodeError, ValueError):
+            return Response({'detail': 'only_tags 不是合法 JSON 数组'}, status=400)
+    if isinstance(only_tags, list) and only_tags:
+        allow = set(str(t) for t in only_tags)
+        items = [x for x in items if x['tag'] in allow]
+        if not items:
+            return Response({'detail': '按 only_tags 过滤后没有剩余接口（文档里的 tag：%s）'
+                                       % '、'.join(parsed['tags'][:20])}, status=400)
+
+    dry_run = request.data.get('dry_run')
+    dry_run = str(dry_run).lower() in ('1', 'true', 'yes') if dry_run is not None else False
+    if dry_run:
+        return Response({
+            'ok': True, 'dry_run': True, 'version': parsed['version'],
+            'info': parsed['info'], 'stats': parsed['stats'], 'tags': parsed['tags'],
+            'preview': [{'tag': x['tag'], 'name': x['name'], 'method': x['method'],
+                         'url': x['url']} for x in items],
+        }, status=200)
+
+    match_mode = (request.data.get('match_mode') or 'skip').lower()
+    if match_mode not in ('skip', 'overwrite'):
+        match_mode = 'skip'
+
+    user = getattr(request, 'user', None)
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return Response({'detail': '未认证，请先登录'}, status=401)
+
+    # ---- 2. 按 tag 建/取服务模块（tag → ServiceModule）----
+    module_map = {}
+    modules_out = []
+    for tag in parsed['tags']:
+        if tag not in [x['tag'] for x in items]:
+            continue
+        obj, _created = ServiceModule.objects.get_or_create(
+            name=tag, project_id=project_id, service_id=service_id,
+            is_delete=False, defaults={'create_by': user, 'update_by': user})
+        module_map[tag] = obj
+        modules_out.append({'id': obj.id, 'name': obj.name, 'created': _created})
+
+    # ---- 3. 落库（去重键：service + method + url）----
+    created, skipped, apis_out = 0, 0, []
+    for it in items:
+        module_obj = module_map.get(it['tag'])
+        if module_obj is None:
+            continue
+        exist = Api.objects.filter(service_id=service_id, method=it['method'],
+                                   url=it['url'], is_delete=False).first()
+        if exist is not None:
+            if match_mode == 'skip':
+                skipped += 1
+                apis_out.append({'id': exist.id, 'name': exist.name, 'method': exist.method,
+                                 'url': exist.url, 'tag': it['tag'], 'action': 'skipped'})
+                continue
+            exist.name = it['name'] or exist.name
+            exist.module_id = module_obj.id
+            exist.params = it['params']
+            exist.json = it['json']
+            exist.headers = it['headers']
+            exist.response = it['response']
+            exist.update_by = user
+            exist.save()
+            apis_out.append({'id': exist.id, 'name': exist.name, 'method': exist.method,
+                             'url': exist.url, 'tag': it['tag'], 'action': 'overwritten'})
+            continue
+
+        api_obj = Api.objects.create(
+            service_id=service_id, module_id=module_obj.id,
+            name=it['name'], url=it['url'], method=it['method'],
+            headers=it['headers'], body_type=Api.BodyType.Json,
+            json=it['json'], api_json_type='object', api_response_type='object',
+            data=[], params=it['params'], response=it['response'],
+            create_by=user, update_by=user)
+        created += 1
+        apis_out.append({'id': api_obj.id, 'name': api_obj.name, 'method': api_obj.method,
+                         'url': api_obj.url, 'tag': it['tag'], 'action': 'created'})
+
+    return Response({
+        'ok': True, 'dry_run': False, 'version': parsed['version'],
+        'info': parsed['info'], 'stats': parsed['stats'],
+        'modules': modules_out, 'created': created, 'skipped': skipped,
+        'apis': apis_out,
+    }, status=200)

@@ -139,6 +139,10 @@ export default {
 	deleteNavigation(id){
 		return http_request.delete(`/user/navigation/${id}/`)
 	},
+	// ★ 2026-10-15：Swagger 2.0 / OpenAPI 3.x 导入，无需流量即可批量建接口资产
+	importSwagger(params){
+		return http_request.post('/import_swagger/', params)
+	},
 	// 环境管理接口
 	getEnvs(params){
 		return http_request.get('/env/env/', {params: params})
@@ -154,6 +158,11 @@ export default {
 	},
 	deleteEnv(id){
 		return http_request.delete(`/env/env/${id}/`)
+	},
+	// ★ 2026-10-15：环境连通性自检（服务 HTTP 探活 + 数据库探针连接）
+	//   把「配置错了要跑用例才发现」提前到配环境那一刻。
+	checkEnv(id, params){
+		return http_request.post(`/env/env/${id}/check/`, params || {})
 	},
 	// selenium执行机管理接口
 	getWebExecutors(params){
@@ -270,6 +279,9 @@ export default {
 	deleteEnvService(id){
 		return http_request.delete(`/env/env_service/${id}/`)
 	},
+	checkEnvService(id, params){
+		return http_request.post(`/env/env_service/${id}/check/`, params || {})
+	},
 	// DB服务管理接口
 	getEnvDbs(params){
 		return http_request.get('/env/env_db/', {params: params})
@@ -285,6 +297,9 @@ export default {
 	},
 	deleteEnvDb(id){
 		return http_request.delete(`/env/env_db/${id}/`)
+	},
+	checkEnvDb(id, params){
+		return http_request.post(`/env/env_db/${id}/check/`, params || {})
 	},
 	// 平台管理接口
 	getPlants(params){

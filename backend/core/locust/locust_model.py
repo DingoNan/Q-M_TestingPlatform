@@ -460,3 +460,69 @@ def start_work_locust_programmatically(mode, case_id, env_id, user_id, server_ho
     runner.greenlet.join()
     runner.quit()
 
+def start_system_standalone_locust_step_load(steps, global_params, env_params, host_list, case_id,
+                                             env_id, user_id, levels, test_host, report_id):
+    """阶梯（step load）压测：按 levels 逐档调整并发，每档持续指定时长后进入下一档。
+
+    levels 形如 [{"users": 1, "spawn_rate": 1, "duration": 60},
+                 {"users": 5, "spawn_rate": 2, "duration": 60}, ...]
+
+    ★ 与普通 headless 压测的区别：
+      普通压测是 `runner.start(user_num, spawn_rate)` 一次跑到底；
+      阶梯压测在**运行过程中反复调用 runner.start() 变更目标并发数**，
+      从而得到「并发逐级上升」的曲线，用于定位容量拐点。
+      这是 locust 官方 step-load 的实现方式（runner.start 可重复调用）。
+
+    ★ 报告字段：max_user 记的是**最大档**并发，便于列表页一眼看出峰值；
+      每档的实际并发变化体现在 history.user_count 折线里。
+    """
+    server_host = 'http://127.0.0.1:8000'
+
+    env = Environment(user_classes=[UserModel], events=events)
+    env.system_run = True
+    env.case_id = case_id
+    env.env_id = env_id
+    env.user_id = user_id
+    env.server_host = server_host
+    env.report_id = report_id
+
+    env.steps = steps
+    env.env_params = env_params
+    env.global_params = global_params
+    env.host_list = host_list
+    env.host = test_host
+    env.mode = 'Standalone-StepLoad'
+
+    # max_user 取最大档，供报告「峰值并发」展示
+    env.max_user = max(int(lv.get('users') or 1) for lv in levels)
+    # rate 取首档的 spawn_rate，语义上仍是「每秒启动用户数」
+    env.rate = int(levels[0].get('spawn_rate') or levels[0].get('users') or 1)
+
+    runner = env.create_local_runner()
+    env.stats.reset_all()
+    env.events.init.fire(environment=env, runner=runner)
+    # ★ stats.history 由这个 greenlet 每秒追加一个点；漏了它 history 就是空的，
+    #   而阶梯压测的「并发随档位上升」曲线完全依赖 history.user_count。
+    gevent.spawn(stats_history, runner)
+    gevent.spawn(record_data_to_db(env))
+
+    print('[locust-step-load] levels=%s' % levels, flush=True)
+    # 让 stats_history 的后台 greenlet 先跑起来，避免第一档整档没被采到
+    gevent.sleep(0)
+    for idx, lv in enumerate(levels, 1):
+        users = int(lv.get('users') or 1)
+        spawn_rate = int(lv.get('spawn_rate') or users)
+        duration = int(lv.get('duration') or 60)
+        runner.start(users, spawn_rate=spawn_rate)
+        # ★ 每档起点打一个锚点：stats_history 每秒轮询，短档位可能整档都没轮到采样，
+        #   曲线会「丢档」。这里保证每一档在 history 上至少留一个点。
+        try:
+            update_stats_history(runner)
+        except Exception as e:
+            print('[locust-step-load] 锚点写入失败（不影响压测）：%s' % e, flush=True)
+        print('[locust-step-load] 第 %d/%d 档：并发 %d，持续 %ss'
+              % (idx, len(levels), users, duration), flush=True)
+        gevent.sleep(duration)
+
+    runner.quit()
+    runner.greenlet.join()

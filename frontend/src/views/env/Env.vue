@@ -226,7 +226,7 @@
 			          
 			          <el-table-column 
 			            align="center" 
-			            :width="ACTION_COL_WIDTH" 
+			            :width="ENV_CHECK_COL_WIDTH" 
 			            label="操作"
 			            class-name="action-column"
 			            fixed="right"
@@ -246,6 +246,21 @@
 			                    circle
 			                  >
 			                    <el-icon><View /></el-icon>
+			                  </el-button>
+			                </el-tooltip>
+			                <el-tooltip 
+			                  content="连通性自检" 
+			                  placement="top" 
+			                  effect="dark"
+			                >
+			                  <el-button 
+			                    type="primary" 
+			                    v-if="permission.has_read_permission" 
+			                    class="action-btn check-btn"
+			                    @click.stop="checkEnv(scope.row)"
+			                    circle
+			                  >
+			                    <el-icon><Monitor /></el-icon>
 			                  </el-button>
 			                </el-tooltip>
 			                
@@ -2441,6 +2456,7 @@ export default {
          取值 = 41 × 该列最多可能出现的按钮数 + 20，锚定 CaseList（4 按钮 = 184px）实测值。
          见 src/assets/css/global-table.css「全站表格操作列统一规范」。 */
       ACTION_COL_WIDTH: 144,   // 3 个按钮
+      ENV_CHECK_COL_WIDTH: 184, // 4 个按钮（环境列表多了「连通性自检」）
 
       userColor: {},
       envRules: {
@@ -3216,6 +3232,42 @@ export default {
       })
     },
     
+    /* 连通性自检（2026-10-15）：一键探活该环境下的所有服务与数据库。
+       ★ 价值：环境/数据库配错（端口、域名、账号口令）原本要等到「跑用例」才暴露，
+         而那时的报错往往是执行引擎内部的异常，与「连不上」没有字面关联，排查成本极高。
+         甘肃 242 上就是靠这个按钮第一时间发现两个 Oracle 库口令配错（ORA-01017）。 */
+    async checkEnv(row) {
+      ElMessage({ message: '正在自检「' + row.name + '」的服务与数据库…', type: 'info' })
+      try {
+        const response = await this.$api.checkEnv(row.id, { scope: 'all' })
+        const data = (response.data && response.data.result) || response.data || {}
+        const services = data.services || []
+        const dbs = data.dbs || []
+        const summary = data.summary || {}
+        const lines = []
+        services.forEach(function (s) {
+          lines.push('[服务] ' + s.name + '：' + (s.ok ? '通' : '不通') +
+            '（' + s.cost_ms + 'ms' + (s.status_code ? '，HTTP ' + s.status_code : '') + '）' +
+            (s.error ? '  ' + s.error : ''))
+        })
+        dbs.forEach(function (d) {
+          lines.push('[数据库] ' + d.name + '(' + d.host + ':' + d.port + ')：' +
+            (d.ok ? '通' : '不通') + '（' + d.cost_ms + 'ms）' + (d.error ? '  ' + d.error : ''))
+        })
+        ElMessageBox.alert(
+          '<div style="max-height:360px;overflow:auto;text-align:left">' +
+          '<p><b>合计 ' + (summary.all || 0) + ' 项，通 ' + (summary.ok || 0) +
+          ' 项，不通 ' + (summary.fail || 0) + ' 项</b></p>' +
+          '<pre style="white-space:pre-wrap;margin:0;font-size:12px">' +
+          (lines.join('\n') || '（该环境未配置服务或数据库）') + '</pre></div>',
+          '连通性自检 - ' + row.name,
+          { dangerouslyUseHTMLString: true, confirmButtonText: '关闭', customClass: 'confirm-dialog' }
+        )
+      } catch (e) {
+        ElMessage({ message: '自检失败：' + ((e && e.response && e.response.data && e.response.data.detail) || (e && e.message) || e), type: 'error' })
+      }
+    },
+
     async deleteEnv(id) {
       ElMessageBox.confirm(
         '确定删除此环境？删除后数据将无法恢复。',

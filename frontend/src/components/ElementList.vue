@@ -829,7 +829,7 @@
 		    <el-col :span="12">
 		      <el-form-item prop="web.value" class="dialog-form-item">
 		        <label class="dialog-label">定位表达式</label>
-		        <el-input v-model="elementSave.web.value" placeholder="请输入定位表达式" size="large" class="input loc-value" />
+		        <el-input v-model="elementSave.web.value" placeholder="定位表达式，如 //button[text()='登录'] 或 #username" size="large" class="input loc-value" />
 		      </el-form-item>
 		    </el-col>
 		    <el-col v-if="elementSave.web.by === 'role'" :span="12">
@@ -864,7 +864,7 @@
 		    <el-col :span="12">
 		      <el-form-item prop="android.value" class="dialog-form-item">
 		        <label class="dialog-label">定位表达式</label>
-		        <el-input v-model="elementSave.android.value" placeholder="请输入定位表达式" size="large" class="input loc-value" />
+		        <el-input v-model="elementSave.android.value" placeholder="定位表达式，如 //button[text()='登录'] 或 #username" size="large" class="input loc-value" />
 		      </el-form-item>
 		    </el-col>
 		  </el-row>
@@ -888,7 +888,7 @@
 		    <el-col :span="12">
 		      <el-form-item prop="ios.value" class="dialog-form-item">
 		        <label class="dialog-label">定位表达式</label>
-		        <el-input v-model="elementSave.ios.value" placeholder="请输入定位表达式" size="large" class="input loc-value" />
+		        <el-input v-model="elementSave.ios.value" placeholder="定位表达式，如 //button[text()='登录'] 或 #username" size="large" class="input loc-value" />
 		      </el-form-item>
 		    </el-col>
 		  </el-row>

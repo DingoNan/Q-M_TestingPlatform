@@ -1,8 +1,10 @@
 import copy
+import json
 import os
 import sys
 import subprocess
 import time
+import uuid
 from threading import Thread
 from django.http import StreamingHttpResponse
 from django.utils import timezone
@@ -790,6 +792,101 @@ def step_run(request: Request):
     return Response(data=log_obj, status=200)
 
 
+def validate_step_load(step_load):
+    """校验阶梯压测档位。返回 (ok, error)。
+
+    档位格式：[{"users": 10, "spawn_rate": 2, "duration": 60}, ...]
+    ★ 放在这里逐项校验并把错误说清楚，是为了避免「压测跑到第 3 档才崩」——
+      那类失败最难排查，因为报告已经产生了、但数据是残缺的。
+    """
+    if not isinstance(step_load, list):
+        return False, 'step_load 必须是数组，例如 [{"users": 1, "spawn_rate": 1, "duration": 60}]'
+    if not step_load:
+        return False, 'step_load 不能是空数组；不使用阶梯压测请直接不要传该字段'
+    if len(step_load) > 20:
+        return False, '阶梯档位最多 20 档（当前 %d 档）' % len(step_load)
+    for i, lv in enumerate(step_load, 1):
+        if not isinstance(lv, dict):
+            return False, '第 %d 档必须是对象，例如 {"users": 10, "spawn_rate": 2, "duration": 60}' % i
+        try:
+            users = int(lv.get('users'))
+        except (TypeError, ValueError):
+            return False, '第 %d 档缺少合法的 users（并发用户数）' % i
+        if users < 1:
+            return False, '第 %d 档的 users 必须 >= 1' % i
+        spawn_rate = lv.get('spawn_rate', users)
+        try:
+            spawn_rate = int(spawn_rate)
+        except (TypeError, ValueError):
+            return False, '第 %d 档的 spawn_rate 必须是数字' % i
+        if spawn_rate < 1:
+            return False, '第 %d 档的 spawn_rate 必须 >= 1' % i
+        try:
+            duration = int(lv.get('duration'))
+        except (TypeError, ValueError):
+            return False, '第 %d 档缺少合法的 duration（本档持续秒数）' % i
+        if duration < 1:
+            return False, '第 %d 档的 duration 必须 >= 1 秒' % i
+        if duration > 86400:
+            return False, '第 %d 档的 duration 不能超过 86400 秒' % i
+    return True, ''
+
+
+def _launch_locust_process(request, case_id, env_id, project_id, users_per_second,
+                           concurrent_users, durations, step_load=None, batch_id=''):
+    """建一份 LocustReport 并以独立子进程拉起压测。返回 (report_id, error_msg)。
+
+    ★ 抽出来的原因：单接口压测（locust_run）与多接口批量压测（locust_batch_run）
+      共用同一套「建报告 + 拉子进程」逻辑，两处各写一遍必然会在其中一处漏修。
+    """
+    start_time = timezone.localtime(timezone.now())
+    if not (env_id and case_id):
+        return None, 'env_id / case_id 不能为空'
+    # ★ 并发参数兜底校验：这三个值最终写进 LocustReport 的 NOT NULL 字段，
+    #   传 None 会在建报告时抛 IntegrityError(1048, "Column 'max_user' cannot be null")，
+    #   表现为一个没有任何有用信息的 500（日志里 12:15 那次就是这样）。
+    #   放在建报告之前拦住，前端能拿到明确的「哪个字段、当前值是什么」。
+    for _label, _val in (('concurrent_users', concurrent_users),
+                         ('users_per_second', users_per_second),
+                         ('durations', durations)):
+        try:
+            _iv = int(_val)
+        except (TypeError, ValueError):
+            return None, '%s 必须是数字（当前值：%r）' % (_label, _val)
+        if _iv < 1:
+            return None, '%s 必须 >= 1（当前值：%r）' % (_label, _val)
+    case_obj = Case.objects.filter(id=case_id).first()
+    if case_obj is None:
+        return None, '用例不存在（case_id=%s）' % case_id
+    # 用例自带项目归属，project_id 允许缺省：缺省时从 case 反查。
+    # 背景：前端 projectInfo 只保存在 Vuex 内存中，刷新页面后会丢失，
+    # 请求体便不再包含 project_id（undefined 被 axios 丢弃）。旧实现直接回 400，
+    # 表现为「点执行就报错、且不产生任何报告」。这里由服务端反查，消除对前端内存态的依赖。
+    if not project_id:
+        project_id = case_obj.project_id
+    report = LocustReport.objects.create(**{'case_id': case_id, 'user_id': request.user.id, 'env_id': env_id,
+                                            'cpu': 0, 'memory': 0, 'rate': users_per_second, 'project_id': project_id,
+                                            'max_user': concurrent_users, 'duration': durations,
+                                            'step_load': step_load or [], 'batch_id': batch_id or '',
+                                            'start_time': start_time, 'end_time': start_time})
+    # 以子进程方式拉起压测（见 locust_run 的说明：gevent monkey-patch 必须隔离）
+    cmd = [sys.executable, 'manage.py', 'run_locust_case', str(case_id), str(env_id), str(request.user.id),
+           str(durations), str(users_per_second), str(concurrent_users), str(report.id),
+           json.dumps(step_load or [], ensure_ascii=False)]
+    log_dir = os.path.join(BASE_DIR, 'logs')
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = open(os.path.join(log_dir, 'locust_%s.log' % report.id), 'ab')
+        subprocess.Popen(cmd, cwd=BASE_DIR, stdout=log_file, stderr=subprocess.STDOUT,
+                         start_new_session=True, env=os.environ.copy())
+    except Exception as e:
+        LocustReport.objects.filter(id=report.id).update(
+            test_process=LocustReport.TestProcess.Failed,
+            fail_reason='压测进程启动失败：%s' % e)
+        return None, '压测进程启动失败：%s' % e
+    return report.id, None
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def locust_run(request: Request):
@@ -802,52 +899,34 @@ def locust_run(request: Request):
     压测 greenlet 永不调度、报告永久停留在「压测中」。
     子进程方式让 monkey-patch 只影响压测进程，web 与 qcluster 均不受影响。
     """
-    start_time = timezone.localtime(timezone.now())
     env_id = request.data.get('env_id')
     case_id = request.data.get('case_id')
     project_id = request.data.get('project_id')
     users_per_second = request.data.get('users_per_second')
     concurrent_users = request.data.get('concurrent_users')
     durations = request.data.get('durations')
-    if not (env_id and case_id):
-        return Response(data={'error': 'env_id / case_id 不能为空'}, status=400)
+    # 阶梯压测（可选）：给了 step_load 就按档位逐级加压，不给就是原来的固定并发压测。
+    step_load = request.data.get('step_load') or []
+    if step_load:
+        ok, err = validate_step_load(step_load)
+        if not ok:
+            return Response(data={'error': err}, status=400)
 
-    # 用例自带项目归属，project_id 允许缺省：缺省时从 case 反查。
-    # 背景：前端 projectInfo 只保存在 Vuex 内存中，用户刷新页面或直接打开用例详情页后会丢失，
-    # 请求体便不再包含 project_id（undefined 被 axios 丢弃）。旧实现直接回 400
-    # 「env_id / case_id / project_id 不能为空」，表现为：点执行就报错、且不产生任何报告，
-    # 用户看到的就是「执行了但没有结果」。这里改成由服务端反查，彻底消除对前端内存态的依赖。
-    case_obj = Case.objects.filter(id=case_id).first()
-    if case_obj is None:
-        return Response(data={'error': '用例不存在（case_id=%s）' % case_id}, status=400)
-    if not project_id:
-        project_id = case_obj.project_id
-    report = LocustReport.objects.create(**{'case_id': case_id, 'user_id': request.user.id, 'env_id': env_id,
-                                            'cpu': 0, 'memory': 0, 'rate': users_per_second, 'project_id': project_id,
-                                            'max_user': concurrent_users, 'duration': durations,
-                                            'start_time': start_time, 'end_time': start_time})
-    # 以子进程方式拉起压测（见上方说明）
-    cmd = [sys.executable, 'manage.py', 'run_locust_case', str(case_id), str(env_id), str(request.user.id),
-           str(durations), str(users_per_second), str(concurrent_users), str(report.id)]
-    log_dir = os.path.join(BASE_DIR, 'logs')
-    try:
-        os.makedirs(log_dir, exist_ok=True)
-        log_file = open(os.path.join(log_dir, 'locust_%s.log' % report.id), 'ab')
-        subprocess.Popen(cmd, cwd=BASE_DIR, stdout=log_file, stderr=subprocess.STDOUT,
-                         start_new_session=True, env=os.environ.copy())
-    except Exception as e:
-        # 拉起失败也要收口，且标为「失败」而不是「已完成」：这类报告没有任何数据
-        LocustReport.objects.filter(id=report.id).update(
-            test_process=LocustReport.TestProcess.Failed,
-            fail_reason='压测进程启动失败：%s' % e)
-        return Response(data={'error': '压测进程启动失败：%s' % e}, status=500)
-    return Response(data={'report_id': report.id}, status=200)
+    report_id, err = _launch_locust_process(request, case_id, env_id, project_id,
+                                            users_per_second, concurrent_users, durations,
+                                            step_load=step_load)
+    if err:
+        return Response(data={'error': err}, status=400 if '不存在' in err or '不能为空' in err else 500)
+    return Response(data={'report_id': report_id}, status=200)
 
 
-def run_locust_standalone(case_id, env_id, user_id, run_times, rate, user_num, report_id):
+def run_locust_standalone(case_id, env_id, user_id, run_times, rate, user_num, report_id,
+                          step_load=None):
     """真正执行压测。**只能在独立进程中调用**（见 locust_run 的说明）。
 
-    入口：`python manage.py run_locust_case <case_id> <env_id> <user_id> <run_times> <rate> <user_num> <report_id>`
+    入口：`python manage.py run_locust_case <case_id> <env_id> <user_id> <run_times> <rate> <user_num> <report_id> [step_load_json]`
+
+    step_load 非空时走阶梯压测，否则走原来的固定并发压测（行为完全不变）。
     """
     # 惰性导入：locust 会触发 gevent monkey-patch，必须延后到真正运行压测时才加载，
     # 避免在 Django(ASGI/WSGI) 启动阶段就 patch ssl/threading/socket 破坏服务器
@@ -879,9 +958,14 @@ def run_locust_standalone(case_id, env_id, user_id, run_times, rate, user_num, r
     test_host = host_list[0]
     env_params = get_env_params_by_env_id(env_id=env_id)
     global_params = get_global_params_by_project_id(project_id=case.project)
-    locust_model.start_system_standalone_locust_headless_programmatically(
-        steps, global_params, env_params, host_list, case_id,
-        env_id, user_id, run_times, rate, user_num, test_host, report_id)
+    if step_load:
+        locust_model.start_system_standalone_locust_step_load(
+            steps, global_params, env_params, host_list, case_id,
+            env_id, user_id, step_load, test_host, report_id)
+    else:
+        locust_model.start_system_standalone_locust_headless_programmatically(
+            steps, global_params, env_params, host_list, case_id,
+            env_id, user_id, run_times, rate, user_num, test_host, report_id)
 
 
 @api_view(['POST'])
@@ -1666,3 +1750,160 @@ def add_many_api_step_for_case(request: Request):
         'added_count': len(added),
         'skipped_count': len(skipped),
     }, status=200)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def locust_batch_run(request: Request):
+    """多接口独立压测：一次提交多个用例，每个用例**各自一份独立报告**。
+
+    请求体：
+      {
+        "env_id": 3, "project_id": 4,
+        "case_ids": [459, 460],
+        "users_per_second": 1, "concurrent_users": 5, "durations": 60,
+        "step_load": [...]           # 可选，阶梯压测档位
+      }
+
+    ★ 为什么不做成「一个用例里塞 N 个接口」：
+      混合场景的 TPS 是所有接口叠加后的值，**不能代表任何单个接口的容量**，
+      而容量评估要的恰恰是「单接口独立承压能力」。所以这里一个接口一份报告，
+      同批次用 batch_id 串起来，既能单独看也能按批次聚合。
+
+    ★ 失败是**部分失败**：某个用例不存在不会回滚其它已拉起的压测，
+      返回体里逐条给出 report_id 或 error，前端可以逐条展示。
+    """
+    env_id = request.data.get('env_id')
+    project_id = request.data.get('project_id')
+    case_ids = request.data.get('case_ids')
+    users_per_second = request.data.get('users_per_second')
+    concurrent_users = request.data.get('concurrent_users')
+    durations = request.data.get('durations')
+    step_load = request.data.get('step_load') or []
+
+    if not env_id:
+        return Response(data={'error': 'env_id 不能为空'}, status=400)
+    if not isinstance(case_ids, list) or not case_ids:
+        return Response(data={'error': 'case_ids 必须是非空数组'}, status=400)
+    if len(case_ids) > 50:
+        return Response(data={'error': '一次最多批量压测 50 个用例（当前 %d 个）' % len(case_ids)}, status=400)
+    if step_load:
+        ok, err = validate_step_load(step_load)
+        if not ok:
+            return Response(data={'error': err}, status=400)
+
+    batch_id = uuid.uuid4().hex[:16]
+    items = []
+    for cid in case_ids:
+        report_id, err = _launch_locust_process(request, cid, env_id, project_id,
+                                                users_per_second, concurrent_users, durations,
+                                                step_load=step_load, batch_id=batch_id)
+        items.append({'case_id': cid, 'report_id': report_id, 'error': err})
+
+    ok_cnt = len([x for x in items if x['report_id']])
+    return Response(data={
+        'batch_id': batch_id,
+        'total': len(items),
+        'success': ok_cnt,
+        'failed': len(items) - ok_cnt,
+        'items': items,
+    }, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def jmeter_run(request: Request):
+    """对接外部 JMeter 执行压测。
+
+    请求体：
+      {
+        "env_id": 3, "project_id": 4, "case_id": 462,
+        "jmeter_home": "/soft/Jmeter/apache-jmeter-5.6.3",
+        "jmx_path": "/soft/Jmeter/GX-PJ/demo.jmx",
+        "jtl_path": "/tmp/qm_jmeter/demo.jtl",     # 可选，缺省自动生成
+        "remote_hosts": ["172.16.21.242:1099"],    # 可选，-R 分布式施压
+        "properties": {"threads": "10"},           # 可选，-J 传入 JMeter 属性
+        "timeout": 3600                            # 可选，秒
+      }
+
+    ★ 平台在这条链路里只做「编排 + 结果归集」，真正施压由外部 JMeter 完成。
+      现场已经有成熟 JMX 脚本时，不必把脚本重写成平台用例。
+    """
+    from core.jmeter.run_jmeter import run_jmeter, summarize_jtl
+
+    env_id = request.data.get('env_id')
+    project_id = request.data.get('project_id')
+    case_id = request.data.get('case_id')
+    jmeter_home = request.data.get('jmeter_home') or ''
+    jmx_path = request.data.get('jmx_path') or ''
+    remote_hosts = request.data.get('remote_hosts') or []
+    properties = request.data.get('properties') or {}
+    try:
+        timeout = int(request.data.get('timeout') or 3600)
+    except (TypeError, ValueError):
+        return Response(data={'error': 'timeout 必须是数字（秒）'}, status=400)
+
+    if not (env_id and case_id):
+        return Response(data={'error': 'env_id / case_id 不能为空'}, status=400)
+    if not jmx_path:
+        return Response(data={'error': 'jmx_path 不能为空（JMeter 脚本绝对路径）'}, status=400)
+    if isinstance(remote_hosts, str):
+        remote_hosts = [h.strip() for h in remote_hosts.split(',') if h.strip()]
+
+    case_obj = Case.objects.filter(id=case_id).first()
+    if case_obj is None:
+        return Response(data={'error': '用例不存在（case_id=%s）' % case_id}, status=400)
+    if not project_id:
+        project_id = case_obj.project_id
+
+    start_time = timezone.localtime(timezone.now())
+    jtl_path = request.data.get('jtl_path') or os.path.join(
+        BASE_DIR, 'logs', 'jmeter_%s.jtl' % uuid.uuid4().hex[:12])
+
+    report = LocustReport.objects.create(**{
+        'case_id': case_id, 'user_id': request.user.id, 'env_id': env_id,
+        'cpu': 0, 'memory': 0, 'rate': 0, 'project_id': project_id,
+        'max_user': 0, 'duration': 'JMeter', 'step_load': [],
+        'batch_id': 'jmeter', 'start_time': start_time, 'end_time': start_time})
+
+    started = time.time()
+    result = run_jmeter(jmeter_home, jmx_path, jtl_path, remote_hosts, properties, timeout)
+    summary = None
+    if result['ok']:
+        try:
+            summary = summarize_jtl(jtl_path)
+        except Exception as e:
+            result['ok'] = False
+            result['error'] = 'JTL 解析失败：%s: %s' % (type(e).__name__, e)
+
+    if result['ok'] and summary:
+        # 把 JMeter 的采样器汇总映射进平台报告，复用既有报告展示
+        requests_statistics = [{
+            'name': lb['label'], 'method': 'JMeter',
+            'num_requests': lb['count'], 'num_failures': lb['fail'],
+            'avg_response_time': lb['avg'], 'min_response_time': lb['min'],
+            'max_response_time': lb['max'],
+        } for lb in summary['labels']]
+        response_time_statistics = [{
+            'name': lb['label'], 'method': 'JMeter',
+            '0.5': lb['avg'], '0.95': lb['p95'], '1.0': lb['max'],
+        } for lb in summary['labels']]
+        LocustReport.objects.filter(id=report.id).update(
+            test_process=LocustReport.TestProcess.Done,
+            requests_statistics=requests_statistics,
+            response_time_statistics=response_time_statistics,
+            history=summary['history'],
+            max_user=summary['total'].get('count', 0),
+            duration='%ss' % summary['duration'],
+            end_time=timezone.localtime(timezone.now()))
+        return Response(data={'report_id': report.id, 'ok': True,
+                              'summary': summary['total'],
+                              'labels': summary['labels']}, status=200)
+
+    # 失败收口：与 locust 链路一致，标「失败」并给出一句话结论 + 原始日志
+    LocustReport.objects.filter(id=report.id).update(
+        test_process=LocustReport.TestProcess.Failed,
+        fail_reason='JMeter 执行失败：%s' % (result['error'] or '未知原因'),
+        exceptions_statistics=[{'count': 1, 'msg': result['error'] or 'JMeter 执行失败',
+                                'traceback': result['log'][-2000:]}])
+    return Response(data={'report_id': report.id, 'ok': False,
+                          'error': result['error'], 'log_tail': result['log'][-2000:]},
+                    status=200)

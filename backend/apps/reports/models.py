@@ -59,6 +59,13 @@ class LocustReport(BaseModel):
     # 旧实现把「守护进程的中断判定结论」塞进 exceptions_statistics，语义偏了
     # （那是判定结论、不是异常），故独立成字段，两者不再混用。
     fail_reason = models.TextField(verbose_name='失败原因', blank=True, default='')
+    # 阶梯压测档位：[{"users": 10, "spawn_rate": 2, "duration": 60}, ...]
+    # 为空数组表示普通（固定并发）压测 —— 与既有行为完全兼容。
+    step_load = models.JSONField(verbose_name='阶梯压测档位', default=list, blank=True)
+    # 批量压测批次号：多接口独立压测时，同一次提交共享同一个 batch_id，
+    # 便于前端按批次聚合展示「每个接口一份独立报告」。单接口压测为空串。
+    batch_id = models.CharField(verbose_name='批量压测批次号', max_length=64,
+                                blank=True, default='', db_index=True)
 
     class Meta:
         ordering = ['-create_time']

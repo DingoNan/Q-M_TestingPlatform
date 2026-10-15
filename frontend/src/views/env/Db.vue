@@ -575,7 +575,7 @@
 			        
 			        <el-table-column 
 			          align="center" 
-			          :width="ACTION_COL_WIDTH" 
+			          :width="DB_CHECK_COL_WIDTH" 
 			          label="操作"
 			          class-name="action-column"
 			          fixed="right"
@@ -595,6 +595,21 @@
 			                  circle
 			                >
 			                  <el-icon><View /></el-icon>
+			                </el-button>
+			              </el-tooltip>
+			              <el-tooltip 
+			                content="连通性自检" 
+			                placement="top" 
+			                effect="dark"
+			              >
+			                <el-button 
+			                  type="primary" 
+			                  v-if="permission.has_read_permission" 
+			                  class="action-btn check-btn"
+			                  @click.stop="checkEnvDb(scope.row)"
+			                  circle
+			                >
+			                  <el-icon><Monitor /></el-icon>
 			                </el-button>
 			              </el-tooltip>
 			              
@@ -886,7 +901,7 @@
 <script>
 import {mapState, mapActions, mapGetters} from 'vuex'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, Delete, Edit, Plus, EditPen, Refresh, Search } from '@element-plus/icons-vue'
+import { View, Delete, Edit, Plus, EditPen, Refresh, Search, Monitor } from '@element-plus/icons-vue'
 
 export default{
   name: 'DatabaseManagement',
@@ -897,7 +912,8 @@ export default{
     Plus,
     EditPen,
     Refresh,
-    Search
+    Search,
+    Monitor
   },
 	computed:{
 		...mapState(['pathPermission', 'projectInfo', 'userInfo']),
@@ -912,6 +928,7 @@ export default{
 		     取值 = 41 × 该列最多可能出现的按钮数 + 20，锚定 CaseList（4 按钮 = 184px）实测值。
 		     见 src/assets/css/global-table.css「全站表格操作列统一规范」。 */
 		  ACTION_COL_WIDTH: 144,   // 3 个按钮
+		  DB_CHECK_COL_WIDTH: 184, // 4 个按钮（环境数据库多了「连通性自检」）
 
 			userColor: {},
 			dbView: false,
@@ -1295,6 +1312,30 @@ export default{
 			    }).catch(() => {})
 		},
 		
+		/* 连通性自检（2026-10-15）：只探活这一条环境数据库。
+		   与 Env.vue 的整机自检互补 —— 改完一条库配置可以立刻单独验证，不必整环境重跑。
+		   ★ 甘肃 242 上就是靠它第一时间定位到两个 Oracle 库口令配错（ORA-01017）。 */
+		async checkEnvDb(row){
+			ElMessage({ message: '正在连接数据库…', type: 'info' })
+			try {
+				const response = await this.$api.checkEnvDb(row.id, {})
+				const data = (response.data && response.data.result) || response.data || {}
+				const ok = !!data.ok
+				ElMessageBox.alert(
+					'<div style="text-align:left">' +
+					'<p><b>' + (ok ? '连接成功' : '连接失败') + '</b></p>' +
+					'<p>类型：' + (data.type_name || '-') + '　地址：' + (data.host || '-') + ':' + (data.port || '-') + '</p>' +
+					'<p>库名：' + (data.name || '-') + '　耗时：' + (data.cost_ms || 0) + 'ms</p>' +
+					(data.error ? '<pre style="white-space:pre-wrap;margin:0;font-size:12px">' + data.error + '</pre>' : '') +
+					'</div>',
+					'数据库连通性自检',
+					{ dangerouslyUseHTMLString: true, confirmButtonText: '关闭', customClass: 'confirm-dialog' }
+				)
+			} catch (e) {
+				ElMessage({ message: '自检失败：' + ((e && e.response && e.response.data && e.response.data.detail) || (e && e.message) || e), type: 'error' })
+			}
+		},
+
 		async deleteEnvDb(id){
 			ElMessageBox.confirm(
 			    '确定删除此数据库环境？删除后数据将无法恢复。',

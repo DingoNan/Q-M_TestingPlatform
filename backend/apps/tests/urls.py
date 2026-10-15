@@ -26,6 +26,8 @@ urlpatterns = [
     path('test/run/', views.case_run),
     path('test/step_run/', views.step_run),
     path('test/locust_run/', views.locust_run),
+    path('test/locust_batch_run/', views.locust_batch_run),
+    path('test/jmeter_run/', views.jmeter_run),
     path('test/init_data/', views.get_init_data),
     path('test/download/windows', views.download_windows),
     path('test/download/linux', views.download_linux),

@@ -36,6 +36,9 @@ class Command(BaseCommand):
         parser.add_argument('rate', type=int)
         parser.add_argument('user_num', type=int)
         parser.add_argument('report_id', type=int)
+        # 阶梯压测档位（可选）：JSON 字符串，形如 [{"users":1,"spawn_rate":1,"duration":60}]
+        parser.add_argument('step_load', nargs='?', default='[]',
+                            help='阶梯压测档位 JSON；缺省为空数组表示普通固定并发压测')
 
     def handle(self, *args, **options):
         report_id = options['report_id']
@@ -52,10 +55,19 @@ class Command(BaseCommand):
         try:
             # 延迟到 handle 内导入：本模块被 Django 自动发现时不应触发 locust 导入
             from apps.tests.views import run_locust_standalone
+            # 档位解析失败不能让整次压测崩掉：退化成普通压测，并把原因打进日志
+            import json as _json
+            try:
+                step_load = _json.loads(options['step_load'] or '[]')
+                if not isinstance(step_load, list):
+                    step_load = []
+            except Exception as e:
+                print('[locust] step_load 解析失败，退化为普通压测：%s' % e, flush=True)
+                step_load = []
             run_locust_standalone(
                 options['case_id'], options['env_id'], options['user_id'],
                 options['run_times'], options['rate'], options['user_num'],
-                report_id,
+                report_id, step_load,
             )
         except Exception as e:
             import traceback
