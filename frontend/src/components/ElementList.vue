@@ -1020,13 +1020,7 @@ export default{
         "name":"登录按钮",
         "module":1,
         "type":"web",
-        "web":[{
-	        "id":"eb6e3789-b286-43bd-a2f5-b514d3d19326",
-	        "value":"//button[text()='登录']",
-	        "by":"xpath",
-	        "parentId":null,
-	        "children":[]
-        }],
+        "web":{"by":"xpath","value":"//button[text()='登录']","opts":{}},
         "android":[],
         "ios":[]
 	}

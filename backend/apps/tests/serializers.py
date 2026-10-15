@@ -97,9 +97,40 @@ class StepSerializer(BaseSerializer):
             assert_api_reference_allowed(attrs.get('keyword'))
         # 注意：方法名不能叫 validate_check_params —— DRF 会把它当成 check_params 字段的
         # 字段级校验器，传入的是字段值(list)而非 attrs，导致 "'list' object has no attribute 'get'"。
+        # P0（2026-10-15）：goto 步骤 uri 保存期校验，见 check_playwright_goto_uri
+        self.check_playwright_goto_uri(attrs)
         self.check_check_params_structure(attrs)
         return attrs
 
+    def check_playwright_goto_uri(self, attrs):
+        """
+        保存期校验 Playwright `goto` 步骤的 uri（DEF-14）。
+
+        ★ 背景：run_playwright.goto() 的内部实现是 `url = self.host + uri`，
+          uri 必须是**不含域名的相对路径**。传入 `http://172.16.21.242:50001/login`
+          会拼成 `http://172.16.21.242:50001http://172.16.21.242:50001/login`，
+          运行期抛 `Protocol error (Page.navigate): Cannot navigate to invalid URL` ——
+          报错与「多写了域名」这件事毫无关联，新手 100% 踩且无法自查。
+          这里在保存期就拦下来，并直接告诉他怎么改。
+        """
+        step_type = attrs.get('type', getattr(self.instance, 'type', None))
+        keyword = attrs.get('keyword', getattr(self.instance, 'keyword', None))
+        # 10 = StepType.Playwright（枚举在 core/run_case.py，此处为避免循环导入直接写字面量）
+        if step_type != 10 or keyword != 'goto':
+            return
+        func_params = attrs.get('func_params')
+        if not isinstance(func_params, list):
+            return
+        for item in func_params:
+            if not isinstance(item, dict) or item.get('name') != 'uri':
+                continue
+            value = item.get('value')
+            if isinstance(value, str) and value.strip().lower().startswith(('http://', 'https://')):
+                raise ValidationError(
+                    'goto 步骤的 uri 必须是不含域名的相对路径（例如 /login）；'
+                    '执行时会自动拼接环境里配置的域名。当前填写的是「%s」，'
+                    '请把域名部分去掉，只保留路径（含开头的 /）。' % value.strip())
+        return
     def check_check_params_structure(self, attrs):
         """
         保存期校验断言参数结构。

@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from utils.base import BasePageNumberPagination
 from utils.base_view import BaseModelViewSet
@@ -27,6 +27,7 @@ from apps.envs.models import (
 from apps.interfaces.models import Api
 from apps.tests.models import Case
 from apps.elements.models import Element
+from core.com.env_probe import probe_service, probe_env_db
 from apps.envs.serializers import (
     EnvSerializers,
     EnvGlobalParamsSerializers,
@@ -73,6 +74,65 @@ class EnvViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
     filterset_class = EnvFilter
+    @action(detail=True, methods=['post'], url_path='check')
+    def check(self, request, pk=None):
+        """环境连通性自检（P2-1，2026-10-15 新增）。
+
+        ★ 为什么要有它：环境/数据库配错时平台此前**完全不探活**，
+          要等「跑用例」才暴露，而那时的报错是执行引擎内部异常，
+          与「连不上」没有字面关联（本次甘肃 242 上排这个耗了大量时间）。
+          这里提供一键自检：HTTP 探活 + 数据库探针连接，只连不写。
+
+        请求体（均为可选）：
+            scope: 'all'(默认) | 'service' | 'db'
+        返回：
+            {env_id, env_name, services:[...], dbs:[...], summary:{all, ok, fail, all_ok}}
+        """
+        env = self.get_object()
+        scope = (request.data or {}).get('scope') or 'all'
+        services, dbs = [], []
+
+        if scope in ('all', 'service'):
+            for env_service in EnvService.objects.filter(env=env, is_delete=False):
+                res = probe_service(env_service.host)
+                services.append({
+                    'id': env_service.id,
+                    'name': env_service.service.name if env_service.service else '',
+                    'host': env_service.host,
+                    'ok': res['ok'],
+                    'status_code': res.get('status_code'),
+                    'cost_ms': res['cost_ms'],
+                    'error': res.get('error', ''),
+                })
+
+        if scope in ('all', 'db'):
+            for env_db in EnvDb.objects.filter(env=env, is_delete=False):
+                res = probe_env_db(env_db)
+                dbs.append({
+                    'id': env_db.id,
+                    'name': env_db.name,
+                    'type': env_db.type,
+                    'type_name': env_db.get_type_display(),
+                    'host': env_db.host,
+                    'port': env_db.port,
+                    'ok': res['ok'],
+                    'cost_ms': res['cost_ms'],
+                    'error': res.get('error', ''),
+                })
+
+        items = services + dbs
+        return Response({
+            'env_id': env.id,
+            'env_name': env.name,
+            'services': services,
+            'dbs': dbs,
+            'summary': {
+                'all': len(items),
+                'ok': len([x for x in items if x['ok']]),
+                'fail': len([x for x in items if not x['ok']]),
+                'all_ok': bool(items) and all(x['ok'] for x in items),
+            },
+        })
 
 
 class EnvWebExecutorViewSet(BaseModelViewSet):
@@ -169,6 +229,20 @@ class EnvServiceViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
     filterset_class = EnvServiceFilter
+    @action(detail=True, methods=['post'], url_path='check')
+    def check(self, request, pk=None):
+        """单个环境服务探活。只要拿到 HTTP 响应就算通（401/403/500 都算通）。"""
+        env_service = self.get_object()
+        res = probe_service(env_service.host)
+        return Response({
+            'id': env_service.id,
+            'name': env_service.service.name if env_service.service else '',
+            'host': env_service.host,
+            'ok': res['ok'],
+            'status_code': res.get('status_code'),
+            'cost_ms': res['cost_ms'],
+            'error': res.get('error', ''),
+        })
 
 
 class EnvDbViewSet(BaseModelViewSet):
@@ -177,6 +251,22 @@ class EnvDbViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = BasePageNumberPagination
     filterset_class = EnvDbFilter
+    @action(detail=True, methods=['post'], url_path='check')
+    def check(self, request, pk=None):
+        """单个环境数据库探活：建一次连接 + 跑一句探针语句，不写任何数据。"""
+        env_db = self.get_object()
+        res = probe_env_db(env_db)
+        return Response({
+            'id': env_db.id,
+            'name': env_db.name,
+            'type': env_db.type,
+            'type_name': env_db.get_type_display(),
+            'host': env_db.host,
+            'port': env_db.port,
+            'ok': res['ok'],
+            'cost_ms': res['cost_ms'],
+            'error': res.get('error', ''),
+        })
 
 
 class PlantViewSet(BaseModelViewSet):

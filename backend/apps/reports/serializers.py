@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 class ReportSerializer(BaseSerializer):
 
+    result = serializers.SerializerMethodField()
     suite_name = serializers.SerializerMethodField()
     suite_type = serializers.SerializerMethodField()
     suite_model = serializers.SerializerMethodField()
@@ -21,6 +22,36 @@ class ReportSerializer(BaseSerializer):
     tags = serializers.SerializerMethodField()
     history = serializers.SerializerMethodField()
 
+    def get_result(self, obj):
+        """顶层结论汇总（DEF-17）。
+
+        ★ 背景：报告把 all/success/fail/error 四个计数平铺在顶层，
+          消费方每次都要自己算通过率、还要兜底除零；缺一个统一结论字段，
+          导致「打开报告看不到结论」。这里一次性给齐：计数 + 通过率 + 结论文案。
+        """
+        total = obj.all_case_number or 0
+        success = obj.success_case_number or 0
+        fail = obj.fail_case_number or 0
+        error = obj.error_case_number or 0
+        not_run = max(total - success - fail - error, 0)
+        pass_rate = round(success / total * 100, 2) if total else 0
+        if total == 0:
+            conclusion = '无用例'
+        elif fail or error:
+            conclusion = '未通过'
+        elif not_run:
+            conclusion = '未完成'
+        else:
+            conclusion = '通过'
+        return {
+            'all': total,
+            'success': success,
+            'fail': fail,
+            'error': error,
+            'not_run': not_run,
+            'pass_rate': pass_rate,
+            'conclusion': conclusion,
+        }
     def get_suite_name(self, obj):
         return obj.suite.name if obj.suite else ''
 
